@@ -8,7 +8,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.util.Arrays;
 import java.util.List;
 
 import org.jwat.arc.ArcReader;
@@ -215,16 +214,17 @@ public class JWATTools {
 	}
 
 	static class TestTask extends Task {
+		private int skipped = 0;
 		public TestTask(CommandLine.Arguments arguments) {
 			CommandLine.Argument argument = arguments.idMap.get( A_FILES );
 			List<String> filesList = argument.values;
 			taskFileListFeeder( filesList, this );
+			System.out.println( "Skipped: " + skipped );
 		}
 		@Override
 		public void process(File file) {
 			ArcReader arcReader = null;
 			WarcReader warcReader = null;
-			System.out.println( "Processing: " + file.getName() );
 			int gzipEntries = 0;
 			int arcRecords = 0;
 			int arcErrors = 0;
@@ -233,6 +233,7 @@ public class JWATTools {
 			try {
 				ByteCountingPushBackInputStream pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( new FileInputStream( file ), 8192 ), 16 );
 				if ( GzipInputStream.isGziped( pbin ) ) {
+					System.out.println( "Processing: " + file.getName() );
 					GzipInputStream gzin = new GzipInputStream( pbin );
 					GzipEntry entry;
 					ByteCountingPushBackInputStream in;
@@ -243,7 +244,7 @@ public class JWATTools {
 						in = new ByteCountingPushBackInputStream( new BufferedInputStream( gzin.getEntryInputStream(), 8192 ), 16 );
 						++gzipEntries;
 						if ( gzipEntries == 1 ) {
-							if ( isArcFile( in ) ) {
+							if ( ArcReaderFactory.isArcFile( in ) ) {
 								arcReader = ArcReaderFactory.getReaderUncompressed();
 								arcReader.setBlockDigestEnabled( true );
 								arcReader.setPayloadDigestEnabled( true );
@@ -251,9 +252,12 @@ public class JWATTools {
 								if ( version != null ) {
 								    ++arcRecords;
 								    version.close();
+									if (version.hasErrors()) {
+										arcErrors += version.getValidationErrors().size();
+									}
 								}
 							}
-							else if ( isWarcFile( in ) ) {
+							else if ( WarcReaderFactory.isWarcFile( in ) ) {
 								warcReader = WarcReaderFactory.getReaderUncompressed();
 								warcReader.setBlockDigestEnabled( true );
 								warcReader.setPayloadDigestEnabled( true );
@@ -302,7 +306,8 @@ public class JWATTools {
 					}
 					gzin.close();
 				}
-				else if ( isArcFile( pbin ) ) {
+				else if ( ArcReaderFactory.isArcFile( pbin ) ) {
+					System.out.println( "Processing: " + file.getName() );
 					arcReader = ArcReaderFactory.getReaderUncompressed( pbin );
 					arcReader.setBlockDigestEnabled( true );
 					arcReader.setPayloadDigestEnabled( true );
@@ -326,7 +331,8 @@ public class JWATTools {
 					}
 					arcReader.close();
 				}
-				else if ( isWarcFile( pbin ) ) {
+				else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
+					System.out.println( "Processing: " + file.getName() );
 					warcReader = WarcReaderFactory.getReader( pbin );
 					warcReader.setBlockDigestEnabled( true );
 					warcReader.setPayloadDigestEnabled( true );
@@ -339,6 +345,9 @@ public class JWATTools {
 						}
 					}
 					warcReader.close();
+				}
+				else {
+					++skipped;
 				}
 				pbin.close();
 			}
@@ -363,27 +372,5 @@ public class JWATTools {
 			}
 		}
 	}
-
-    public static boolean isArcFile(ByteCountingPushBackInputStream pbin) throws IOException {
-        byte[] magicBytes = new byte["filedesc:".length()];
-        byte[] arcBytes = "filedesc:".getBytes();
-        // Look for the leading magic in front of every valid ARC file.
-        int read = pbin.readFully(magicBytes);
-        if (read > 0) {
-            pbin.unread(magicBytes, 0, read);
-        }
-        return (Arrays.equals(arcBytes, magicBytes));
-    }
-
-    public static boolean isWarcFile(ByteCountingPushBackInputStream pbin) throws IOException {
-        byte[] magicBytes = new byte["WARC/".length()];
-        byte[] warcBytes = "WARC/".getBytes();
-        // Look for the leading magic in front of every valid WARC file.
-        int read = pbin.readFully(magicBytes);
-        if (read > 0) {
-            pbin.unread(magicBytes, 0, read);
-        }
-        return (Arrays.equals(warcBytes, magicBytes));
-    }
 
 }
