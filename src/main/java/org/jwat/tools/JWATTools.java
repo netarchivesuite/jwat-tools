@@ -81,8 +81,9 @@ public class JWATTools {
 			System.out.println( " -1 --fast        compress faster" );
 			System.out.println( " -9 --best        compress better" );
 			*/
-			System.out.println( "usage: JWATTools [-dt] [file ...]" );
-			System.out.println( " -t   test compressed file integrity" );
+			System.out.println( "usage: JWATTools [-dte] [file ...]" );
+			System.out.println( " -t   test validity of ARC, WARC and/or GZip file(s)" );
+			System.out.println( " -e   show errors" );
 			System.out.println( " -d   decompress" );
 			//System.out.println( " -1   compress faster" );
 			//System.out.println( " -9   compress better" );
@@ -404,6 +405,7 @@ public class JWATTools {
 				ArcValidationError arcError;
 				while ( iter.hasNext() ) {
 					arcError = iter.next();
+					System.out.println( arcRecord.getOffset() );
 					System.out.println( " Error - t: " + arcError.error + " - f: " + arcError.field + " - v: " + arcError.value );
 				}
 			}
@@ -415,7 +417,17 @@ public class JWATTools {
 				WarcValidationError warcError;
 				while ( iter.hasNext() ) {
 					warcError = iter.next();
-					System.out.println( " Error - t: " + warcError.error + " - f: " + warcError.field + " - v: " + warcError.value );
+					String warcTypeStr = warcRecord.warcTypeStr;
+					if ( warcTypeStr == null || warcTypeStr.length() == 0 ) {
+						warcTypeStr = "unknown";
+					}
+					else {
+						warcTypeStr = "'" + warcTypeStr + "'";
+					}
+					System.out.println( "Error in " + warcTypeStr + " record at offset: " + warcRecord.getOffset() + " (0x" + (Long.toHexString(warcRecord.getOffset())) + ")" );
+					System.out.println( "\tError type: " + warcError.error );
+					System.out.println( "\tField/Desc: " + warcError.field );
+					System.out.println( "\t     Value: " + warcError.value );
 				}
 			}
 		}
