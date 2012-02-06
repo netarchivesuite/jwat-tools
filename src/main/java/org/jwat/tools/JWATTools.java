@@ -8,11 +8,15 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcReaderFactory;
 import org.jwat.arc.ArcRecord;
+import org.jwat.arc.ArcRecordBase;
+import org.jwat.arc.ArcValidationError;
 import org.jwat.arc.ArcVersionBlock;
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.gzip.GzipEntry;
@@ -20,6 +24,7 @@ import org.jwat.gzip.GzipInputStream;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcReaderFactory;
 import org.jwat.warc.WarcRecord;
+import org.jwat.warc.WarcValidationError;
 
 public class JWATTools {
 
@@ -27,6 +32,7 @@ public class JWATTools {
 	public static final int A_COMPRESS = 2;
 	public static final int A_FILES = 3;
 	public static final int A_TEST = 4;
+	public static final int A_SHOW_ERRORS = 5;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -50,6 +56,7 @@ public class JWATTools {
 		cmdLine.addOption( "--fast", A_COMPRESS, 1 );
 		cmdLine.addOption( "--best", A_COMPRESS, 9 );
 		cmdLine.addOption( "-t", A_TEST );
+		cmdLine.addOption( "-e", A_SHOW_ERRORS );
 		cmdLine.addOption( "--test", A_TEST );
 		cmdLine.addListArgument( "files", A_FILES, 1, Integer.MAX_VALUE );
 		try {
@@ -215,8 +222,12 @@ public class JWATTools {
 
 	static class TestTask extends Task {
 		private int skipped = 0;
+		private boolean bShowErrors = false;
 		public TestTask(CommandLine.Arguments arguments) {
 			CommandLine.Argument argument = arguments.idMap.get( A_FILES );
+			if ( arguments.idMap.containsKey( A_SHOW_ERRORS ) ) {
+				bShowErrors = true;
+			}
 			List<String> filesList = argument.values;
 			taskFileListFeeder( filesList, this );
 			System.out.println( "Skipped: " + skipped );
@@ -255,6 +266,9 @@ public class JWATTools {
 									if (version.hasErrors()) {
 										arcErrors += version.getValidationErrors().size();
 									}
+									if ( bShowErrors ) {
+										showArcErrors( version );
+									}
 								}
 							}
 							else if ( WarcReaderFactory.isWarcFile( in ) ) {
@@ -274,6 +288,9 @@ public class JWATTools {
 										if (arcRecord.hasErrors()) {
 											arcErrors += arcRecord.getValidationErrors().size();
 										}
+										if ( bShowErrors ) {
+											showArcErrors( arcRecord );
+										}
 									}
 									else {
 										b = false;
@@ -288,6 +305,9 @@ public class JWATTools {
 								warcRecord.close();
 								if (warcRecord.hasErrors()) {
 									warcErrors += warcRecord.getValidationErrors().size();
+								}
+								if ( bShowErrors ) {
+									showWarcErrors( warcRecord );
 								}
 							}
 						}
@@ -323,6 +343,9 @@ public class JWATTools {
 								if (arcRecord.hasErrors()) {
 									arcErrors += arcRecord.getValidationErrors().size();
 								}
+								if ( bShowErrors ) {
+									showArcErrors( arcRecord );
+								}
 							}
 							else {
 								b = false;
@@ -342,6 +365,9 @@ public class JWATTools {
 						warcRecord.close();
 						if (warcRecord.hasErrors()) {
 							warcErrors += warcRecord.getValidationErrors().size();
+						}
+						if ( bShowErrors ) {
+							showWarcErrors( warcRecord );
 						}
 					}
 					warcReader.close();
@@ -369,6 +395,28 @@ public class JWATTools {
 				System.out.println( ">Warc.isValid: " + warcReader.isCompliant() );
 				System.out.println( ">Warc.Records: " + warcRecords );
 				System.out.println( ">Warc.Errors: " + warcErrors );
+			}
+		}
+		private void showArcErrors(ArcRecordBase arcRecord) {
+			Collection<ArcValidationError> arcValidationErrors = arcRecord.getValidationErrors();
+			if ( arcValidationErrors != null ) {
+				Iterator<ArcValidationError> iter = arcValidationErrors.iterator();
+				ArcValidationError arcError;
+				while ( iter.hasNext() ) {
+					arcError = iter.next();
+					System.out.println( " Error - t: " + arcError.error + " - f: " + arcError.field + " - v: " + arcError.value );
+				}
+			}
+		}
+		private void showWarcErrors(WarcRecord warcRecord) {
+			Collection<WarcValidationError> warcValidationErrors = warcRecord.getValidationErrors();
+			if ( warcValidationErrors != null ) {
+				Iterator<WarcValidationError> iter = warcValidationErrors.iterator();
+				WarcValidationError warcError;
+				while ( iter.hasNext() ) {
+					warcError = iter.next();
+					System.out.println( " Error - t: " + warcError.error + " - f: " + warcError.field + " - v: " + warcError.value );
+				}
 			}
 		}
 	}
