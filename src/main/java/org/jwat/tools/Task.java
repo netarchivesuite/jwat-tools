@@ -1,6 +1,7 @@
 package org.jwat.tools;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.List;
 
@@ -12,7 +13,7 @@ public abstract class Task {
 		String fileSeparator = System.getProperty( "file.separator" );
 		File parentFile;
 		String filepart;
-		FilenameFilter filter;
+		FileFilter filter;
 		for ( int i=0; i<filesList.size(); ++i ) {
 			filepart = filesList.get( i );
 			int idx = filepart.lastIndexOf( fileSeparator );
@@ -28,10 +29,10 @@ public abstract class Task {
 			if ( idx == -1 ) {
 				parentFile = new File( parentFile, filepart );
 				filepart = "";
-				filter = new AcceptAllFilter();
+				filter = new AcceptAllFileFilter();
 			}
 			else {
-				filter = new AcceptAllFilter();
+				filter = new AcceptWildcardFileFilter(filepart);
 			}
 			if ( parentFile.exists() ) {
 				taskFileFeeder( parentFile, filter, task );
@@ -43,26 +44,52 @@ public abstract class Task {
 		}
 	}
 
-	public static void taskFileFeeder(File parentFile, FilenameFilter filter, Task task) {
+	public static void taskFileFeeder(File parentFile, FileFilter filter, Task task) {
 		if ( parentFile.isFile() ) {
 			task.process( parentFile );
 		}
 		else if ( parentFile.isDirectory() ) {
-			File[] files = parentFile.listFiles();
-			for ( int i=0; i<files.length; ++i ) {
-				if ( files[ i ].isFile() ) {
-					task.process( files[ i ] );
+			File[] files = parentFile.listFiles( filter );
+			if (files != null) {
+				for ( int i=0; i<files.length; ++i ) {
+					if ( files[ i ].isFile() ) {
+						task.process( files[ i ] );
+					}
+					else {
+						taskFileFeeder( files[ i ], filter, task );
+					}
 				}
-				else {
-					taskFileFeeder( files[ i ], filter, task );
-				}
+			}
+			else {
+				System.out.println("Error reading: " + parentFile.getPath());
 			}
 		}
 	}
 
-	static class AcceptAllFilter implements FilenameFilter {
+	static class AcceptAllFilenameFilter implements FilenameFilter {
 		@Override
 		public boolean accept(File dir, String name) {
+			return true;
+		}
+	}
+
+	static class AcceptAllFileFilter implements FileFilter {
+		@Override
+		public boolean accept(File arg0) {
+			return true;
+		}
+	}
+
+	static class AcceptWildcardFileFilter implements FileFilter {
+		WildcardMatcher wm;
+		public AcceptWildcardFileFilter(String pattern) {
+			wm = new WildcardMatcher(pattern);
+		}
+		@Override
+		public boolean accept(File pathname) {
+			if (pathname.isFile()) {
+				return wm.match(pathname.getName());
+			}
 			return true;
 		}
 	}

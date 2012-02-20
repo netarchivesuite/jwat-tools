@@ -1,5 +1,6 @@
 package org.jwat.tools;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,8 +9,9 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.util.List;
 
-import org.jwat.gzip.GzipEntry;
-import org.jwat.gzip.GzipInputStream;
+import org.jwat.common.ByteCountingPushBackInputStream;
+import org.jwat.gzip.GzipReader;
+import org.jwat.gzip.GzipReaderEntry;
 
 public class DecompressTask extends Task {
 
@@ -22,37 +24,65 @@ public class DecompressTask extends Task {
 	@Override
 	public void process(File srcFile) {
 		String srcFname = srcFile.getName();
-		if ( srcFname.toLowerCase().endsWith( ".gz" ) ) {
-			String dstFname = srcFname.substring( 0, srcFname.length() - 3 );
-			File dstFile = new File( srcFile.getParentFile(), dstFname );
-			if ( !dstFile.exists() ) {
-				System.out.println( srcFname + " -> " + dstFname );
-				try {
-					GzipInputStream gzin = new GzipInputStream( new FileInputStream( srcFile ) );
-					GzipEntry entry;
+		ByteCountingPushBackInputStream pbin = null;
+		RandomAccessFile raf = null;
+		try {
+			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( new FileInputStream( srcFile ), 8192 ), 16 );
+			if (GzipReader.isGzipped(pbin)) {
+				String dstFname;
+				if (srcFname.endsWith(".gz")) {
+					dstFname = srcFname.substring( 0, srcFname.length() - 3 );
+				}
+				else {
+					dstFname = srcFname + ".org";
+				}
+				File dstFile = new File( srcFile.getParentFile(), dstFname );
+				if ( !dstFile.exists() ) {
+					System.out.println( srcFname + " -> " + dstFname );
+					GzipReader gzipReader = new GzipReader( pbin );
+					GzipReaderEntry gzipEntry;
 					InputStream in;
-					RandomAccessFile raf = new RandomAccessFile( dstFile, "rw" );
+					raf = new RandomAccessFile( dstFile, "rw" );
 					byte[] buffer = new byte[ 8192 ];
 					int read;
-					while ( (entry = gzin.getNextEntry()) != null ) {
-						in = gzin.getEntryInputStream();
+					while ( (gzipEntry = gzipReader.getNextEntry()) != null ) {
+						in = gzipEntry.getInputStream();
 						while ( (read = in.read(buffer)) != -1 ) {
 							raf.write( buffer, 0, read );
 						}
 						in.close();
+						gzipEntry.close();
 					}
-					raf.close();
-					gzin.close();
+					gzipReader.close();
 				}
-				catch (FileNotFoundException e) {
-					e.printStackTrace();
-				}
-				catch (IOException e) {
-					e.printStackTrace();
+				else {
+					System.out.println( dstFile.getName() + " already exists, skipping." );
 				}
 			}
-			else {
-				System.out.println( dstFile.getName() + " already exists, skipping." );
+			else if ( srcFname.toLowerCase().endsWith( ".gz" ) ) {
+				System.out.println( "Invalid extension: " + srcFname );
+			}
+		}
+		catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally {
+			if (pbin != null) {
+				try {
+					pbin.close();
+				}
+				catch (IOException e) {
+				}
+			}
+			if (raf != null) {
+				try {
+					raf.close();
+				}
+				catch (IOException e) {
+				}
 			}
 		}
 	}

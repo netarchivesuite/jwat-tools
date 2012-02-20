@@ -1,9 +1,5 @@
 package org.jwat.tools;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.List;
-
 public class JWATTools {
 
 	public static final int A_DECOMPRESS = 1;
@@ -11,6 +7,7 @@ public class JWATTools {
 	public static final int A_FILES = 3;
 	public static final int A_TEST = 4;
 	public static final int A_SHOW_ERRORS = 5;
+	public static final int A_RECURSIVE = 6;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -35,6 +32,7 @@ public class JWATTools {
 		cmdLine.addOption( "--best", A_COMPRESS, 9 );
 		cmdLine.addOption( "-t", A_TEST );
 		cmdLine.addOption( "-e", A_SHOW_ERRORS );
+		cmdLine.addOption( "-r", A_RECURSIVE );
 		cmdLine.addOption( "--test", A_TEST );
 		cmdLine.addListArgument( "files", A_FILES, 1, Integer.MAX_VALUE );
 		try {
@@ -63,6 +61,7 @@ public class JWATTools {
 			System.out.println( " -t   test validity of ARC, WARC and/or GZip file(s)" );
 			System.out.println( " -e   show errors" );
 			System.out.println( " -d   decompress" );
+			System.out.println( " -r   recursive" );
 			//System.out.println( " -1   compress faster" );
 			//System.out.println( " -9   compress better" );
 		}
@@ -76,65 +75,6 @@ public class JWATTools {
 			else if ( arguments.idMap.containsKey( A_TEST ) ) {
 				new TestTask( arguments );
 			}
-		}
-	}
-
-	static void taskFileListFeeder(List<String> filesList, Task task) {
-		String fileSeparator = System.getProperty( "file.separator" );
-		File parentFile;
-		String filepart;
-		FilenameFilter filter;
-		for ( int i=0; i<filesList.size(); ++i ) {
-			filepart = filesList.get( i );
-			int idx = filepart.lastIndexOf( fileSeparator );
-			if ( idx != -1 ) {
-				idx += fileSeparator.length();
-				parentFile = new File( filepart.substring( 0, idx ) );
-				filepart = filepart.substring( idx );
-			}
-			else {
-				parentFile = new File( System.getProperty( "user.dir" ) );
-			}
-			idx = filepart.indexOf( "*" );
-			if ( idx == -1 ) {
-				parentFile = new File( parentFile, filepart );
-				filepart = "";
-				filter = new AcceptAllFilter();
-			}
-			else {
-				filter = new AcceptAllFilter();
-			}
-			if ( parentFile.exists() ) {
-				taskFileFeeder( parentFile, filter, task );
-			}
-			else {
-				System.out.println( "File does not exist -- " + parentFile.getPath() );
-				System.exit( 1 );
-			}
-		}
-	}
-
-	static void taskFileFeeder(File parentFile, FilenameFilter filter, Task task) {
-		if ( parentFile.isFile() ) {
-			task.process( parentFile );
-		}
-		else if ( parentFile.isDirectory() ) {
-			File[] files = parentFile.listFiles();
-			for ( int i=0; i<files.length; ++i ) {
-				if ( files[ i ].isFile() ) {
-					task.process( files[ i ] );
-				}
-				else {
-					taskFileFeeder( files[ i ], filter, task );
-				}
-			}
-		}
-	}
-
-	static class AcceptAllFilter implements FilenameFilter {
-		@Override
-		public boolean accept(File dir, String name) {
-			return true;
 		}
 	}
 
