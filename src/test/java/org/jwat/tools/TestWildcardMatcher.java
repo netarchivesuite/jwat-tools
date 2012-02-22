@@ -7,10 +7,10 @@ import org.junit.runners.JUnit4;
 import org.jwat.tools.WildcardMatcher.WildcardPart;
 
 @RunWith(JUnit4.class)
-public class TestWildcardFilter {
+public class TestWildcardMatcher {
 
 	@Test
-	public void test_wildcard_filter() {
+	public void test_wildcard_matcher() {
 		WildcardMatcher wm;
 		WildcardPart part;
 

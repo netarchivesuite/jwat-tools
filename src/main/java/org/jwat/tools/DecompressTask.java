@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.gzip.GzipReader;
-import org.jwat.gzip.GzipReaderEntry;
+import org.jwat.gzip.GzipEntry;
 
 public class DecompressTask extends Task {
 
@@ -40,7 +40,7 @@ public class DecompressTask extends Task {
 				if ( !dstFile.exists() ) {
 					System.out.println( srcFname + " -> " + dstFname );
 					GzipReader gzipReader = new GzipReader( pbin );
-					GzipReaderEntry gzipEntry;
+					GzipEntry gzipEntry;
 					InputStream in;
 					raf = new RandomAccessFile( dstFile, "rw" );
 					byte[] buffer = new byte[ 8192 ];

@@ -16,8 +16,9 @@ import org.jwat.arc.ArcRecordBase;
 import org.jwat.arc.ArcValidationError;
 import org.jwat.arc.ArcVersionBlock;
 import org.jwat.common.ByteCountingPushBackInputStream;
+import org.jwat.common.Diagnosis;
+import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
-import org.jwat.gzip.GzipReaderEntry;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcReaderFactory;
 import org.jwat.warc.WarcRecord;
@@ -41,19 +42,20 @@ public class TestTask extends Task {
 		}
 		List<String> filesList = argument.values;
 		taskFileListFeeder( filesList, this );
-		System.out.println( "-------" );
-		System.out.println( "Summary" );
-		System.out.println( "gzip arc files: " + arcGzFiles );
-		System.out.println( "gzip warc files: " + warcGzFiles );
-		System.out.println( "gzip files: " + gzFiles );
-		System.out.println( "arc files: " + arcFiles );
-		System.out.println( "warc files: " + warcFiles );
-		System.out.println( "Skipped: " + skipped );
+		System.out.println( "----------" );
+		System.out.println( "Summary..." );
+		System.out.println( "GZip files: " + gzFiles );
+		System.out.println( "  +  Arc: " + arcGzFiles );
+		System.out.println( "  + Warc: " + warcGzFiles );
+		System.out.println( " Arc files: " + arcFiles );
+		System.out.println( "Warc files: " + warcFiles );
+		System.out.println( "   Skipped: " + skipped );
 	}
 
 	@Override
 	public void process(File srcFile) {
 		ByteCountingPushBackInputStream pbin = null;
+		GzipReader gzipReader = null;
 		ArcReader arcReader = null;
 		WarcReader warcReader = null;
 		int gzipEntries = 0;
@@ -64,9 +66,8 @@ public class TestTask extends Task {
 		try {
 			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( new FileInputStream( srcFile ), 8192 ), 16 );
 			if ( GzipReader.isGzipped( pbin ) ) {
-				System.out.println( "Processing: " + srcFile.getName() );
-				GzipReader gzipReader = new GzipReader( pbin );
-				GzipReaderEntry gzipEntry;
+				gzipReader = new GzipReader( pbin );
+				GzipEntry gzipEntry;
 				ByteCountingPushBackInputStream in;
 				byte[] buffer = new byte[ 8192 ];
 				int read;
@@ -142,6 +143,7 @@ public class TestTask extends Task {
 					}
 					in.close();
 					gzipEntry.close();
+					showGzipErrors(srcFile, gzipEntry);
 					offset = pbin.getConsumed();
 				}
 				if ( arcReader != null ) {
@@ -153,7 +155,6 @@ public class TestTask extends Task {
 				gzipReader.close();
 			}
 			else if ( ArcReaderFactory.isArcFile( pbin ) ) {
-				System.out.println( "Processing: " + srcFile.getName() );
 				arcReader = ArcReaderFactory.getReaderUncompressed( pbin );
 				arcReader.setBlockDigestEnabled( true );
 				arcReader.setPayloadDigestEnabled( true );
@@ -182,7 +183,6 @@ public class TestTask extends Task {
 				++arcFiles;
 			}
 			else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
-				System.out.println( "Processing: " + srcFile.getName() );
 				warcReader = WarcReaderFactory.getReader( pbin );
 				warcReader.setBlockDigestEnabled( true );
 				warcReader.setPayloadDigestEnabled( true );
@@ -219,18 +219,66 @@ public class TestTask extends Task {
 				}
 			}
 		}
-		if ( gzipEntries > 0 ) {
-			System.out.println( ">GZip.Entries: " + gzipEntries );
+		if (gzipReader != null || arcReader != null || warcReader != null) {
+			System.out.println( "Summary of '" + srcFile.getPath() + "'" );
+			if ( gzipEntries > 0 ) {
+				System.out.println( "    GZip.Entries: " + gzipEntries );
+			}
+			if ( arcReader != null ) {
+				System.out.println( "     Arc.isValid: " + arcReader.isCompliant() );
+				System.out.println( "     Arc.Records: " + arcRecords );
+				System.out.println( "      Arc.Errors: " + arcErrors );
+			}
+			if ( warcReader != null ) {
+				System.out.println( "    Warc.isValid: " + warcReader.isCompliant() );
+				System.out.println( "    Warc.Records: " + warcRecords );
+				System.out.println( "     Warc.Errors: " + warcErrors );
+			}
 		}
-		if ( arcReader != null ) {
-			System.out.println( ">Arc.isValid: " + arcReader.isCompliant() );
-			System.out.println( ">Arc.Records: " + arcRecords );
-			System.out.println( ">Arc.Errors: " + arcErrors );
+	}
+
+	protected void showGzipErrors(File file, GzipEntry gzipEntry) {
+		List<Diagnosis> diagnosisList;
+		Iterator<Diagnosis> diagnosisIterator;
+		if ( gzipEntry.diagnostics.hasErrors() ) {
+			System.out.println( "Error in '" + file.getPath() + "'" );
+			System.out.println( "       Offset: " + gzipEntry.getStartOffset() + " (0x" + (Long.toHexString(gzipEntry.getStartOffset())) + ")" );
+			diagnosisList = gzipEntry.diagnostics.getErrors();
+			diagnosisIterator = diagnosisList.iterator();
+			showDiagnosisList(diagnosisIterator);
 		}
-		if ( warcReader != null ) {
-			System.out.println( ">Warc.isValid: " + warcReader.isCompliant() );
-			System.out.println( ">Warc.Records: " + warcRecords );
-			System.out.println( ">Warc.Errors: " + warcErrors );
+		if ( gzipEntry.diagnostics.hasWarnings() ) {
+			System.out.println( "Warning in '" + file.getPath() + "'" );
+			System.out.println( "       Offset: " + gzipEntry.getStartOffset() + " (0x" + (Long.toHexString(gzipEntry.getStartOffset())) + ")" );
+			diagnosisList = gzipEntry.diagnostics.getWarnings();
+			diagnosisIterator = diagnosisList.iterator();
+			showDiagnosisList(diagnosisIterator);
+		}
+	}
+
+	protected void showDiagnosisList(Iterator<Diagnosis> diagnosisIterator) {
+		Diagnosis diagnosis;
+		while (diagnosisIterator.hasNext()) {
+			diagnosis = diagnosisIterator.next();
+			System.out.println( "         Type: " + diagnosis.type.name() );
+			System.out.println( "       Entity: " + diagnosis.entity );
+			switch (diagnosis.type) {
+			case EMPTY:
+				break;
+			case INVALID:
+			case RESERVED:
+			case UNKNOWN:
+				System.out.println( "        Value: " + diagnosis.information[0] );
+				break;
+			case INVALID_EXPECTED:
+				System.out.println( "        Value: " + diagnosis.information[0] );
+				System.out.println( "     Expected: " + diagnosis.information[1] );
+				break;
+			case INVALID_ENCODING:
+				System.out.println( "        Value: " + diagnosis.information[0] );
+				System.out.println( "     Encoding: " + diagnosis.information[1] );
+				break;
+			}
 		}
 	}
 
