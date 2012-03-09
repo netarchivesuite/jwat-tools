@@ -81,7 +81,7 @@ public class TestTask extends Task {
 							arcReader = ArcReaderFactory.getReaderUncompressed();
 							arcReader.setBlockDigestEnabled( true );
 							arcReader.setPayloadDigestEnabled( true );
-							ArcVersionBlock version = arcReader.getVersionBlock( in );
+							ArcVersionBlock version = arcReader.getVersionBlockFrom( in, gzipEntry.getStartOffset() );
 							if ( version != null ) {
 							    ++arcRecords;
 							    version.close();
@@ -107,7 +107,7 @@ public class TestTask extends Task {
 						if ( gzipEntries > 1 ) {
 							boolean b = true;
 							while ( b ) {
-								ArcRecord arcRecord = arcReader.getNextRecordFrom( in, offset );
+								ArcRecord arcRecord = arcReader.getNextRecordFrom( in, gzipEntry.getStartOffset() );
 								if ( arcRecord != null ) {
 								    ++arcRecords;
 								    arcRecord.close();
@@ -125,7 +125,7 @@ public class TestTask extends Task {
 					}
 					else if ( warcReader != null ) {
 						WarcRecord warcRecord;
-						while ( (warcRecord = warcReader.getNextRecordFrom( in ) ) != null ) {
+						while ( (warcRecord = warcReader.getNextRecordFrom( in, gzipEntry.getStartOffset() ) ) != null ) {
 							++warcRecords;
 							warcRecord.close();
 							warcErrors += warcRecord.diagnostics.getErrors().size();
