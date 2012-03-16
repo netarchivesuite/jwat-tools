@@ -28,6 +28,9 @@ public class TestTask extends Task {
 	private int gzFiles = 0;
 	private int arcFiles = 0;
 	private int warcFiles = 0;
+	private int errors = 0;
+	private int warnings = 0;
+	private int runtimeErrors = 0;
 	private int skipped = 0;
 
 	private boolean bShowErrors = false;
@@ -46,6 +49,9 @@ public class TestTask extends Task {
 		System.out.println( "  + Warc: " + warcGzFiles );
 		System.out.println( " Arc files: " + arcFiles );
 		System.out.println( "Warc files: " + warcFiles );
+		System.out.println( "    Errors: " + errors );
+		System.out.println( "  Warnings: " + warnings );
+		System.out.println( "RuntimeErr: " + runtimeErrors );
 		System.out.println( "   Skipped: " + skipped );
 	}
 
@@ -76,6 +82,9 @@ public class TestTask extends Task {
 				while ( (gzipEntry = gzipReader.getNextEntry()) != null ) {
 					in = new ByteCountingPushBackInputStream( new BufferedInputStream( gzipEntry.getInputStream(), 8192 ), 16 );
 					++gzipEntries;
+
+					//System.out.println(gzipEntries + " - " + gzipEntry.getStartOffset() + " (0x" + (Long.toHexString(gzipEntry.getStartOffset())) + ")");
+
 					if ( gzipEntries == 1 ) {
 						if ( ArcReaderFactory.isArcFile( in ) ) {
 							arcReader = ArcReaderFactory.getReaderUncompressed();
@@ -168,7 +177,10 @@ public class TestTask extends Task {
 						ArcRecord arcRecord = arcReader.getNextRecord();
 						if ( arcRecord != null ) {
 						    ++arcRecords;
-						    arcRecord.close();
+
+							//System.out.println(arcRecords + " - " + arcRecord.getStartOffset() + " (0x" + (Long.toHexString(arcRecord.getStartOffset())) + ")");
+
+							arcRecord.close();
 							arcErrors += arcRecord.diagnostics.getErrors().size();
 							arcWarnings += arcRecord.diagnostics.getWarnings().size();
 							if ( bShowErrors ) {
@@ -190,6 +202,9 @@ public class TestTask extends Task {
 				WarcRecord warcRecord;
 				while ( (warcRecord = warcReader.getNextRecord()) != null ) {
 					++warcRecords;
+
+					//System.out.println(warcRecords + " - " + warcRecord.getStartOffset() + " (0x" + (Long.toHexString(warcRecord.getStartOffset())) + ")");
+
 					warcRecord.close();
 					warcErrors += warcRecord.diagnostics.getErrors().size();
 					warcWarnings += warcRecord.diagnostics.getWarnings().size();
@@ -210,6 +225,10 @@ public class TestTask extends Task {
 		catch (IOException e) {
 			e.printStackTrace();
 		}
+		catch (Throwable t) {
+			++runtimeErrors;
+			t.printStackTrace();
+		}
 		finally {
 			if (pbin != null) {
 				try {
@@ -222,6 +241,7 @@ public class TestTask extends Task {
 		if (gzipReader != null || arcReader != null || warcReader != null) {
 			System.out.println( "Summary of '" + srcFile.getPath() + "'" );
 			if ( gzipEntries > 0 ) {
+				//System.out.println( "    GZip.isValid: " + gzipReader.isCompliant() );
 				System.out.println( "    GZip.Entries: " + gzipEntries );
 				System.out.println( "     GZip.Errors: " + gzipErrors );
 				System.out.println( "   GZip.Warnings: " + gzipWarnings );
@@ -239,6 +259,12 @@ public class TestTask extends Task {
 				System.out.println( "   Warc.Warnings: " + warcWarnings );
 			}
 		}
+		errors += gzipErrors;
+		warnings += gzipWarnings;
+		errors += arcErrors;
+		warnings +=arcWarnings;
+		errors += warcErrors;
+		warnings += warcWarnings;
 	}
 
 	protected void showGzipErrors(File file, GzipEntry gzipEntry) {
@@ -348,13 +374,14 @@ public class TestTask extends Task {
 			case INVALID_DATA:
 				System.out.println( "        Value: " + diagnosis.information[0] );
 				break;
-			case INVALID_EXPECTED:
-				System.out.println( "        Value: " + diagnosis.information[0] );
-				System.out.println( "     Expected: " + diagnosis.information[1] );
-				break;
 			case INVALID_ENCODING:
 				System.out.println( "        Value: " + diagnosis.information[0] );
 				System.out.println( "     Encoding: " + diagnosis.information[1] );
+				break;
+			case INVALID_EXPECTED:
+				System.out.println( "        Value: " + diagnosis.information[0] );
+			case ERROR_EXPECTED:
+				System.out.println( "     Expected: " + diagnosis.information[1] );
 				break;
 			}
 		}
