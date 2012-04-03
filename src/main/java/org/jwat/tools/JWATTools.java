@@ -8,6 +8,7 @@ public class JWATTools {
 	public static final int A_TEST = 4;
 	public static final int A_SHOW_ERRORS = 5;
 	public static final int A_RECURSIVE = 6;
+	public static final int A_WORKERS = 6;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -33,6 +34,7 @@ public class JWATTools {
 		cmdLine.addOption( "-t", A_TEST );
 		cmdLine.addOption( "-e", A_SHOW_ERRORS );
 		cmdLine.addOption( "-r", A_RECURSIVE );
+		cmdLine.addOption( "-w=", A_WORKERS );
 		cmdLine.addOption( "--test", A_TEST );
 		cmdLine.addListArgument( "files", A_FILES, 1, Integer.MAX_VALUE );
 		try {
@@ -49,7 +51,7 @@ public class JWATTools {
 			System.exit( 1 );
 		}
 		if ( arguments == null ) {
-			System.out.println( "JWATTools v0.1.0" );
+			System.out.println( "JWATTools v0.4.0" );
 			/*
 			System.out.println( "usage: JWATTools [-dt19] [file ...]" );
 			System.out.println( " -t --test        test compressed file integrity" );

@@ -75,7 +75,7 @@ public abstract class Task {
 
 	static class AcceptAllFileFilter implements FileFilter {
 		@Override
-		public boolean accept(File arg0) {
+		public boolean accept(File pathname) {
 			return true;
 		}
 	}

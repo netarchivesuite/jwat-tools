@@ -1,27 +1,21 @@
 package org.jwat.tools;
 
-import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
-
-import org.jwat.arc.ArcReader;
-import org.jwat.arc.ArcReaderFactory;
-import org.jwat.arc.ArcRecord;
-import org.jwat.arc.ArcRecordBase;
-import org.jwat.arc.ArcVersionBlock;
-import org.jwat.common.ByteCountingPushBackInputStream;
-import org.jwat.common.Diagnosis;
-import org.jwat.gzip.GzipEntry;
-import org.jwat.gzip.GzipReader;
-import org.jwat.warc.WarcReader;
-import org.jwat.warc.WarcReaderFactory;
-import org.jwat.warc.WarcRecord;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class TestTask extends Task {
+
+	/*
+	 * Summary.
+	 */
 
 	private int arcGzFiles = 0;
 	private int warcGzFiles = 0;
@@ -33,357 +27,210 @@ public class TestTask extends Task {
 	private int runtimeErrors = 0;
 	private int skipped = 0;
 
+	private int queued = 0;
+	private int processed = 0;
+
 	private boolean bShowErrors = false;
 
+	private ProgressableOutput cout = new ProgressableOutput(System.out);
+
+	/** Validation output stream. */
+	private SynchronizedOutput validationOutput;
+
+	/** Exception output stream. */
+	private SynchronizedOutput exceptionOutput;
+
+	/** ThreadPool executor. */
+	private ExecutorService executor; 
+
+	//private List<Future<TestResult>> futures = new LinkedList<Future<TestResult>>();
+
+	/** Results ready resource semaphore. */
+	private Semaphore resultsReady = new Semaphore(0);
+
+	/** Completed validation results list. */
+	private ConcurrentLinkedQueue<TestFileResult> results = new ConcurrentLinkedQueue<TestFileResult>();
+
 	public TestTask(CommandLine.Arguments arguments) {
-		CommandLine.Argument argument = arguments.idMap.get( JWATTools.A_FILES );
+		CommandLine.Argument argument;
 		if ( arguments.idMap.containsKey( JWATTools.A_SHOW_ERRORS ) ) {
 			bShowErrors = true;
 		}
-		List<String> filesList = argument.values;
-		taskFileListFeeder( filesList, this );
-		System.out.println( "----------" );
-		System.out.println( "Summary..." );
-		System.out.println( "GZip files: " + gzFiles );
-		System.out.println( "  +  Arc: " + arcGzFiles );
-		System.out.println( "  + Warc: " + warcGzFiles );
-		System.out.println( " Arc files: " + arcFiles );
-		System.out.println( "Warc files: " + warcFiles );
-		System.out.println( "    Errors: " + errors );
-		System.out.println( "  Warnings: " + warnings );
-		System.out.println( "RuntimeErr: " + runtimeErrors );
-		System.out.println( "   Skipped: " + skipped );
+		int threads = 1;
+		argument = arguments.idMap.get( JWATTools.A_WORKERS );
+		if ( argument != null && argument.value != null ) {
+			try {
+				threads = Integer.parseInt(argument.value);
+				System.out.println( "Using " + threads + " thread(s)." );
+			} catch (NumberFormatException e) {
+			}
+		}
+		//executor = Executors.newFixedThreadPool(16);
+		argument = arguments.idMap.get( JWATTools.A_FILES );
+		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()); 
+		cout.println("ThreadPool started.");
+		validationOutput = new SynchronizedOutput("v.out");
+		exceptionOutput = new SynchronizedOutput("e.out");
+		Thread thread = new Thread(new OutputThread());
+		thread.start();
+		long startCtm = System.currentTimeMillis();
+		try {
+			List<String> filesList = argument.values;
+			taskFileListFeeder( filesList, this );
+		} catch (Throwable t) {
+			cout.println("Died unexpectedly!");
+		} finally {
+			cout.println("Queued " + queued + " validation job(s).");
+			//System.out.println("Queued: " + queued + " - Processed: " + processed + ".");
+			if (executor != null) {
+				executor.shutdown();
+				/*
+				try {
+					executor.awaitTermination(60L, TimeUnit.MINUTES);
+				} catch (InterruptedException e) {
+				}
+				*/
+				while (!executor.isTerminated()) {
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+					}
+				}
+				cout.println("ThreadPool shut down.");
+				thread.interrupt();
+				/*
+				Iterator<Future<TestResult>> iter = futures.iterator();
+				Future<TestResult> future;
+				TestResult result;
+				while (iter.hasNext()) {
+					future = iter.next();
+					if (future.isDone()) {
+						try {
+							result = future.get();
+							update_summary(result);
+						} catch (CancellationException e) {
+						} catch (ExecutionException e) {
+						} catch (InterruptedException e) {
+						}
+					} else {
+						System.out.println("NOOOOOOOOOOOOOOOOOOOOOOO!");
+					}
+				}
+				*/
+			}
+		}
+		validationOutput.close();
+		exceptionOutput.close();
+		cout.println( "#" );
+		cout.println( "# Job summary" );
+		cout.println( "#" );
+		cout.println( "GZip files: " + gzFiles );
+		cout.println( "  +  Arc: " + arcGzFiles );
+		cout.println( "  + Warc: " + warcGzFiles );
+		cout.println( " Arc files: " + arcFiles );
+		cout.println( "Warc files: " + warcFiles );
+		cout.println( "    Errors: " + errors );
+		cout.println( "  Warnings: " + warnings );
+		cout.println( "RuntimeErr: " + runtimeErrors );
+		cout.println( "   Skipped: " + skipped );
+		cout.println( "Validation took " + (System.currentTimeMillis() - startCtm) + " ms." );
+	}
+
+	public void update_summary(TestFileResult result) {
+		arcGzFiles += result.arcGzFiles;
+		warcGzFiles += result.warcGzFiles;
+		gzFiles += result.gzFiles;
+		arcFiles += result.arcFiles;
+		warcFiles += result.warcFiles;
+		runtimeErrors += result.runtimeErrors;
+		skipped += result.skipped;
+		errors += result.gzipErrors;
+		warnings += result.gzipWarnings;
+		errors += result.arcErrors;
+		warnings += result.arcWarnings;
+		errors += result.warcErrors;
+		warnings += result.warcWarnings;
 	}
 
 	@Override
 	public void process(File srcFile) {
-		ByteCountingPushBackInputStream pbin = null;
-		GzipReader gzipReader = null;
-		ArcReader arcReader = null;
-		WarcReader warcReader = null;
-		int gzipEntries = 0;
-		int gzipErrors = 0;
-		int gzipWarnings = 0;
-		int arcRecords = 0;
-		int arcErrors = 0;
-		int arcWarnings = 0;
-		int warcRecords = 0;
-		int warcErrors = 0;
-		int warcWarnings = 0;
-		try {
-			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( new FileInputStream( srcFile ), 8192 ), 16 );
-			if ( GzipReader.isGzipped( pbin ) ) {
-				gzipReader = new GzipReader( pbin );
-				GzipEntry gzipEntry;
-				ByteCountingPushBackInputStream in;
-				byte[] buffer = new byte[ 8192 ];
-				int read;
-				long offset = 0;
-				while ( (gzipEntry = gzipReader.getNextEntry()) != null ) {
-					in = new ByteCountingPushBackInputStream( new BufferedInputStream( gzipEntry.getInputStream(), 8192 ), 16 );
-					++gzipEntries;
-
-					//System.out.println(gzipEntries + " - " + gzipEntry.getStartOffset() + " (0x" + (Long.toHexString(gzipEntry.getStartOffset())) + ")");
-
-					if ( gzipEntries == 1 ) {
-						if ( ArcReaderFactory.isArcFile( in ) ) {
-							arcReader = ArcReaderFactory.getReaderUncompressed();
-							arcReader.setBlockDigestEnabled( true );
-							arcReader.setPayloadDigestEnabled( true );
-							ArcVersionBlock version = arcReader.getVersionBlockFrom( in, gzipEntry.getStartOffset() );
-							if ( version != null ) {
-							    ++arcRecords;
-							    version.close();
-								arcErrors += version.diagnostics.getErrors().size();
-								arcWarnings += version.diagnostics.getWarnings().size();
-								if ( bShowErrors ) {
-									showArcErrors( srcFile, version );
-								}
-							}
-							++arcGzFiles;
-						}
-						else if ( WarcReaderFactory.isWarcFile( in ) ) {
-							warcReader = WarcReaderFactory.getReaderUncompressed();
-							warcReader.setBlockDigestEnabled( true );
-							warcReader.setPayloadDigestEnabled( true );
-							++warcGzFiles;
-						}
-						else {
-							++gzFiles;
-						}
-					}
-					if ( arcReader != null ) {
-						if ( gzipEntries > 1 ) {
-							boolean b = true;
-							while ( b ) {
-								ArcRecord arcRecord = arcReader.getNextRecordFrom( in, gzipEntry.getStartOffset() );
-								if ( arcRecord != null ) {
-								    ++arcRecords;
-								    arcRecord.close();
-									arcErrors += arcRecord.diagnostics.getErrors().size();
-									arcWarnings += arcRecord.diagnostics.getWarnings().size();
-									if ( bShowErrors ) {
-										showArcErrors( srcFile, arcRecord );
-									}
-								}
-								else {
-									b = false;
-								}
-							}
-						}
-					}
-					else if ( warcReader != null ) {
-						WarcRecord warcRecord;
-						while ( (warcRecord = warcReader.getNextRecordFrom( in, gzipEntry.getStartOffset() ) ) != null ) {
-							++warcRecords;
-							warcRecord.close();
-							warcErrors += warcRecord.diagnostics.getErrors().size();
-							warcWarnings += warcRecord.diagnostics.getWarnings().size();
-							if ( bShowErrors ) {
-								showWarcErrors( srcFile, warcRecord );
-							}
-						}
-					}
-					else {
-						while ( (read = in.read(buffer)) != -1 ) {
-						}
-					}
-					in.close();
-					gzipEntry.close();
-					gzipErrors = gzipEntry.diagnostics.getErrors().size();
-					gzipWarnings = gzipEntry.diagnostics.getWarnings().size();
-					if ( bShowErrors ) {
-						showGzipErrors(srcFile, gzipEntry);
-					}
-					offset = pbin.getConsumed();
+		if (srcFile.length() > 0) {
+				boolean bValidate = TestFile.checkfile(srcFile);
+				if (bValidate) {
+					/*
+					Future<TestResult> future = executor.submit(new TestCallable(srcFile));
+					futures.add(future);
+					*/
+					Future<?> future = executor.submit(new TestRunnable(srcFile));
+					//futures.add(future);
+					++queued;
+				} else {
 				}
-				if ( arcReader != null ) {
-					arcReader.close();
-				}
-				if ( warcReader != null ) {
-					warcReader.close();
-				}
-				gzipReader.close();
-			}
-			else if ( ArcReaderFactory.isArcFile( pbin ) ) {
-				arcReader = ArcReaderFactory.getReaderUncompressed( pbin );
-				arcReader.setBlockDigestEnabled( true );
-				arcReader.setPayloadDigestEnabled( true );
-				ArcVersionBlock version = arcReader.getVersionBlock();
-				if ( version != null ) {
-				    ++arcRecords;
-					boolean b = true;
-					while ( b ) {
-						ArcRecord arcRecord = arcReader.getNextRecord();
-						if ( arcRecord != null ) {
-						    ++arcRecords;
-
-							//System.out.println(arcRecords + " - " + arcRecord.getStartOffset() + " (0x" + (Long.toHexString(arcRecord.getStartOffset())) + ")");
-
-							arcRecord.close();
-							arcErrors += arcRecord.diagnostics.getErrors().size();
-							arcWarnings += arcRecord.diagnostics.getWarnings().size();
-							if ( bShowErrors ) {
-								showArcErrors( srcFile, arcRecord );
-							}
-						}
-						else {
-							b = false;
-						}
-					}
-				}
-				arcReader.close();
-				++arcFiles;
-			}
-			else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
-				warcReader = WarcReaderFactory.getReader( pbin );
-				warcReader.setBlockDigestEnabled( true );
-				warcReader.setPayloadDigestEnabled( true );
-				WarcRecord warcRecord;
-				while ( (warcRecord = warcReader.getNextRecord()) != null ) {
-					++warcRecords;
-
-					//System.out.println(warcRecords + " - " + warcRecord.getStartOffset() + " (0x" + (Long.toHexString(warcRecord.getStartOffset())) + ")");
-
-					warcRecord.close();
-					warcErrors += warcRecord.diagnostics.getErrors().size();
-					warcWarnings += warcRecord.diagnostics.getWarnings().size();
-					if ( bShowErrors ) {
-						showWarcErrors( srcFile, warcRecord );
-					}
-				}
-				warcReader.close();
-				++warcFiles;
-			}
-			else {
-				++skipped;
-			}
 		}
-		catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		catch (Throwable t) {
-			++runtimeErrors;
-			t.printStackTrace();
-		}
-		finally {
-			if (pbin != null) {
+	}
+
+	class OutputThread implements Runnable {
+
+		boolean exit = false;
+
+		@Override
+		public void run() {
+			TestFileResult result;
+			cout.println("Output Thread started.");
+			while (!exit) {
 				try {
-					pbin.close();
-				}
-				catch (IOException e) {
-				}
-			}
-		}
-		if (gzipReader != null || arcReader != null || warcReader != null) {
-			System.out.println( "Summary of '" + srcFile.getPath() + "'" );
-			if ( gzipEntries > 0 ) {
-				//System.out.println( "    GZip.isValid: " + gzipReader.isCompliant() );
-				System.out.println( "    GZip.Entries: " + gzipEntries );
-				System.out.println( "     GZip.Errors: " + gzipErrors );
-				System.out.println( "   GZip.Warnings: " + gzipWarnings );
-			}
-			if ( arcReader != null ) {
-				System.out.println( "     Arc.isValid: " + arcReader.isCompliant() );
-				System.out.println( "     Arc.Records: " + arcRecords );
-				System.out.println( "      Arc.Errors: " + arcErrors );
-				System.out.println( "    Arc.Warnings: " + arcWarnings );
-			}
-			if ( warcReader != null ) {
-				System.out.println( "    Warc.isValid: " + warcReader.isCompliant() );
-				System.out.println( "    Warc.Records: " + warcRecords );
-				System.out.println( "     Warc.Errors: " + warcErrors );
-				System.out.println( "   Warc.Warnings: " + warcWarnings );
-			}
-		}
-		errors += gzipErrors;
-		warnings += gzipWarnings;
-		errors += arcErrors;
-		warnings +=arcWarnings;
-		errors += warcErrors;
-		warnings += warcWarnings;
-	}
-
-	protected void showGzipErrors(File file, GzipEntry gzipEntry) {
-		List<Diagnosis> diagnosisList;
-		Iterator<Diagnosis> diagnosisIterator;
-		if ( gzipEntry.diagnostics.hasErrors() ) {
-			System.out.println( "Error in '" + file.getPath() + "'" );
-			System.out.println( "       Offset: " + gzipEntry.getStartOffset() + " (0x" + (Long.toHexString(gzipEntry.getStartOffset())) + ")" );
-			diagnosisList = gzipEntry.diagnostics.getErrors();
-			diagnosisIterator = diagnosisList.iterator();
-			showDiagnosisList(diagnosisIterator);
-		}
-		if ( gzipEntry.diagnostics.hasWarnings() ) {
-			System.out.println( "Warning in '" + file.getPath() + "'" );
-			System.out.println( "       Offset: " + gzipEntry.getStartOffset() + " (0x" + (Long.toHexString(gzipEntry.getStartOffset())) + ")" );
-			diagnosisList = gzipEntry.diagnostics.getWarnings();
-			diagnosisIterator = diagnosisList.iterator();
-			showDiagnosisList(diagnosisIterator);
-		}
-	}
-
-	protected void showArcErrors(File file, ArcRecordBase arcRecord) {
-		List<Diagnosis> diagnosisList;
-		Iterator<Diagnosis> diagnosisIterator;
-		if ( arcRecord.diagnostics.hasErrors() ) {
-			System.out.println( "Error in '" + file.getPath() + "'" );
-			System.out.println( "       Offset: " + arcRecord.getStartOffset() + " (0x" + (Long.toHexString(arcRecord.getStartOffset())) + ")" );
-			diagnosisList = arcRecord.diagnostics.getErrors();
-			diagnosisIterator = diagnosisList.iterator();
-			showDiagnosisList(diagnosisIterator);
-		}
-		if ( arcRecord.diagnostics.hasWarnings() ) {
-			System.out.println( "Error in '" + file.getPath() + "'" );
-			System.out.println( "       Offset: " + arcRecord.getStartOffset() + " (0x" + (Long.toHexString(arcRecord.getStartOffset())) + ")" );
-			diagnosisList = arcRecord.diagnostics.getWarnings();
-			diagnosisIterator = diagnosisList.iterator();
-			showDiagnosisList(diagnosisIterator);
-		}
-	}
-
-	protected void showWarcErrors(File file, WarcRecord warcRecord) {
-		List<Diagnosis> diagnosisList;
-		Iterator<Diagnosis> diagnosisIterator;
-		if ( warcRecord.diagnostics.hasErrors() ) {
-			String warcTypeStr = warcRecord.warcTypeStr;
-			if ( warcTypeStr == null || warcTypeStr.length() == 0 ) {
-				warcTypeStr = "unknown";
-			}
-			else {
-				warcTypeStr = "'" + warcTypeStr + "'";
-			}
-			System.out.println( "Error in '" + file.getPath() + "'" );
-			System.out.println( "       Offset: " + warcRecord.getStartOffset() + " (0x" + (Long.toHexString(warcRecord.getStartOffset())) + ")" );
-			System.out.println( "  Record Type: " + warcTypeStr );
-			diagnosisList = warcRecord.diagnostics.getErrors();
-			diagnosisIterator = diagnosisList.iterator();
-			showDiagnosisList(diagnosisIterator);
-		}
-		if ( warcRecord.diagnostics.hasWarnings() ) {
-			String warcTypeStr = warcRecord.warcTypeStr;
-			if ( warcTypeStr == null || warcTypeStr.length() == 0 ) {
-				warcTypeStr = "unknown";
-			}
-			else {
-				warcTypeStr = "'" + warcTypeStr + "'";
-			}
-			System.out.println( "Warning in '" + file.getPath() + "'" );
-			System.out.println( "       Offset: " + warcRecord.getStartOffset() + " (0x" + (Long.toHexString(warcRecord.getStartOffset())) + ")" );
-			System.out.println( "  Record Type: " + warcTypeStr );
-			diagnosisList = warcRecord.diagnostics.getWarnings();
-			diagnosisIterator = diagnosisList.iterator();
-			showDiagnosisList(diagnosisIterator);
-		}
-	}
-
-	protected void showDiagnosisList(Iterator<Diagnosis> diagnosisIterator) {
-		Diagnosis diagnosis;
-		while (diagnosisIterator.hasNext()) {
-			diagnosis = diagnosisIterator.next();
-			System.out.println( "         Type: " + diagnosis.type.name() );
-			System.out.println( "       Entity: " + diagnosis.entity );
-			switch (diagnosis.type) {
-			case EMPTY:
-			case INVALID:
-				break;
-			case RECOMMENDED:
-				if (diagnosis.information != null) {
-					if (diagnosis.information.length >= 1) {
-						System.out.println( "  Recommended: " + diagnosis.information[0] );
+					resultsReady.acquire();
+					result = results.poll();
+					if (result != null) {
+						update_summary(result);
+						validationOutput.acquired();
+						exceptionOutput.acquired();
+						try {
+							result.printResult(bShowErrors, validationOutput.out, exceptionOutput.out);
+						}
+						catch (Throwable t) {
+							++result.runtimeErrors;
+							t.printStackTrace();
+						}
+						exceptionOutput.release();
+						validationOutput.release();
+					} else {
+						exit = true;
 					}
-					if (diagnosis.information.length >= 2) {
-						System.out.println( "   Instead of: " + diagnosis.information[1] );
-					}
+					++processed;
+					cout.print_progress("Queued: " + queued + " - Processed: " + processed + ".");
+				} catch (InterruptedException e) {
+					exit = true;
 				}
-				break;
-			case REQUIRED_INVALID:
-			case UNDESIRED_DATA:
-				if (diagnosis.information != null) {
-					if (diagnosis.information.length >= 1) {
-						System.out.println( "        Value: " + diagnosis.information[0] );
-					}
-				}
-				break;
-			case DUPLICATE:
-			case RESERVED:
-			case UNKNOWN:
-			case INVALID_DATA:
-				System.out.println( "        Value: " + diagnosis.information[0] );
-				break;
-			case INVALID_ENCODING:
-				System.out.println( "        Value: " + diagnosis.information[0] );
-				System.out.println( "     Encoding: " + diagnosis.information[1] );
-				break;
-			case INVALID_EXPECTED:
-				System.out.println( "        Value: " + diagnosis.information[0] );
-			case ERROR_EXPECTED:
-				System.out.println( "     Expected: " + diagnosis.information[1] );
-				break;
 			}
+			cout.println("Output Thread stopped.");
+		}
+	}
+
+	class TestCallable implements Callable<TestFileResult> {
+		File srcFile;
+		TestCallable(File srcFile) {
+			this.srcFile = srcFile;
+		}
+		@Override
+		public TestFileResult call() throws Exception {
+			TestFileResult result = TestFile.processFile(srcFile, bShowErrors, null);
+			results.add(result);
+			resultsReady.release();
+			return result;
+		}
+	}
+
+	class TestRunnable implements Runnable {
+		File srcFile;
+		TestRunnable(File srcFile) {
+			this.srcFile = srcFile;
+		}
+		@Override
+		public void run() {
+			TestFileResult result = TestFile.processFile(srcFile, bShowErrors, null);
+			results.add(result);
+			resultsReady.release();
 		}
 	}
 
