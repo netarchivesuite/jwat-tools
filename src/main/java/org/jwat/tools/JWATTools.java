@@ -59,13 +59,13 @@ public class JWATTools {
 			System.out.println( " -1 --fast        compress faster" );
 			System.out.println( " -9 --best        compress better" );
 			*/
-			System.out.println( "usage: JWATTools [-dte] [file ...]" );
+			System.out.println( "usage: JWATTools [-dte19] [file ...]" );
 			System.out.println( " -t   test validity of ARC, WARC and/or GZip file(s)" );
 			System.out.println( " -e   show errors" );
 			System.out.println( " -d   decompress" );
 			System.out.println( " -r   recursive" );
-			//System.out.println( " -1   compress faster" );
-			//System.out.println( " -9   compress better" );
+			System.out.println( " -1   compress faster" );
+			System.out.println( " -9   compress better" );
 		}
 		else {
 			if ( arguments.idMap.containsKey( A_DECOMPRESS ) ) {
