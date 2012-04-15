@@ -28,14 +28,14 @@ import org.jwat.warc.WarcRecord;
 
 public class CompressTask extends Task {
 
-	private int compressionLevel = Deflater.DEFAULT_COMPRESSION;
+	protected int compressionLevel = Deflater.DEFAULT_COMPRESSION;
 
 	public CompressTask(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
 		// Compression level.
 		argument = arguments.idMap.get( JWATTools.A_COMPRESS );
 		if (argument != null) {
-			int compressionLevel = argument.argDef.subId;
+			compressionLevel = argument.argDef.subId;
 			System.out.println( "Compression level: " + compressionLevel );
 		}
 		// Files
@@ -288,7 +288,7 @@ public class CompressTask extends Task {
 		        writer.writeEntryHeader(entry);
 
 		        cout = entry.getOutputStream();
-		        cout.write(warcRecord.headerBytes);
+		        cout.write(warcRecord.header.headerBytes);
 
 				payload = warcRecord.getPayload();
 				if (payload != null) {

@@ -169,7 +169,7 @@ public class TestFile {
 								if (warcRecord.diagnostics.hasErrors() || warcRecord.diagnostics.hasWarnings()) {
 									itemDiagnosis = new TestFileResultItemDiagnosis();
 									itemDiagnosis.offset = gzipReader.getStartOffset();
-									itemDiagnosis.type = warcRecord.warcTypeStr;
+									itemDiagnosis.type = warcRecord.header.warcTypeStr;
 									itemDiagnosis.errors = warcRecord.diagnostics.getErrors();
 									itemDiagnosis.warnings = warcRecord.diagnostics.getWarnings();
 									result.rdList.add(itemDiagnosis);
@@ -277,7 +277,7 @@ public class TestFile {
 						if (warcRecord.diagnostics.hasErrors() || warcRecord.diagnostics.hasWarnings()) {
 							itemDiagnosis = new TestFileResultItemDiagnosis();
 							itemDiagnosis.offset = warcReader.getStartOffset();
-							itemDiagnosis.type = warcRecord.warcTypeStr;
+							itemDiagnosis.type = warcRecord.header.warcTypeStr;
 							itemDiagnosis.errors = warcRecord.diagnostics.getErrors();
 							itemDiagnosis.warnings = warcRecord.diagnostics.getWarnings();
 							result.rdList.add(itemDiagnosis);

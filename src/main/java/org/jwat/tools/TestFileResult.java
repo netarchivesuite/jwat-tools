@@ -166,7 +166,7 @@ public class TestFileResult {
 		List<Diagnosis> diagnosisList;
 		Iterator<Diagnosis> diagnosisIterator;
 		if ( warcRecord.diagnostics.hasErrors() ) {
-			String warcTypeStr = warcRecord.warcTypeStr;
+			String warcTypeStr = warcRecord.header.warcTypeStr;
 			if ( warcTypeStr == null || warcTypeStr.length() == 0 ) {
 				warcTypeStr = "unknown";
 			}
@@ -181,7 +181,7 @@ public class TestFileResult {
 			showDiagnosisList(diagnosisIterator, out);
 		}
 		if ( warcRecord.diagnostics.hasWarnings() ) {
-			String warcTypeStr = warcRecord.warcTypeStr;
+			String warcTypeStr = warcRecord.header.warcTypeStr;
 			if ( warcTypeStr == null || warcTypeStr.length() == 0 ) {
 				warcTypeStr = "unknown";
 			}
