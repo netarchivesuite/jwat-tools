@@ -9,6 +9,7 @@ public class JWATTools {
 	public static final int A_SHOW_ERRORS = 5;
 	public static final int A_RECURSIVE = 6;
 	public static final int A_WORKERS = 6;
+	public static final int A_INTERVAL = 7;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -36,6 +37,7 @@ public class JWATTools {
 		cmdLine.addOption( "-r", A_RECURSIVE );
 		cmdLine.addOption( "-w=", A_WORKERS );
 		cmdLine.addOption( "--test", A_TEST );
+		cmdLine.addOption( "-i", A_INTERVAL );
 		cmdLine.addListArgument( "files", A_FILES, 1, Integer.MAX_VALUE );
 		try {
 			arguments = cmdLine.parse( args );
@@ -76,6 +78,9 @@ public class JWATTools {
 			}
 			else if ( arguments.idMap.containsKey( A_TEST ) ) {
 				new TestTask( arguments );
+			}
+			else if ( arguments.idMap.containsKey( A_INTERVAL ) ) {
+				new IntervalTask( arguments );
 			}
 		}
 	}

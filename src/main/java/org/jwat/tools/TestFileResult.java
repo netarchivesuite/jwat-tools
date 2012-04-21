@@ -118,7 +118,8 @@ public class TestFileResult {
 				err.println( "#" );
 				err.println( "# Exception while processing '" + file + "'" );
 				err.println( "#" );
-				err.println( "Offset: " + itemThrowable.offset + " (0x" + (Long.toHexString(itemThrowable.offset)) + ")" );
+				err.println( "StartOffset: " + itemThrowable.startOffset + " (0x" + (Long.toHexString(itemThrowable.startOffset)) + ")" );
+				err.println( "     Offset: " + itemThrowable.offset + " (0x" + (Long.toHexString(itemThrowable.offset)) + ")" );
 				itemThrowable.t.printStackTrace( err );
 			}
 		}

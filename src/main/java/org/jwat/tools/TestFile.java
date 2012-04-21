@@ -81,6 +81,10 @@ public class TestFile {
 		GzipReader gzipReader = null;
 		ArcReader arcReader = null;
 		WarcReader warcReader = null;
+		GzipEntry gzipEntry = null;
+		ArcVersionBlock versionBlock = null;
+		ArcRecord arcRecord = null;
+		WarcRecord warcRecord = null;
 		TestFileResult result = new TestFileResult();
 		TestFileResultItemDiagnosis itemDiagnosis;
 		TestFileResultItemThrowable itemThrowable;
@@ -89,7 +93,6 @@ public class TestFile {
 			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( new FileInputStream( file ), 8192 ), 16 );
 			if ( GzipReader.isGzipped( pbin ) ) {
 				gzipReader = new GzipReader( pbin );
-				GzipEntry gzipEntry;
 				ByteCountingPushBackInputStream in;
 				byte[] buffer = new byte[ 8192 ];
 				while ( (gzipEntry = gzipReader.getNextEntry()) != null ) {
@@ -101,19 +104,19 @@ public class TestFile {
 							arcReader = ArcReaderFactory.getReaderUncompressed();
 							arcReader.setBlockDigestEnabled( true );
 							arcReader.setPayloadDigestEnabled( true );
-							ArcVersionBlock version = arcReader.getVersionBlockFrom( in, gzipEntry.getStartOffset() );
-							if ( version != null ) {
+							versionBlock = arcReader.getVersionBlockFrom( in, gzipEntry.getStartOffset() );
+							if ( versionBlock != null ) {
 							    ++result.arcRecords;
-							    version.close();
-								result.arcErrors += version.diagnostics.getErrors().size();
-								result.arcWarnings += version.diagnostics.getWarnings().size();
+							    versionBlock.close();
+								result.arcErrors += versionBlock.diagnostics.getErrors().size();
+								result.arcWarnings += versionBlock.diagnostics.getWarnings().size();
 								if ( bShowErrors ) {
 									//TestResult.showArcErrors( srcFile, version, System.out );
-									if (version.diagnostics.hasErrors() || version.diagnostics.hasWarnings()) {
+									if (versionBlock.diagnostics.hasErrors() || versionBlock.diagnostics.hasWarnings()) {
 										itemDiagnosis = new TestFileResultItemDiagnosis();
 										itemDiagnosis.offset = gzipReader.getStartOffset();
-										itemDiagnosis.errors = version.diagnostics.getErrors();
-										itemDiagnosis.warnings = version.diagnostics.getWarnings();
+										itemDiagnosis.errors = versionBlock.diagnostics.getErrors();
+										itemDiagnosis.warnings = versionBlock.diagnostics.getWarnings();
 										result.rdList.add(itemDiagnosis);
 									}
 								}
@@ -134,7 +137,7 @@ public class TestFile {
 						if ( result.gzipEntries > 1 ) {
 							boolean b = true;
 							while ( b ) {
-								ArcRecord arcRecord = arcReader.getNextRecordFrom( in, gzipEntry.getStartOffset() );
+								arcRecord = arcReader.getNextRecordFrom( in, gzipEntry.getStartOffset() );
 								if ( arcRecord != null ) {
 								    ++result.arcRecords;
 								    arcRecord.close();
@@ -158,7 +161,6 @@ public class TestFile {
 						}
 					}
 					else if ( warcReader != null ) {
-						WarcRecord warcRecord;
 						while ( (warcRecord = warcReader.getNextRecordFrom( in, gzipEntry.getStartOffset() ) ) != null ) {
 							++result.warcRecords;
 							warcRecord.close();
@@ -211,19 +213,19 @@ public class TestFile {
 				arcReader = ArcReaderFactory.getReaderUncompressed( pbin );
 				arcReader.setBlockDigestEnabled( true );
 				arcReader.setPayloadDigestEnabled( true );
-				ArcVersionBlock version = arcReader.getVersionBlock();
-				if ( version != null ) {
+				versionBlock = arcReader.getVersionBlock();
+				if ( versionBlock != null ) {
 				    ++result.arcRecords;
-				    version.close();
-					result.arcErrors += version.diagnostics.getErrors().size();
-					result.arcWarnings += version.diagnostics.getWarnings().size();
+				    versionBlock.close();
+					result.arcErrors += versionBlock.diagnostics.getErrors().size();
+					result.arcWarnings += versionBlock.diagnostics.getWarnings().size();
 					if ( bShowErrors ) {
 						//TestResult.showArcErrors( srcFile, version, System.out );
-						if (version.diagnostics.hasErrors() || version.diagnostics.hasWarnings()) {
+						if (versionBlock.diagnostics.hasErrors() || versionBlock.diagnostics.hasWarnings()) {
 							itemDiagnosis = new TestFileResultItemDiagnosis();
 							itemDiagnosis.offset = arcReader.getStartOffset();
-							itemDiagnosis.errors = version.diagnostics.getErrors();
-							itemDiagnosis.warnings = version.diagnostics.getWarnings();
+							itemDiagnosis.errors = versionBlock.diagnostics.getErrors();
+							itemDiagnosis.warnings = versionBlock.diagnostics.getWarnings();
 							result.rdList.add(itemDiagnosis);
 						}
 					}
@@ -232,7 +234,7 @@ public class TestFile {
 					}
 					boolean b = true;
 					while ( b ) {
-						ArcRecord arcRecord = arcReader.getNextRecord();
+						arcRecord = arcReader.getNextRecord();
 						if ( arcRecord != null ) {
 						    ++result.arcRecords;
 							//System.out.println(arcRecords + " - " + arcRecord.getStartOffset() + " (0x" + (Long.toHexString(arcRecord.getStartOffset())) + ")");
@@ -265,7 +267,6 @@ public class TestFile {
 				warcReader = WarcReaderFactory.getReader( pbin );
 				warcReader.setBlockDigestEnabled( true );
 				warcReader.setPayloadDigestEnabled( true );
-				WarcRecord warcRecord;
 				while ( (warcRecord = warcReader.getNextRecord()) != null ) {
 					++result.warcRecords;
 					//System.out.println(warcRecords + " - " + warcRecord.getStartOffset() + " (0x" + (Long.toHexString(warcRecord.getStartOffset())) + ")");
@@ -297,6 +298,28 @@ public class TestFile {
 		catch (Throwable t) {
 			++result.runtimeErrors;
 			itemThrowable = new TestFileResultItemThrowable();
+			long startOffset = -1;
+			Long length = null;
+			if (versionBlock != null) {
+				startOffset = versionBlock.getStartOffset();
+				length = versionBlock.getLength();
+			}
+			if (arcRecord != null) {
+				startOffset = arcRecord.getStartOffset();
+				length = arcRecord.getLength();
+			}
+			if (warcRecord != null) {
+				startOffset = warcRecord.getStartOffset();
+				length = warcRecord.header.contentLength;
+			}
+			if (gzipEntry != null) {
+				startOffset = gzipEntry.getStartOffset();
+				length = gzipEntry.comp_isize;
+			}
+			if (length != null) {
+				startOffset += length;
+			}
+			itemThrowable.startOffset = startOffset;
 			itemThrowable.offset = pbin.getConsumed();
 			itemThrowable.t = t;
 			result.throwableList.add(itemThrowable);

@@ -90,6 +90,7 @@ public class CompressTask extends Task {
 			if (raf != null) {
 				try {
 					raf.close();
+					raf = null;
 				}
 				catch (IOException e) {
 				}
