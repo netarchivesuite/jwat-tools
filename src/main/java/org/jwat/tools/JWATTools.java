@@ -10,6 +10,8 @@ public class JWATTools {
 	public static final int A_RECURSIVE = 6;
 	public static final int A_WORKERS = 6;
 	public static final int A_INTERVAL = 7;
+	public static final int A_UNPACK = 8;
+	public static final int A_CONVERT = 9;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -38,6 +40,8 @@ public class JWATTools {
 		cmdLine.addOption( "-w=", A_WORKERS );
 		cmdLine.addOption( "--test", A_TEST );
 		cmdLine.addOption( "-i", A_INTERVAL );
+		cmdLine.addOption( "-u", A_UNPACK );
+		cmdLine.addOption( "-c", A_CONVERT );
 		cmdLine.addListArgument( "files", A_FILES, 1, Integer.MAX_VALUE );
 		try {
 			arguments = cmdLine.parse( args );
@@ -68,6 +72,9 @@ public class JWATTools {
 			System.out.println( " -r   recursive" );
 			System.out.println( " -1   compress faster" );
 			System.out.println( " -9   compress better" );
+			System.out.println( " -i   interval extract" );
+			System.out.println( " -u   unpack multifile gzip" );
+			System.out.println( " -c   convert arc to warc" );
 		}
 		else {
 			if ( arguments.idMap.containsKey( A_DECOMPRESS ) ) {
@@ -81,6 +88,12 @@ public class JWATTools {
 			}
 			else if ( arguments.idMap.containsKey( A_INTERVAL ) ) {
 				new IntervalTask( arguments );
+			}
+			else if ( arguments.idMap.containsKey( A_UNPACK ) ) {
+				new UnpackTask( arguments );
+			}
+			else if ( arguments.idMap.containsKey( A_CONVERT ) ) {
+				new ConvertTask( arguments );
 			}
 		}
 	}
