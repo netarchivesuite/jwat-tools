@@ -81,12 +81,12 @@ public class ConvertTask extends Task {
 
 			    record = WarcRecord.createRecord(writer);
 				record.header.addHeader("WARC-Type", "warcinfo");
-				record.header.addHeader("WARC-Date", cal.getTime());
+				record.header.addHeader("WARC-Date", cal.getTime(), null);
 				record.header.addHeader("WARC-Filename", dstFname);
 				record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + warcinfoUuid + ">");
 				record.header.addHeader("Content-Type", "application/warc-fields");
 				record.header.addHeader("Content-Length", "0");
-				// Standard says, no.
+				// Standard says no.
 				//record.header.addHeader("WARC-Concurrent-To", "<urn:uuid:" + filedescUuid + ">");
 				writer.writeHeader(record);
 				writer.closeRecord();
@@ -98,7 +98,7 @@ public class ConvertTask extends Task {
 				record = WarcRecord.createRecord(writer);
 				record.header.addHeader("WARC-Type", "metadata");
 				record.header.addHeader("WARC-Target-URI", version.recUrl);
-				record.header.addHeader("WARC-Date", version.archiveDate);
+				record.header.addHeader("WARC-Date", version.archiveDate, version.recArchiveDate);
 				record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + filedescUuid + ">");
 				record.header.addHeader("WARC-Concurrent-To", "<urn:uuid:" + warcinfoUuid + ">");
 				// "WARC-Block-Digest"
@@ -133,7 +133,7 @@ public class ConvertTask extends Task {
 					record = WarcRecord.createRecord(writer);
 					record.header.addHeader("WARC-Type", "metadata");
 					record.header.addHeader("WARC-Target-URI", arcRecord.recUrl);
-					record.header.addHeader("WARC-Date", arcRecord.archiveDate);
+					record.header.addHeader("WARC-Date", arcRecord.archiveDate, arcRecord.recArchiveDate);
 					record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + recordUuid + ">");
 					// "WARC-Block-Digest"
 					// "WARC-Payload-Digest"

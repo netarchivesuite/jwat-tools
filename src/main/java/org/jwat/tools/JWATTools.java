@@ -57,7 +57,7 @@ public class JWATTools {
 			System.exit( 1 );
 		}
 		if ( arguments == null ) {
-			System.out.println( "JWATTools v0.4.0" );
+			System.out.println( "JWATTools v0.5.0" );
 			/*
 			System.out.println( "usage: JWATTools [-dt19] [file ...]" );
 			System.out.println( " -t --test        test compressed file integrity" );
