@@ -81,7 +81,7 @@ public abstract class Task {
 	}
 
 	static class AcceptWildcardFileFilter implements FileFilter {
-		WildcardMatcher wm;
+		private WildcardMatcher wm;
 		public AcceptWildcardFileFilter(String pattern) {
 			wm = new WildcardMatcher(pattern);
 		}

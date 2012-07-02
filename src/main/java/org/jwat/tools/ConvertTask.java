@@ -20,7 +20,7 @@ import org.jwat.arc.ArcReaderFactory;
 import org.jwat.arc.ArcRecord;
 import org.jwat.arc.ArcVersionBlock;
 import org.jwat.common.ByteCountingPushBackInputStream;
-import org.jwat.common.HttpResponse;
+import org.jwat.common.HttpHeader;
 import org.jwat.common.Payload;
 import org.jwat.warc.WarcRecord;
 import org.jwat.warc.WarcWriter;
@@ -61,7 +61,7 @@ public class ConvertTask extends Task {
 				WarcWriter writer = WarcWriterFactory.getWriter(out, 8192, false);
 				WarcRecord record;
 				Payload payload;
-				HttpResponse httpResponse;
+				HttpHeader httpResponse;
 				InputStream in;
 				String contentLength;
 				String contentType;
@@ -118,7 +118,7 @@ public class ConvertTask extends Task {
 				}
 				writer.writeHeader(record);
 				if (in != null) {
-					writer.streamPayload(in, 0);
+					writer.streamPayload(in);
 				}
 				writer.closeRecord();
 
@@ -143,7 +143,7 @@ public class ConvertTask extends Task {
 					payload = arcRecord.getPayload();
 					httpResponse = null;
 					if (payload != null) {
-						httpResponse = payload.getHttpResponse();
+						httpResponse = payload.getHttpHeader();
 					}
 					if (httpResponse != null && httpResponse.isValid()) {
 						contentType = "application/http; msgtype=response";
@@ -160,11 +160,11 @@ public class ConvertTask extends Task {
 					writer.writeHeader(record);
 					if (httpResponse != null && httpResponse.isValid()) {
 						in = new ByteArrayInputStream(httpResponse.getHeader());
-						writer.streamPayload(in, 0);
+						writer.streamPayload(in);
 					}
 					if (payload != null) {
 						in = payload.getInputStream();
-						writer.streamPayload(in, 0);
+						writer.streamPayload(in);
 					}
 					writer.closeRecord();
 				}
