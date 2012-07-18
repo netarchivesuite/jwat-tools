@@ -14,8 +14,7 @@ import java.util.zip.Deflater;
 
 import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcReaderFactory;
-import org.jwat.arc.ArcRecord;
-import org.jwat.arc.ArcVersionBlock;
+import org.jwat.arc.ArcRecordBase;
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.Payload;
 import org.jwat.gzip.GzipConstants;
@@ -161,8 +160,7 @@ public class CompressTask extends Task {
         GzipEntry entry = null;
         OutputStream cout = null;
 		ArcReader arcReader = null;
-		ArcVersionBlock version;
-		ArcRecord arcRecord;
+		ArcRecordBase arcRecord;
 		Payload payload;
 		int read;
         byte[] buffer = new byte[16384];
@@ -173,10 +171,9 @@ public class CompressTask extends Task {
 	        entry = null;
 
 	        arcReader = ArcReaderFactory.getReaderUncompressed( in );
-			arcReader.setBlockDigestEnabled( true );
-			arcReader.setPayloadDigestEnabled( true );
-			version = arcReader.getVersionBlock();
-			if ( version != null ) {
+			arcReader.setBlockDigestEnabled( false );
+			arcReader.setPayloadDigestEnabled( false );
+			while ((arcRecord = arcReader.getNextRecord()) != null) {
 		        entry = new GzipEntry();
 		        entry.magic = GzipConstants.GZIP_MAGIC;
 		        entry.cm = GzipConstants.CM_DEFLATE;
@@ -187,9 +184,9 @@ public class CompressTask extends Task {
 		        writer.writeEntryHeader(entry);
 
 		        cout = entry.getOutputStream();
-		        //cout.write(version.headerBytes);
+		        //cout.write(arcRecord.headerBytes);
 
-				payload = version.getPayload();
+				payload = arcRecord.getPayload();
 				if (payload != null) {
 					pin = payload.getInputStreamComplete();
 			        while ((read = pin.read(buffer, 0, 16384)) != -1) {
@@ -199,33 +196,7 @@ public class CompressTask extends Task {
 
 				cout.close();
 
-				version.close();
-
-				while ((arcRecord = arcReader.getNextRecord()) != null) {
-			        entry = new GzipEntry();
-			        entry.magic = GzipConstants.GZIP_MAGIC;
-			        entry.cm = GzipConstants.CM_DEFLATE;
-			        entry.flg = 0;
-			        entry.mtime = System.currentTimeMillis() / 1000;
-			        entry.xfl = 0;
-			        entry.os = GzipConstants.OS_UNKNOWN;
-			        writer.writeEntryHeader(entry);
-
-			        cout = entry.getOutputStream();
-			        //cout.write(arcRecord.headerBytes);
-
-					payload = arcRecord.getPayload();
-					if (payload != null) {
-						pin = payload.getInputStreamComplete();
-				        while ((read = pin.read(buffer, 0, 16384)) != -1) {
-				        	cout.write(buffer, 0, read);
-				        }
-					}
-
-					cout.close();
-
-			        arcRecord.close();
-				}
+		        arcRecord.close();
 			}
 		} catch (Throwable t) {
 			t.printStackTrace();

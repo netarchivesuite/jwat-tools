@@ -17,11 +17,11 @@ import java.util.UUID;
 
 import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcReaderFactory;
-import org.jwat.arc.ArcRecord;
-import org.jwat.arc.ArcVersionBlock;
+import org.jwat.arc.ArcRecordBase;
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.HttpHeader;
 import org.jwat.common.Payload;
+import org.jwat.common.PayloadWithHeaderAbstract;
 import org.jwat.warc.WarcRecord;
 import org.jwat.warc.WarcWriter;
 import org.jwat.warc.WarcWriterFactory;
@@ -54,121 +54,142 @@ public class ConvertTask extends Task {
 				dstFname += ".warc";
 
 				ArcReader reader = ArcReaderFactory.getReader(pbin, 8192);
+				ArcRecordBase arcRecord;
 
 				System.out.println(srcFname + " -> " + dstFname);
 
-				out = new BufferedOutputStream(new FileOutputStream(dstFname), 8192);
-				WarcWriter writer = WarcWriterFactory.getWriter(out, 8192, false);
-				WarcRecord record;
-				Payload payload;
-				HttpHeader httpResponse;
-				InputStream in;
-				String contentLength;
-				String contentType;
-
 				/*
-				 * Conversion warcinfo.
+				 * Check for first record.
 				 */
 
-				ArcVersionBlock version = reader.getVersionBlock();
+				arcRecord = reader.getNextRecord();
+				if (arcRecord != null) {
+					out = new BufferedOutputStream(new FileOutputStream(dstFname), 8192);
+					WarcWriter writer = WarcWriterFactory.getWriter(out, 8192, false);
+					WarcRecord record;
+					Payload payload;
+					PayloadWithHeaderAbstract payloadHeaderWrapped;
+					HttpHeader httpResponse;
+					InputStream in;
+					Long contentLength;
+					String contentType;
 
-				UUID warcinfoUuid = UUID.randomUUID();
-			    UUID filedescUuid = UUID.randomUUID();
+					/*
+					 * Conversion warcinfo.
+					 */
 
-			    GregorianCalendar cal = new GregorianCalendar();
-			    cal.setTimeZone(TimeZone.getTimeZone("UTC"));
-			    cal.setTimeInMillis(System.currentTimeMillis());
+					UUID warcinfoUuid = UUID.randomUUID();
+				    UUID filedescUuid = UUID.randomUUID();
 
-			    record = WarcRecord.createRecord(writer);
-				record.header.addHeader("WARC-Type", "warcinfo");
-				record.header.addHeader("WARC-Date", cal.getTime(), null);
-				record.header.addHeader("WARC-Filename", dstFname);
-				record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + warcinfoUuid + ">");
-				record.header.addHeader("Content-Type", "application/warc-fields");
-				record.header.addHeader("Content-Length", "0");
-				// Standard says no.
-				//record.header.addHeader("WARC-Concurrent-To", "<urn:uuid:" + filedescUuid + ">");
-				writer.writeHeader(record);
-				writer.closeRecord();
+				    GregorianCalendar cal = new GregorianCalendar();
+				    cal.setTimeZone(TimeZone.getTimeZone("UTC"));
+				    cal.setTimeInMillis(System.currentTimeMillis());
 
-				/*
-				 * Filedesc metadata.
-				 */
-
-				record = WarcRecord.createRecord(writer);
-				record.header.addHeader("WARC-Type", "metadata");
-				record.header.addHeader("WARC-Target-URI", version.recUrl);
-				record.header.addHeader("WARC-Date", version.archiveDate, version.recArchiveDate);
-				record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + filedescUuid + ">");
-				record.header.addHeader("WARC-Concurrent-To", "<urn:uuid:" + warcinfoUuid + ">");
-				// "WARC-Block-Digest"
-				// "WARC-Payload-Digest"
-				contentLength = "0";
-				contentType = null;
-				in = null;
-				payload = record.getPayload();
-				if (version.xml != null && version.xml.length() > 0) {
-					contentLength = Long.toString(version.xml.length());
-					contentType = version.recContentType;
-					in = new ByteArrayInputStream(version.xml.getBytes("ISO8859-1"));
-				}
-				record.header.addHeader("Content-Length", contentLength);
-				if (contentType != null) {
-					record.header.addHeader("Content-Type", contentType);
-				}
-				writer.writeHeader(record);
-				if (in != null) {
-					writer.streamPayload(in);
-				}
-				writer.closeRecord();
-
-				/*
-				 * Records.
-				 */
-
-				ArcRecord arcRecord;
-				UUID recordUuid;
-				while ((arcRecord = reader.getNextRecord()) != null) {
-					recordUuid = UUID.randomUUID();
-					record = WarcRecord.createRecord(writer);
-					record.header.addHeader("WARC-Type", "metadata");
-					record.header.addHeader("WARC-Target-URI", arcRecord.recUrl);
-					record.header.addHeader("WARC-Date", arcRecord.archiveDate, arcRecord.recArchiveDate);
-					record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + recordUuid + ">");
-					// "WARC-Block-Digest"
-					// "WARC-Payload-Digest"
-					contentLength = "0";
-					contentType = null;
-					in = null;
-					payload = arcRecord.getPayload();
-					httpResponse = null;
-					if (payload != null) {
-						httpResponse = payload.getHttpHeader();
-					}
-					if (httpResponse != null && httpResponse.isValid()) {
-						contentType = "application/http; msgtype=response";
-					} else {
-						contentType = arcRecord.recContentType;
-					}
-					if (payload != null) {
-						contentLength = Long.toString(arcRecord.recLength);
-					}
-					record.header.addHeader("Content-Length", contentLength);
-					if (contentType != null) {
-						record.header.addHeader("Content-Type", contentType);
-					}
+				    record = WarcRecord.createRecord(writer);
+					record.header.addHeader("WARC-Type", "warcinfo");
+					record.header.addHeader("WARC-Date", cal.getTime(), null);
+					record.header.addHeader("WARC-Filename", dstFname);
+					record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + warcinfoUuid + ">");
+					record.header.addHeader("Content-Type", "application/warc-fields");
+					record.header.addHeader("Content-Length", "0");
+					// Standard says no.
+					//record.header.addHeader("WARC-Concurrent-To", "<urn:uuid:" + filedescUuid + ">");
 					writer.writeHeader(record);
-					if (httpResponse != null && httpResponse.isValid()) {
-						in = new ByteArrayInputStream(httpResponse.getHeader());
-						writer.streamPayload(in);
-					}
-					if (payload != null) {
-						in = payload.getInputStream();
-						writer.streamPayload(in);
-					}
 					writer.closeRecord();
+
+					/*
+					 * Filedesc metadata.
+					 */
+
+					if (arcRecord.recordType == ArcRecordBase.RT_VERSION_BLOCK) {
+						record = WarcRecord.createRecord(writer);
+						record.header.addHeader("WARC-Type", "metadata");
+						record.header.addHeader("WARC-Target-URI", arcRecord.header.urlUri, arcRecord.header.urlStr );
+						record.header.addHeader("WARC-Date", arcRecord.header.archiveDate, arcRecord.header.archiveDateStr);
+						record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + filedescUuid + ">");
+						record.header.addHeader("WARC-Concurrent-To", "<urn:uuid:" + warcinfoUuid + ">");
+						// "WARC-Block-Digest"
+						// "WARC-Payload-Digest"
+						contentLength = 0L;
+						contentType = "text/plain";
+						in = null;
+						payload = record.getPayload();
+						if (payload != null) {
+							// TODO ADd record line when available in JWAT.
+							in = payload.getInputStreamComplete();
+							contentLength = payload.getTotalLength();
+						}
+						record.header.addHeader("Content-Length", contentLength, null);
+						if (contentType != null) {
+							record.header.addHeader("Content-Type", contentType);
+						}
+						writer.writeHeader(record);
+						if (in != null) {
+							writer.streamPayload(in);
+						}
+						writer.closeRecord();
+					}
+					else {
+						// TODO no version block.
+					}
+
+					/*
+					 * Records.
+					 */
+
+					UUID recordUuid;
+					while ((arcRecord = reader.getNextRecord()) != null) {
+						recordUuid = UUID.randomUUID();
+						record = WarcRecord.createRecord(writer);
+						record.header.addHeader("WARC-Type", "metadata");
+						record.header.addHeader("WARC-Target-URI", arcRecord.header.urlUri, arcRecord.header.urlStr);
+						record.header.addHeader("WARC-Date", arcRecord.header.archiveDate, arcRecord.header.archiveDateStr);
+						record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + recordUuid + ">");
+						// "WARC-Block-Digest"
+						// "WARC-Payload-Digest"
+						contentLength = 0L;
+						contentType = null;
+						in = null;
+						payload = arcRecord.getPayload();
+						httpResponse = null;
+						if (payload != null) {
+							payloadHeaderWrapped = payload.getPayloadHeaderWrapped();
+							if (payloadHeaderWrapped instanceof HttpHeader) {
+								httpResponse = (HttpHeader)payloadHeaderWrapped;
+								if (httpResponse != null && httpResponse.isValid()) {
+									if (httpResponse.headerType == HttpHeader.HT_RESPONSE) {
+										contentType = "application/http; msgtype=response";
+									}
+									else if (httpResponse.headerType == HttpHeader.HT_REQUEST) {
+										contentType = "application/http; msgtype=request";
+									}
+									else {
+										throw new IllegalStateException("Unknown header type!");
+									}
+								} else {
+									contentType = arcRecord.header.contentTypeStr;
+								}
+							}
+							contentLength = arcRecord.header.archiveLength;
+						}
+						record.header.addHeader("Content-Length", contentLength, null);
+						if (contentType != null) {
+							record.header.addHeader("Content-Type", contentType);
+						}
+						writer.writeHeader(record);
+						if (httpResponse != null && httpResponse.isValid()) {
+							in = new ByteArrayInputStream(httpResponse.getHeader());
+							writer.streamPayload(in);
+						} else if (payload != null) {
+							in = payload.getInputStream();
+							writer.streamPayload(in);
+						}
+						writer.closeRecord();
+					}
+					writer.close();
+				} else {
+					// TODO no records.
 				}
-				writer.close();
 			}
 		}
 		catch (FileNotFoundException e) {
@@ -193,7 +214,6 @@ public class ConvertTask extends Task {
 				}
 			}
 		}
-		
 	}
 
 }
