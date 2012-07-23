@@ -115,7 +115,6 @@ public class TestFile {
 						}
 					}
 					if ( arcReader != null ) {
-						boolean b = true;
 						while ( (arcRecord = arcReader.getNextRecordFrom( in, gzipEntry.getStartOffset() )) != null ) {
 						    ++result.arcRecords;
 						    arcRecord.close();
@@ -187,7 +186,6 @@ public class TestFile {
 				arcReader = ArcReaderFactory.getReaderUncompressed( pbin );
 				arcReader.setBlockDigestEnabled( true );
 				arcReader.setPayloadDigestEnabled( true );
-				boolean b = true;
 				while ( (arcRecord = arcReader.getNextRecord()) != null ) {
 				    ++result.arcRecords;
 					//System.out.println(arcRecords + " - " + arcRecord.getStartOffset() + " (0x" + (Long.toHexString(arcRecord.getStartOffset())) + ")");
@@ -250,7 +248,7 @@ public class TestFile {
 			Long length = null;
 			if (arcRecord != null) {
 				startOffset = arcRecord.getStartOffset();
-				length = arcRecord.getLength();
+				length = arcRecord.header.archiveLength;
 			}
 			if (warcRecord != null) {
 				startOffset = warcRecord.getStartOffset();
