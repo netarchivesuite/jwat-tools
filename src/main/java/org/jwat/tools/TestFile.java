@@ -256,7 +256,8 @@ public class TestFile {
 			}
 			if (gzipEntry != null) {
 				startOffset = gzipEntry.getStartOffset();
-				length = gzipEntry.comp_isize;
+				// TODO correct entry size including header+trailer.
+				length = gzipEntry.compressed_size;
 			}
 			if (length != null) {
 				startOffset += length;
