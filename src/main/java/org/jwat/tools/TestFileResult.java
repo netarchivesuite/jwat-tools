@@ -205,16 +205,38 @@ public class TestFileResult {
 			out.println( "         Type: " + diagnosis.type.name() );
 			out.println( "       Entity: " + diagnosis.entity );
 			switch (diagnosis.type) {
+			/*
+			 * 0
+			 */
 			case EMPTY:
 			case INVALID:
+			case RECOMMENDED_MISSING:
+			case REQUIRED_MISSING:
 				break;
-			case RECOMMENDED:
+			/*
+			 * 1
+			 */
+			case DUPLICATE:
+			case INVALID_DATA:
+			case RESERVED:
+			case UNKNOWN:
 				if (diagnosis.information != null) {
 					if (diagnosis.information.length >= 1) {
-						out.println( "  Recommended: " + diagnosis.information[0] );
+						out.println( "        Value: " + diagnosis.information[0] );
 					}
-					if (diagnosis.information.length >= 2) {
-						out.println( "   Instead of: " + diagnosis.information[1] );
+				}
+				break;
+			case ERROR_EXPECTED:
+				if (diagnosis.information != null) {
+					if (diagnosis.information.length >= 1) {
+						out.println( "     Expected: " + diagnosis.information[0] );
+					}
+				}
+				break;
+			case ERROR:
+				if (diagnosis.information != null) {
+					if (diagnosis.information.length >= 1) {
+						out.println( "  Description: " + diagnosis.information[0] );
 					}
 				}
 				break;
@@ -226,20 +248,38 @@ public class TestFileResult {
 					}
 				}
 				break;
-			case DUPLICATE:
-			case RESERVED:
-			case UNKNOWN:
-			case INVALID_DATA:
-				out.println( "        Value: " + diagnosis.information[0] );
-				break;
+			/*
+			 * 2
+			 */
 			case INVALID_ENCODING:
-				out.println( "        Value: " + diagnosis.information[0] );
-				out.println( "     Encoding: " + diagnosis.information[1] );
+				if (diagnosis.information != null) {
+					if (diagnosis.information.length >= 1) {
+						out.println( "        Value: " + diagnosis.information[0] );
+					}
+					if (diagnosis.information.length >= 2) {
+						out.println( "     Encoding: " + diagnosis.information[1] );
+					}
+				}
 				break;
 			case INVALID_EXPECTED:
-				out.println( "        Value: " + diagnosis.information[0] );
-			case ERROR_EXPECTED:
-				out.println( "     Expected: " + diagnosis.information[1] );
+				if (diagnosis.information != null) {
+					if (diagnosis.information.length >= 1) {
+						out.println( "        Value: " + diagnosis.information[0] );
+					}
+					if (diagnosis.information.length >= 2) {
+						out.println( "     Expected: " + diagnosis.information[1] );
+					}
+				}
+				break;
+			case RECOMMENDED:
+				if (diagnosis.information != null) {
+					if (diagnosis.information.length >= 1) {
+						out.println( "  Recommended: " + diagnosis.information[0] );
+					}
+					if (diagnosis.information.length >= 2) {
+						out.println( "   Instead of: " + diagnosis.information[1] );
+					}
+				}
 				break;
 			}
 		}
