@@ -180,7 +180,8 @@ public class ConvertTask extends Task {
 						if (httpResponse != null && httpResponse.isValid()) {
 							in = new ByteArrayInputStream(httpResponse.getHeader());
 							writer.streamPayload(in);
-						} else if (payload != null) {
+						}
+						if (payload != null) {
 							in = payload.getInputStream();
 							writer.streamPayload(in);
 						}
