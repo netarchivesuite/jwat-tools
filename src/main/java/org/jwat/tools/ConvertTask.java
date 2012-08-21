@@ -141,7 +141,7 @@ public class ConvertTask extends Task {
 					while ((arcRecord = reader.getNextRecord()) != null) {
 						recordUuid = UUID.randomUUID();
 						record = WarcRecord.createRecord(writer);
-						record.header.addHeader("WARC-Type", "metadata");
+						record.header.addHeader("WARC-Type", "response");
 						record.header.addHeader("WARC-Target-URI", arcRecord.header.urlUri, arcRecord.header.urlStr);
 						record.header.addHeader("WARC-Date", arcRecord.header.archiveDate, arcRecord.header.archiveDateStr);
 						record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + recordUuid + ">");
