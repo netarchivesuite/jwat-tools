@@ -40,21 +40,26 @@ public class ConvertTask extends Task {
 		ByteCountingPushBackInputStream pbin = null;
 		RandomAccessFile rafIn = null;
 		BufferedOutputStream out = null;
+		boolean bCompressed = false;
 		int count = 0;
 		try {
 			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( new FileInputStream( srcFile ), 8192 ), 16 );
+			// This will totally not work on arc.gz files! 
 			if (ArcReaderFactory.isArcFile(pbin)) {
 				String dstFname = "converted-" + srcFname;
-				if (dstFname.endsWith(".gz")) {
-					dstFname = dstFname.substring( 0, dstFname.length() - 3 );
+				if (dstFname.toLowerCase().endsWith(".gz")) {
+					dstFname = dstFname.substring( 0, dstFname.length() - ".gz".length() );
 				}
-				if (dstFname.endsWith(".arc")) {
-					dstFname = dstFname.substring( 0, dstFname.length() - 4 );
+				if (dstFname.toLowerCase().endsWith(".arc")) {
+					dstFname = dstFname.substring( 0, dstFname.length() - ".arc".length() );
 				}
 				dstFname += ".warc";
 
 				ArcReader reader = ArcReaderFactory.getReader(pbin, 8192);
 				ArcRecordBase arcRecord;
+
+				// Should eventually have an override.
+				bCompressed = reader.isCompressed();
 
 				System.out.println(srcFname + " -> " + dstFname);
 
@@ -65,7 +70,7 @@ public class ConvertTask extends Task {
 				arcRecord = reader.getNextRecord();
 				if (arcRecord != null) {
 					out = new BufferedOutputStream(new FileOutputStream(dstFname), 8192);
-					WarcWriter writer = WarcWriterFactory.getWriter(out, 8192, false);
+					WarcWriter writer = WarcWriterFactory.getWriter(out, 8192, bCompressed);
 					WarcRecord record;
 					Payload payload;
 					PayloadWithHeaderAbstract payloadHeaderWrapped;
@@ -113,9 +118,9 @@ public class ConvertTask extends Task {
 						contentLength = 0L;
 						contentType = "text/plain";
 						in = null;
-						payload = record.getPayload();
+						payload = arcRecord.getPayload();
 						if (payload != null) {
-							// TODO ADd record line when available in JWAT.
+							// TODO Add record line when available in JWAT.
 							in = payload.getInputStreamComplete();
 							contentLength = payload.getTotalLength();
 						}
@@ -132,6 +137,7 @@ public class ConvertTask extends Task {
 					else {
 						// TODO no version block.
 					}
+					arcRecord.close();
 
 					/*
 					 * Records.
@@ -186,6 +192,7 @@ public class ConvertTask extends Task {
 							writer.streamPayload(in);
 						}
 						writer.closeRecord();
+						arcRecord.close();
 					}
 					writer.close();
 				} else {
