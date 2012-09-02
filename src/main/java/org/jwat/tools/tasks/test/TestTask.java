@@ -1,4 +1,4 @@
-package org.jwat.tools;
+package org.jwat.tools.tasks.test;
 
 import java.io.File;
 import java.util.List;
@@ -10,6 +10,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import org.jwat.tools.CommandLine;
+import org.jwat.tools.JWATTools;
+import org.jwat.tools.ProgressableOutput;
+import org.jwat.tools.SynchronizedOutput;
+import org.jwat.tools.Task;
+import org.jwat.tools.CommandLine.Argument;
+import org.jwat.tools.CommandLine.Arguments;
 
 public class TestTask extends Task {
 

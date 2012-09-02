@@ -1,4 +1,4 @@
-package org.jwat.tools;
+package org.jwat.tools.tasks.test;
 
 import java.io.File;
 import java.io.PrintStream;

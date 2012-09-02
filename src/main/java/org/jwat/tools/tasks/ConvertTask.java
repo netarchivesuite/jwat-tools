@@ -1,4 +1,4 @@
-package org.jwat.tools;
+package org.jwat.tools.tasks;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -22,6 +22,11 @@ import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.HttpHeader;
 import org.jwat.common.Payload;
 import org.jwat.common.PayloadWithHeaderAbstract;
+import org.jwat.tools.CommandLine;
+import org.jwat.tools.JWATTools;
+import org.jwat.tools.Task;
+import org.jwat.tools.CommandLine.Argument;
+import org.jwat.tools.CommandLine.Arguments;
 import org.jwat.warc.WarcRecord;
 import org.jwat.warc.WarcWriter;
 import org.jwat.warc.WarcWriterFactory;

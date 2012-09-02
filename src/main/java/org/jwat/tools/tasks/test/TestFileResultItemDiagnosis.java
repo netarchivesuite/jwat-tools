@@ -1,4 +1,4 @@
-package org.jwat.tools;
+package org.jwat.tools.tasks.test;
 
 import java.util.LinkedList;
 import java.util.List;

@@ -1,4 +1,4 @@
-package org.jwat.tools;
+package org.jwat.tools.tasks;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -21,6 +21,9 @@ import org.jwat.gzip.GzipConstants;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
 import org.jwat.gzip.GzipWriter;
+import org.jwat.tools.CommandLine;
+import org.jwat.tools.JWATTools;
+import org.jwat.tools.Task;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcReaderFactory;
 import org.jwat.warc.WarcRecord;

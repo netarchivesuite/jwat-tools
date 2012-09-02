@@ -347,7 +347,7 @@ public class CommandLine {
 		return args;
 	}
 
-	static class ArgumentDefinition {
+	public static class ArgumentDefinition {
 		static final int AT_MMT = 1;
 		static final int AT_MC = 2;
 		static final int AT_TXT = 3;
@@ -358,27 +358,27 @@ public class CommandLine {
 		static final int SVT_OPTIONAL_CHAR = 1;
 		static final int SVT_REQUIRED_CHAR = 2;
 		static final int SVT_TEXT = 3;
-		byte type;
-		int id;
-		int subId;
-		String name;
-		byte valueType = VT_NONE;
-		byte shortValueType = SVT_NONE;
-		String shortValueOptions;
-		int min;
-		int max;
+		public byte type;
+		public int id;
+		public int subId;
+		public String name;
+		public byte valueType = VT_NONE;
+		public byte shortValueType = SVT_NONE;
+		public String shortValueOptions;
+		public int min;
+		public int max;
 	}
 
 	public static class Argument {
-		ArgumentDefinition argDef;
-		String value;
-		List<String> values = new LinkedList<String>();
+		public ArgumentDefinition argDef;
+		public String value;
+		public List<String> values = new LinkedList<String>();
 	}
 
 	public static class Arguments {
-		List<Argument> switchArgsList = new LinkedList<Argument>();
-		Map<Integer, Argument> idMap = new TreeMap<Integer, Argument>();
-		List<String> unnamedArgsList = new LinkedList<String>();
+		public List<Argument> switchArgsList = new LinkedList<Argument>();
+		public Map<Integer, Argument> idMap = new TreeMap<Integer, Argument>();
+		public List<String> unnamedArgsList = new LinkedList<String>();
 	}
 
 	public static class ParseException extends IOException {

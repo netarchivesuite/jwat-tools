@@ -1,4 +1,4 @@
-package org.jwat.tools;
+package org.jwat.tools.tasks;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -12,6 +12,11 @@ import java.util.List;
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
+import org.jwat.tools.CommandLine;
+import org.jwat.tools.JWATTools;
+import org.jwat.tools.Task;
+import org.jwat.tools.CommandLine.Argument;
+import org.jwat.tools.CommandLine.Arguments;
 
 public class UnpackTask extends Task {
 

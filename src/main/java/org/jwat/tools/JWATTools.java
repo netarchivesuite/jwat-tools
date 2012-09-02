@@ -1,5 +1,12 @@
 package org.jwat.tools;
 
+import org.jwat.tools.tasks.CompressTask;
+import org.jwat.tools.tasks.ConvertTask;
+import org.jwat.tools.tasks.DecompressTask;
+import org.jwat.tools.tasks.IntervalTask;
+import org.jwat.tools.tasks.UnpackTask;
+import org.jwat.tools.tasks.test.TestTask;
+
 public class JWATTools {
 
 	public static final int A_DECOMPRESS = 1;

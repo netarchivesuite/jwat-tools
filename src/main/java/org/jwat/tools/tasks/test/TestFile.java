@@ -1,4 +1,4 @@
-package org.jwat.tools;
+package org.jwat.tools.tasks.test;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -8,8 +8,11 @@ import java.io.IOException;
 
 import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcReaderFactory;
+import org.jwat.arc.ArcRecord;
 import org.jwat.arc.ArcRecordBase;
 import org.jwat.common.ByteCountingPushBackInputStream;
+import org.jwat.common.ContentType;
+import org.jwat.common.Payload;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
 import org.jwat.warc.WarcReader;
@@ -117,6 +120,9 @@ public class TestFile {
 					if ( arcReader != null ) {
 						while ( (arcRecord = arcReader.getNextRecordFrom( in, gzipEntry.getStartOffset() )) != null ) {
 						    ++result.arcRecords;
+						    if (arcRecord.hasPayload() && !arcRecord.hasEmptyPayload()) {
+						    	validate_payload(arcRecord, arcRecord.header.contentType, arcRecord.getPayload());
+						    }
 						    arcRecord.close();
 							result.arcErrors += arcRecord.diagnostics.getErrors().size();
 							result.arcWarnings += arcRecord.diagnostics.getWarnings().size();
@@ -136,6 +142,9 @@ public class TestFile {
 					else if ( warcReader != null ) {
 						while ( (warcRecord = warcReader.getNextRecordFrom( in, gzipEntry.getStartOffset() ) ) != null ) {
 							++result.warcRecords;
+						    if (warcRecord.hasPayload()) {
+						    	validate_payload(warcRecord, warcRecord.header.contentType, warcRecord.getPayload());
+						    }
 							warcRecord.close();
 							result.warcErrors += warcRecord.diagnostics.getErrors().size();
 							result.warcWarnings += warcRecord.diagnostics.getWarnings().size();
@@ -189,6 +198,9 @@ public class TestFile {
 				while ( (arcRecord = arcReader.getNextRecord()) != null ) {
 				    ++result.arcRecords;
 					//System.out.println(arcRecords + " - " + arcRecord.getStartOffset() + " (0x" + (Long.toHexString(arcRecord.getStartOffset())) + ")");
+				    if (arcRecord.hasPayload() && !arcRecord.hasEmptyPayload()) {
+				    	validate_payload(arcRecord, arcRecord.header.contentType, arcRecord.getPayload());
+				    }
 					arcRecord.close();
 					result.arcErrors += arcRecord.diagnostics.getErrors().size();
 					result.arcWarnings += arcRecord.diagnostics.getWarnings().size();
@@ -216,6 +228,9 @@ public class TestFile {
 				while ( (warcRecord = warcReader.getNextRecord()) != null ) {
 					++result.warcRecords;
 					//System.out.println(warcRecords + " - " + warcRecord.getStartOffset() + " (0x" + (Long.toHexString(warcRecord.getStartOffset())) + ")");
+				    if (warcRecord.hasPayload()) {
+				    	validate_payload(warcRecord, warcRecord.header.contentType, warcRecord.getPayload());
+				    }
 					warcRecord.close();
 					result.warcErrors += warcRecord.diagnostics.getErrors().size();
 					result.warcWarnings += warcRecord.diagnostics.getWarnings().size();
@@ -294,5 +309,11 @@ public class TestFile {
 		}
 		return result;
 	}
+
+    public static void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload) {
+    }
+
+    public static void validate_payload(WarcRecord warcRecord, ContentType contentType, Payload payload) {
+    }
 
 }
