@@ -4,7 +4,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -22,11 +21,10 @@ import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.HttpHeader;
 import org.jwat.common.Payload;
 import org.jwat.common.PayloadWithHeaderAbstract;
+import org.jwat.common.RandomAccessFileInputStream;
 import org.jwat.tools.CommandLine;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.Task;
-import org.jwat.tools.CommandLine.Argument;
-import org.jwat.tools.CommandLine.Arguments;
 import org.jwat.warc.WarcRecord;
 import org.jwat.warc.WarcWriter;
 import org.jwat.warc.WarcWriterFactory;
@@ -42,13 +40,16 @@ public class ConvertTask extends Task {
 	@Override
 	public void process(File srcFile) {
 		String srcFname = srcFile.getName();
+		RandomAccessFile raf = null;
+		RandomAccessFileInputStream rafin;
 		ByteCountingPushBackInputStream pbin = null;
-		RandomAccessFile rafIn = null;
 		BufferedOutputStream out = null;
 		boolean bCompressed = false;
 		int count = 0;
 		try {
-			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( new FileInputStream( srcFile ), 8192 ), 16 );
+			raf = new RandomAccessFile( srcFile, "r" );
+			rafin = new RandomAccessFileInputStream( raf );
+			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( rafin, 8192 ), 16 );
 			// This will totally not work on arc.gz files! 
 			if (ArcReaderFactory.isArcFile(pbin)) {
 				String dstFname = "converted-" + srcFname;
@@ -200,6 +201,7 @@ public class ConvertTask extends Task {
 						arcRecord.close();
 					}
 					writer.close();
+					reader.close();
 				} else {
 					// TODO no records.
 				}
@@ -219,9 +221,16 @@ public class ConvertTask extends Task {
 				catch (IOException e) {
 				}
 			}
-			if (rafIn != null) {
+			if (raf != null) {
 				try {
-					rafIn.close();
+					raf.close();
+				}
+				catch (IOException e) {
+				}
+			}
+			if (out != null) {
+				try {
+					out.close();
 				}
 				catch (IOException e) {
 				}

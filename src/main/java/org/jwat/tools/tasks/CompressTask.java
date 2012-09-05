@@ -2,7 +2,6 @@ package org.jwat.tools.tasks;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -17,6 +16,7 @@ import org.jwat.arc.ArcReaderFactory;
 import org.jwat.arc.ArcRecordBase;
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.Payload;
+import org.jwat.common.RandomAccessFileInputStream;
 import org.jwat.gzip.GzipConstants;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
@@ -49,10 +49,13 @@ public class CompressTask extends Task {
 	@Override
 	public void process(File srcFile) {
 		String srcFname = srcFile.getName();
-		ByteCountingPushBackInputStream pbin = null;
 		RandomAccessFile raf = null;
+		RandomAccessFileInputStream rafin;
+		ByteCountingPushBackInputStream pbin = null;
 		try {
-			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( new FileInputStream( srcFile ), 8192 ), 16 );
+			raf = new RandomAccessFile( srcFile, "r" );
+			rafin = new RandomAccessFileInputStream( raf );
+			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( rafin, 8192 ), 16 );
 			if (!GzipReader.isGzipped(pbin)) {
 				String dstFname = srcFname + ".gz";
 				File dstFile = new File( srcFile.getParentFile(), dstFname );

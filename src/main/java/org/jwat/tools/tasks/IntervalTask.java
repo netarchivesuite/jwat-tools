@@ -11,8 +11,6 @@ import java.util.List;
 import org.jwat.tools.CommandLine;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.Task;
-import org.jwat.tools.CommandLine.Argument;
-import org.jwat.tools.CommandLine.Arguments;
 
 public class IntervalTask extends Task {
 

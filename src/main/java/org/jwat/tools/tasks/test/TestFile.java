@@ -2,34 +2,46 @@ package org.jwat.tools.tasks.test;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcReaderFactory;
-import org.jwat.arc.ArcRecord;
 import org.jwat.arc.ArcRecordBase;
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.ContentType;
 import org.jwat.common.Payload;
+import org.jwat.common.RandomAccessFileInputStream;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
+import org.jwat.tools.validators.ValidatorPlugin;
+import org.jwat.tools.validators.XmlValidatorPlugin;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcReaderFactory;
 import org.jwat.warc.WarcRecord;
 
 public class TestFile {
 
+	public static List<ValidatorPlugin> validatorPlugins = new LinkedList<ValidatorPlugin>();
+
+	static {
+		validatorPlugins.add(new XmlValidatorPlugin());
+	}
+
 	public static boolean checkfile(File file) {
 		boolean bValidate = false;
-		FileInputStream in = null;
+		RandomAccessFile raf = null;
+		RandomAccessFileInputStream rafin;
 		ByteCountingPushBackInputStream pbin = null;
 		try {
 			byte[] magicBytes = new byte[16];
 			int magicLength = 0;
-			in = new FileInputStream(file);
-			pbin = new ByteCountingPushBackInputStream(in, 16);
+			raf = new RandomAccessFile( file, "r" );
+			rafin = new RandomAccessFileInputStream( raf );
+			pbin = new ByteCountingPushBackInputStream(rafin, 16);
 			magicLength = pbin.readFully(magicBytes);
 			if (magicLength == 16) {
 				if (GzipReader.isGzipped(pbin)) {
@@ -50,9 +62,7 @@ public class TestFile {
 				}
 			}
 			pbin.close();
-			pbin = null;
-			in.close();
-			in = null;
+			raf.close();
 		} catch (FileNotFoundException e) {
 			System.out.println("Error reading: " + file.getPath());
 		} catch (IOException e) {
@@ -66,9 +76,9 @@ public class TestFile {
 					e.printStackTrace();
 				}
 			}
-			if (in != null) {
+			if (raf != null) {
 				try {
-					in.close();
+					raf.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -79,6 +89,8 @@ public class TestFile {
 
 	public static TestFileResult processFile(File file, boolean bShowErrors, TestFileUpdateCallback callback) {
 		//System.out.println(">" + file.getPath());
+		RandomAccessFile raf = null;
+		RandomAccessFileInputStream rafin;
 		ByteCountingPushBackInputStream pbin = null;
 		GzipReader gzipReader = null;
 		ArcReader arcReader = null;
@@ -91,7 +103,9 @@ public class TestFile {
 		TestFileResultItemThrowable itemThrowable;
 		result.file = file.getPath();
 		try {
-			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( new FileInputStream( file ), 8192 ), 16 );
+			raf = new RandomAccessFile( file, "r" );
+			rafin = new RandomAccessFileInputStream( raf );
+			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( rafin, 8192 ), 16 );
 			if ( GzipReader.isGzipped( pbin ) ) {
 				gzipReader = new GzipReader( pbin );
 				ByteCountingPushBackInputStream in;
@@ -290,6 +304,13 @@ public class TestFile {
 				catch (IOException e) {
 				}
 			}
+			if (raf != null) {
+				try {
+					raf.close();
+				}
+				catch (IOException e) {
+				}
+			}
 		}
 		result.bGzipReader = gzipReader != null;
 		result.bArcReader = arcReader != null;
@@ -310,10 +331,28 @@ public class TestFile {
 		return result;
 	}
 
-    public static void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload) {
+	public static void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload) {
+    	if (contentType != null
+    			&& "text".equalsIgnoreCase(contentType.contentType)
+    			&& "xml".equalsIgnoreCase(contentType.mediaType)) {
+    		ValidatorPlugin plugin;
+    		for (int i=0; i<validatorPlugins.size(); ++i) {
+    			plugin = validatorPlugins.get(i);
+    			plugin.getValidator().validate(payload.getInputStream());
+    		}
+    	}
     }
 
     public static void validate_payload(WarcRecord warcRecord, ContentType contentType, Payload payload) {
+    	if (contentType != null
+    			&& "text".equalsIgnoreCase(contentType.contentType)
+    			&& "xml".equalsIgnoreCase(contentType.mediaType)) {
+    		ValidatorPlugin plugin;
+    		for (int i=0; i<validatorPlugins.size(); ++i) {
+    			plugin = validatorPlugins.get(i);
+    			plugin.getValidator().validate(payload.getInputStream());
+    		}
+    	}
     }
 
 }
