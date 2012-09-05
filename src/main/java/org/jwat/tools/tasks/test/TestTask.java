@@ -16,8 +16,7 @@ import org.jwat.tools.JWATTools;
 import org.jwat.tools.ProgressableOutput;
 import org.jwat.tools.SynchronizedOutput;
 import org.jwat.tools.Task;
-import org.jwat.tools.CommandLine.Argument;
-import org.jwat.tools.CommandLine.Arguments;
+import org.jwat.tools.validators.XmlValidatorPlugin;
 
 public class TestTask extends Task {
 
@@ -63,6 +62,9 @@ public class TestTask extends Task {
 		CommandLine.Argument argument;
 		if ( arguments.idMap.containsKey( JWATTools.A_SHOW_ERRORS ) ) {
 			bShowErrors = true;
+		}
+		if ( arguments.idMap.containsKey( JWATTools.A_XML ) ) {
+			TestFile.validatorPlugins.add(new XmlValidatorPlugin());
 		}
 		int threads = 1;
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );

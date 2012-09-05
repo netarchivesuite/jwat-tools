@@ -18,7 +18,6 @@ import org.jwat.common.RandomAccessFileInputStream;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
 import org.jwat.tools.validators.ValidatorPlugin;
-import org.jwat.tools.validators.XmlValidatorPlugin;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcReaderFactory;
 import org.jwat.warc.WarcRecord;
@@ -26,10 +25,6 @@ import org.jwat.warc.WarcRecord;
 public class TestFile {
 
 	public static List<ValidatorPlugin> validatorPlugins = new LinkedList<ValidatorPlugin>();
-
-	static {
-		validatorPlugins.add(new XmlValidatorPlugin());
-	}
 
 	public static boolean checkfile(File file) {
 		boolean bValidate = false;

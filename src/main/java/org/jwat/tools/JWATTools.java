@@ -19,6 +19,7 @@ public class JWATTools {
 	public static final int A_INTERVAL = 7;
 	public static final int A_UNPACK = 8;
 	public static final int A_CONVERT = 9;
+	public static final int A_XML = 10;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -49,6 +50,7 @@ public class JWATTools {
 		cmdLine.addOption( "-i", A_INTERVAL );
 		cmdLine.addOption( "-u", A_UNPACK );
 		cmdLine.addOption( "-c", A_CONVERT );
+		cmdLine.addOption( "-x", A_XML );
 		cmdLine.addListArgument( "files", A_FILES, 1, Integer.MAX_VALUE );
 		try {
 			arguments = cmdLine.parse( args );
@@ -74,6 +76,7 @@ public class JWATTools {
 			*/
 			System.out.println( "usage: JWATTools [-dte19] [file ...]" );
 			System.out.println( " -t   test validity of ARC, WARC and/or GZip file(s)" );
+			System.out.println( " -x   to validate text/xml payload (eg. mets)" );
 			System.out.println( " -e   show errors" );
 			System.out.println( " -d   decompress" );
 			System.out.println( " -r   recursive" );
