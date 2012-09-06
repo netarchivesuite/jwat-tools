@@ -1,4 +1,4 @@
-package org.jwat.tools;
+package org.jwat.tools.core;
 
 import java.io.IOException;
 import java.util.LinkedList;

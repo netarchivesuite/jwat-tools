@@ -12,9 +12,9 @@ import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.RandomAccessFileInputStream;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
-import org.jwat.tools.CommandLine;
 import org.jwat.tools.JWATTools;
-import org.jwat.tools.Task;
+import org.jwat.tools.core.CommandLine;
+import org.jwat.tools.core.Task;
 
 public class UnpackTask extends Task {
 

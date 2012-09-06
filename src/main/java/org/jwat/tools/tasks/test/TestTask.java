@@ -11,11 +11,11 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.jwat.tools.CommandLine;
 import org.jwat.tools.JWATTools;
-import org.jwat.tools.ProgressableOutput;
-import org.jwat.tools.SynchronizedOutput;
-import org.jwat.tools.Task;
+import org.jwat.tools.core.CommandLine;
+import org.jwat.tools.core.ProgressableOutput;
+import org.jwat.tools.core.SynchronizedOutput;
+import org.jwat.tools.core.Task;
 import org.jwat.tools.validators.XmlValidatorPlugin;
 
 public class TestTask extends Task {

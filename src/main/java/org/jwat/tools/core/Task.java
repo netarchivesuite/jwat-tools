@@ -1,9 +1,10 @@
-package org.jwat.tools;
+package org.jwat.tools.core;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.List;
+
 
 public abstract class Task {
 

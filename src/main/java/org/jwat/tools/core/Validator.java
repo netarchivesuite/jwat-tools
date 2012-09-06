@@ -1,4 +1,4 @@
-package org.jwat.tools.validators;
+package org.jwat.tools.core;
 
 import java.io.InputStream;
 

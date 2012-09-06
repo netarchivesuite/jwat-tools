@@ -1,4 +1,6 @@
-package org.jwat.tools;
+package org.jwat.tools.core;
+
+import org.jwat.tools.core.CommandLine;
 
 public class CommandLineTest {
 

@@ -17,7 +17,7 @@ import org.jwat.common.Payload;
 import org.jwat.common.RandomAccessFileInputStream;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
-import org.jwat.tools.validators.ValidatorPlugin;
+import org.jwat.tools.core.ValidatorPlugin;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcReaderFactory;
 import org.jwat.warc.WarcRecord;

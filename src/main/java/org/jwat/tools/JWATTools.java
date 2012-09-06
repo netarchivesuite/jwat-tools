@@ -1,5 +1,6 @@
 package org.jwat.tools;
 
+import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.tasks.CompressTask;
 import org.jwat.tools.tasks.ConvertTask;
 import org.jwat.tools.tasks.DecompressTask;

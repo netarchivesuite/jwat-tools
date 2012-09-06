@@ -1,4 +1,4 @@
-package org.jwat.tools;
+package org.jwat.tools.core;
 
 import java.util.ArrayList;
 import java.util.List;

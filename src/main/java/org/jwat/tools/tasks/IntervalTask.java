@@ -8,9 +8,9 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.List;
 
-import org.jwat.tools.CommandLine;
 import org.jwat.tools.JWATTools;
-import org.jwat.tools.Task;
+import org.jwat.tools.core.CommandLine;
+import org.jwat.tools.core.Task;
 
 public class IntervalTask extends Task {
 

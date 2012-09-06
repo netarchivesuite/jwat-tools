@@ -1,10 +1,11 @@
-package org.jwat.tools;
+package org.jwat.tools.core;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-import org.jwat.tools.WildcardMatcher.WildcardPart;
+import org.jwat.tools.core.WildcardMatcher;
+import org.jwat.tools.core.WildcardMatcher.WildcardPart;
 
 @RunWith(JUnit4.class)
 public class TestWildcardMatcher {
