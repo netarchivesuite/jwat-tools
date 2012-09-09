@@ -1,5 +1,6 @@
 package org.jwat.tools.validators;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -11,7 +12,6 @@ import org.jwat.tools.core.Validator;
 import org.jwat.tools.core.ValidatorPlugin;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
@@ -45,6 +45,14 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
 
     	public static final String W3C_XML_SCHEMA = "http://www.w3.org/2001/XMLSchema"; 
 
+    	private static EntityResolver entityResolver;
+
+    	static {
+    		String jwattools_home = System.getenv("JWATTOOLS_HOME");
+    		File home = new File(jwattools_home, "cache");
+    		entityResolver = new XmlEntityResolver(home);
+    	}
+
     	private DocumentBuilderFactory factory;
 
     	private DocumentBuilder builder;
@@ -63,7 +71,6 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
         }
 
         public void validate(InputStream in) {
-        	EntityResolver entityResolver = new MyEntityResolver();
         	ErrorHandler errorHandler = new MyErrorHandler();
         	try {
         		builder.reset();
@@ -82,16 +89,6 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
     		}
         }
 
-    }
-
-    public static class MyEntityResolver implements EntityResolver {
-		@Override
-		public InputSource resolveEntity(String arg0, String arg1)
-				throws SAXException, IOException {
-			System.out.println(arg0);
-			System.out.println(arg1);
-			return null;
-		}
     }
 
     public static class MyErrorHandler implements ErrorHandler {
