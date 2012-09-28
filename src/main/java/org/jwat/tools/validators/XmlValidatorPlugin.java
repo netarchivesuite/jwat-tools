@@ -11,9 +11,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.jwat.tools.core.Validator;
 import org.jwat.tools.core.ValidatorPlugin;
 import org.xml.sax.EntityResolver;
-import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
 
 /**
  * Thread safe XmlValidator dispenser.
@@ -31,6 +29,9 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
         }
     };
 
+    /**
+     * Construct an <code>XmlValidatorPlugin</object> dispenser.
+     */
     public XmlValidatorPlugin() {
     }
 
@@ -53,30 +54,45 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
     		entityResolver = new XmlEntityResolver(home);
     	}
 
-    	private DocumentBuilderFactory factory;
+    	private DocumentBuilderFactory factoryParsing;
+    	private DocumentBuilder builderParsing;
 
-    	private DocumentBuilder builder;
+    	private DocumentBuilderFactory factoryValidating;
+    	private DocumentBuilder builderValidating;
 
-        public XmlValidator() {
-        	factory = DocumentBuilderFactory.newInstance();
-        	factory.setNamespaceAware(true);
-        	factory.setValidating(true);
-    		factory.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
+    	/** <code>XmlErrorHandler</code> used to report errors and/or warnings. */
+    	private XmlErrorHandler errorHandler;
+
+    	/**
+    	 * Construct an <code>XmlValidator</code>.
+    	 */
+    	public XmlValidator() {
+        	factoryParsing = DocumentBuilderFactory.newInstance();
+        	factoryParsing.setNamespaceAware(true);
+        	factoryParsing.setValidating(false);
+    		factoryValidating = DocumentBuilderFactory.newInstance();
+        	factoryValidating.setNamespaceAware(true);
+        	factoryValidating.setValidating(true);
+    		factoryValidating.setAttribute(JAXP_SCHEMA_LANGUAGE, W3C_XML_SCHEMA);
     		try {
-        		builder = factory.newDocumentBuilder();
+        		builderParsing = factoryParsing.newDocumentBuilder();
+        		builderValidating = factoryValidating.newDocumentBuilder();
     		}
     		catch (ParserConfigurationException e) {
     			throw new IllegalStateException("Could not create a new 'DocumentBuilder'!");
     		}
+    		errorHandler = new XmlErrorHandler();
         }
 
-        public void validate(InputStream in) {
-        	ErrorHandler errorHandler = new MyErrorHandler();
+    	/**
+    	 * Parse an XML document without validating DTD/XSD.
+    	 * @param in XML input stream
+    	 */
+        public void parse(InputStream in) {
         	try {
-        		builder.reset();
-        		builder.setEntityResolver(entityResolver);
-        		builder.setErrorHandler(errorHandler);
-        		builder.parse(in);
+        		builderParsing.reset();
+        		builderParsing.setErrorHandler(errorHandler);
+        		builderParsing.parse(in);
         	}
         	catch (IllegalArgumentException e) {
     			e.printStackTrace();
@@ -89,21 +105,28 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
     		}
         }
 
-    }
+        /**
+         * Parse an XML document and validate using DTD/XSD.
+    	 * @param in XML input stream
+         */
+        public void validate(InputStream in) {
+        	try {
+        		builderValidating.reset();
+        		builderValidating.setEntityResolver(entityResolver);
+        		builderValidating.setErrorHandler(errorHandler);
+        		builderValidating.parse(in);
+        	}
+        	catch (IllegalArgumentException e) {
+    			e.printStackTrace();
+        	}
+        	catch (SAXException e) {
+    			e.printStackTrace();
+    		}
+        	catch (IOException e) {
+    			e.printStackTrace();
+    		}
+        }
 
-    public static class MyErrorHandler implements ErrorHandler {
-		@Override
-		public void fatalError(SAXParseException arg0) throws SAXException {
-			System.out.println("Line " + arg0.getLineNumber() + ", Column " + arg0.getColumnNumber() + ": " + arg0.getMessage());
-		}
-		@Override
-		public void error(SAXParseException arg0) throws SAXException {
-			System.out.println("Line " + arg0.getLineNumber() + ", Column" + arg0.getColumnNumber() + ": " + arg0.getMessage());
-		}
-		@Override
-		public void warning(SAXParseException arg0) throws SAXException {
-			System.out.println("Line " + arg0.getLineNumber() + ", Column" + arg0.getColumnNumber() + ": " + arg0.getMessage());
-		}
     }
 
 }

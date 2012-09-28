@@ -11,6 +11,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import org.jwat.common.UriProfile;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.core.ProgressableOutput;
@@ -41,11 +42,14 @@ public class TestTask extends Task {
 
 	private ProgressableOutput cout = new ProgressableOutput(System.out);
 
-	/** Validation output stream. */
-	private SynchronizedOutput validationOutput;
+	/** Valid results output stream. */
+	private SynchronizedOutput validOutput;
+
+	/** Invalid results output stream. */
+	private SynchronizedOutput invalidOutput;
 
 	/** Exception output stream. */
-	private SynchronizedOutput exceptionOutput;
+	private SynchronizedOutput exceptionsOutput;
 
 	/** ThreadPool executor. */
 	private ExecutorService executor; 
@@ -66,6 +70,10 @@ public class TestTask extends Task {
 		if ( arguments.idMap.containsKey( JWATTools.A_XML ) ) {
 			TestFile.validatorPlugins.add(new XmlValidatorPlugin());
 		}
+		if ( arguments.idMap.containsKey( JWATTools.A_LAX ) ) {
+			TestFile.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
+			System.out.println("Using relaxed URI validation for ARC URL and WARC Target-URI.");
+		}
 		int threads = 1;
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
@@ -77,10 +85,15 @@ public class TestTask extends Task {
 		}
 		//executor = Executors.newFixedThreadPool(16);
 		argument = arguments.idMap.get( JWATTools.A_FILES );
-		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()); 
+
+		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+
 		cout.println("ThreadPool started.");
-		validationOutput = new SynchronizedOutput("v.out");
-		exceptionOutput = new SynchronizedOutput("e.out");
+
+		validOutput = new SynchronizedOutput("v.out");
+		invalidOutput = new SynchronizedOutput("i.out");
+		exceptionsOutput = new SynchronizedOutput("e.out");
+
 		Thread thread = new Thread(new OutputThread());
 		thread.start();
 		long startCtm = System.currentTimeMillis();
@@ -129,8 +142,42 @@ public class TestTask extends Task {
 				*/
 			}
 		}
-		validationOutput.close();
-		exceptionOutput.close();
+		exceptionsOutput.close();
+
+		validOutput.acquired();
+		validOutput.out.println( "#" );
+		validOutput.out.println( "# Job summary" );
+		validOutput.out.println( "#" );
+		validOutput.out.println( "GZip files: " + gzFiles );
+		validOutput.out.println( "  +  Arc: " + arcGzFiles );
+		validOutput.out.println( "  + Warc: " + warcGzFiles );
+		validOutput.out.println( " Arc files: " + arcFiles );
+		validOutput.out.println( "Warc files: " + warcFiles );
+		validOutput.out.println( "    Errors: " + errors );
+		validOutput.out.println( "  Warnings: " + warnings );
+		validOutput.out.println( "RuntimeErr: " + runtimeErrors );
+		validOutput.out.println( "   Skipped: " + skipped );
+		validOutput.out.println( "Validation took " + (System.currentTimeMillis() - startCtm) + " ms." );
+		validOutput.release();
+		validOutput.close();
+
+		invalidOutput.acquired();
+		invalidOutput.out.println( "#" );
+		invalidOutput.out.println( "# Job summary" );
+		invalidOutput.out.println( "#" );
+		invalidOutput.out.println( "GZip files: " + gzFiles );
+		invalidOutput.out.println( "  +  Arc: " + arcGzFiles );
+		invalidOutput.out.println( "  + Warc: " + warcGzFiles );
+		invalidOutput.out.println( " Arc files: " + arcFiles );
+		invalidOutput.out.println( "Warc files: " + warcFiles );
+		invalidOutput.out.println( "    Errors: " + errors );
+		invalidOutput.out.println( "  Warnings: " + warnings );
+		invalidOutput.out.println( "RuntimeErr: " + runtimeErrors );
+		invalidOutput.out.println( "   Skipped: " + skipped );
+		invalidOutput.out.println( "Validation took " + (System.currentTimeMillis() - startCtm) + " ms." );
+		invalidOutput.release();
+		invalidOutput.close();
+
 		cout.println( "#" );
 		cout.println( "# Job summary" );
 		cout.println( "#" );
@@ -193,17 +240,19 @@ public class TestTask extends Task {
 					result = results.poll();
 					if (result != null) {
 						update_summary(result);
-						validationOutput.acquired();
-						exceptionOutput.acquired();
+						validOutput.acquired();
+						invalidOutput.acquired();
+						exceptionsOutput.acquired();
 						try {
-							result.printResult(bShowErrors, validationOutput.out, exceptionOutput.out);
+							result.printResult(bShowErrors, validOutput.out, invalidOutput.out, exceptionsOutput.out);
 						}
 						catch (Throwable t) {
 							++result.runtimeErrors;
 							t.printStackTrace();
 						}
-						exceptionOutput.release();
-						validationOutput.release();
+						exceptionsOutput.release();
+						invalidOutput.release();
+						validOutput.release();
 					} else {
 						exit = true;
 					}

@@ -50,34 +50,43 @@ public class TestFileResult {
 
 	public List<TestFileResultItemThrowable> throwableList = new LinkedList<TestFileResultItemThrowable>();
 
-	public void printResult(boolean bShowErrors, PrintStream out, PrintStream err) {
-		out.println( "#" );
-		out.println( "# Summary of '" + file + "'" );
-		out.println( "#" );
+	public void printResult(boolean bShowErrors, PrintStream validOutput, PrintStream invalidOutput, PrintStream exceptionsOutput) {
+		PrintStream output;
+		if ((bGzipReader && (bGzipIsComppliant == false || gzipErrors > 0 || gzipWarnings > 0))
+				|| (bArcReader && (bArcIsCompliant == false || arcErrors > 0 || arcWarnings > 0))
+				|| (bWarcReader && (bWarcIsCompliant == false || warcErrors > 0 || warcWarnings > 0))) {
+			output = invalidOutput;
+		} else {
+			output = validOutput;
+		}
+
+		output.println( "#" );
+		output.println( "# Summary of '" + file + "'" );
+		output.println( "#" );
 		if (bGzipReader) {
-			//out.println( "    GZip.isValid: " + gzipReader.isCompliant() );
-			out.println( "    GZip.Entries: " + gzipEntries );
-			out.println( "     GZip.Errors: " + gzipErrors );
-			out.println( "   GZip.Warnings: " + gzipWarnings );
+			output.println( "    GZip.isValid: " + bGzipIsComppliant );
+			output.println( "    GZip.Entries: " + gzipEntries );
+			output.println( "     GZip.Errors: " + gzipErrors );
+			output.println( "   GZip.Warnings: " + gzipWarnings );
 		}
 		if (bArcReader) {
-			out.println( "     Arc.isValid: " + bArcIsCompliant );
-			out.println( "     Arc.Records: " + arcRecords );
-			out.println( "      Arc.Errors: " + arcErrors );
-			out.println( "    Arc.Warnings: " + arcWarnings );
+			output.println( "     Arc.isValid: " + bArcIsCompliant );
+			output.println( "     Arc.Records: " + arcRecords );
+			output.println( "      Arc.Errors: " + arcErrors );
+			output.println( "    Arc.Warnings: " + arcWarnings );
 		}
 		if (bWarcReader) {
-			out.println( "    Warc.isValid: " + bWarcIsCompliant );
-			out.println( "    Warc.Records: " + warcRecords );
-			out.println( "     Warc.Errors: " + warcErrors );
-			out.println( "   Warc.Warnings: " + warcWarnings );
+			output.println( "    Warc.isValid: " + bWarcIsCompliant );
+			output.println( "    Warc.Records: " + warcRecords );
+			output.println( "     Warc.Errors: " + warcErrors );
+			output.println( "   Warc.Warnings: " + warcWarnings );
 		}
 
 		TestFileResultItemDiagnosis itemDiagnosis;
 		if ( bShowErrors && rdList.size() > 0 ) {
-			out.println( "#" );
-			out.println( "# Detailed diagnosis report for '" + file + "'" );
-			out.println( "#" );
+			output.println( "#" );
+			output.println( "# Detailed diagnosis report for '" + file + "'" );
+			output.println( "#" );
 			Iterator<TestFileResultItemDiagnosis> rectryIter = rdList.iterator();
 			while (rectryIter.hasNext()) {
 				itemDiagnosis = rectryIter.next();
@@ -89,10 +98,10 @@ public class TestFileResult {
 					else {
 						typeStr = "'" + typeStr + "'";
 					}
-					out.println( "Error in '" + file + "'" );
-					out.println( "       Offset: " + itemDiagnosis.offset + " (0x" + (Long.toHexString(itemDiagnosis.offset)) + ")" );
-					out.println( "  Record Type: " + typeStr );
-					showDiagnosisList(itemDiagnosis.errors.iterator(), out);
+					output.println( "Error in '" + file + "'" );
+					output.println( "       Offset: " + itemDiagnosis.offset + " (0x" + (Long.toHexString(itemDiagnosis.offset)) + ")" );
+					output.println( "  Record Type: " + typeStr );
+					showDiagnosisList(itemDiagnosis.errors.iterator(), output);
 				}
 				if ( itemDiagnosis.warnings.size() > 0 ) {
 					String typeStr = itemDiagnosis.type;
@@ -102,25 +111,27 @@ public class TestFileResult {
 					else {
 						typeStr = "'" + typeStr + "'";
 					}
-					out.println( "Warning in '" + file + "'" );
-					out.println( "       Offset: " + itemDiagnosis.offset + " (0x" + (Long.toHexString(itemDiagnosis.offset)) + ")" );
-					out.println( "  Record Type: " + typeStr );
-					showDiagnosisList(itemDiagnosis.warnings.iterator(), out);
+					output.println( "Warning in '" + file + "'" );
+					output.println( "       Offset: " + itemDiagnosis.offset + " (0x" + (Long.toHexString(itemDiagnosis.offset)) + ")" );
+					output.println( "  Record Type: " + typeStr );
+					showDiagnosisList(itemDiagnosis.warnings.iterator(), output);
 				}
 			}
 		}
+
+		// Report exceptions also in v.out
 
 		if ( throwableList.size() > 0 ) {
 			Iterator<TestFileResultItemThrowable> iter = throwableList.iterator();
 			TestFileResultItemThrowable itemThrowable;
 			while ( iter.hasNext() ) {
 				itemThrowable = iter.next();
-				err.println( "#" );
-				err.println( "# Exception while processing '" + file + "'" );
-				err.println( "#" );
-				err.println( "StartOffset: " + itemThrowable.startOffset + " (0x" + (Long.toHexString(itemThrowable.startOffset)) + ")" );
-				err.println( "     Offset: " + itemThrowable.offset + " (0x" + (Long.toHexString(itemThrowable.offset)) + ")" );
-				itemThrowable.t.printStackTrace( err );
+				exceptionsOutput.println( "#" );
+				exceptionsOutput.println( "# Exception while processing '" + file + "'" );
+				exceptionsOutput.println( "#" );
+				exceptionsOutput.println( "StartOffset: " + itemThrowable.startOffset + " (0x" + (Long.toHexString(itemThrowable.startOffset)) + ")" );
+				exceptionsOutput.println( "     Offset: " + itemThrowable.offset + " (0x" + (Long.toHexString(itemThrowable.offset)) + ")" );
+				itemThrowable.t.printStackTrace( exceptionsOutput );
 			}
 		}
 	}

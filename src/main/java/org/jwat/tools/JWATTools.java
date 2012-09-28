@@ -1,6 +1,7 @@
 package org.jwat.tools;
 
 import org.jwat.tools.core.CommandLine;
+import org.jwat.tools.tasks.CDXTask;
 import org.jwat.tools.tasks.CompressTask;
 import org.jwat.tools.tasks.ConvertTask;
 import org.jwat.tools.tasks.DecompressTask;
@@ -21,6 +22,8 @@ public class JWATTools {
 	public static final int A_UNPACK = 8;
 	public static final int A_CONVERT = 9;
 	public static final int A_XML = 10;
+	public static final int A_CDX = 11;
+	public static final int A_LAX = 12;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -52,6 +55,8 @@ public class JWATTools {
 		cmdLine.addOption( "-u", A_UNPACK );
 		cmdLine.addOption( "-c", A_CONVERT );
 		cmdLine.addOption( "-x", A_XML );
+		cmdLine.addOption( "-C", A_CDX);
+		cmdLine.addOption( "-l", A_LAX);
 		cmdLine.addListArgument( "files", A_FILES, 1, Integer.MAX_VALUE );
 		try {
 			arguments = cmdLine.parse( args );
@@ -86,6 +91,8 @@ public class JWATTools {
 			System.out.println( " -i   interval extract" );
 			System.out.println( " -u   unpack multifile gzip" );
 			System.out.println( " -c   convert arc to warc" );
+			System.out.println( " -cdx output CDX" );
+			System.out.println( " -l   relaxed URL URI validation" );
 		}
 		else {
 			if ( arguments.idMap.containsKey( A_DECOMPRESS ) ) {
@@ -105,6 +112,9 @@ public class JWATTools {
 			}
 			else if ( arguments.idMap.containsKey( A_CONVERT ) ) {
 				new ConvertTask( arguments );
+			}
+			else if ( arguments.idMap.containsKey( A_CDX ) ) {
+				new CDXTask( arguments );
 			}
 		}
 	}

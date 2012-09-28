@@ -15,6 +15,7 @@ import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.ContentType;
 import org.jwat.common.Payload;
 import org.jwat.common.RandomAccessFileInputStream;
+import org.jwat.common.UriProfile;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
 import org.jwat.tools.core.ValidatorPlugin;
@@ -25,6 +26,8 @@ import org.jwat.warc.WarcRecord;
 public class TestFile {
 
 	public static List<ValidatorPlugin> validatorPlugins = new LinkedList<ValidatorPlugin>();
+
+	public static UriProfile uriProfile = UriProfile.RFC3986;
 
 	public static boolean checkfile(File file) {
 		boolean bValidate = false;
@@ -112,12 +115,14 @@ public class TestFile {
 					if ( result.gzipEntries == 1 ) {
 						if ( ArcReaderFactory.isArcFile( in ) ) {
 							arcReader = ArcReaderFactory.getReaderUncompressed();
+							arcReader.setUriProfile(uriProfile);
 							arcReader.setBlockDigestEnabled( true );
 							arcReader.setPayloadDigestEnabled( true );
 							++result.arcGzFiles;
 						}
 						else if ( WarcReaderFactory.isWarcFile( in ) ) {
 							warcReader = WarcReaderFactory.getReaderUncompressed();
+							warcReader.setWarcTargerUriProfile(uriProfile);
 							warcReader.setBlockDigestEnabled( true );
 							warcReader.setPayloadDigestEnabled( true );
 							++result.warcGzFiles;
@@ -202,6 +207,7 @@ public class TestFile {
 			}
 			else if ( ArcReaderFactory.isArcFile( pbin ) ) {
 				arcReader = ArcReaderFactory.getReaderUncompressed( pbin );
+				arcReader.setUriProfile(uriProfile);
 				arcReader.setBlockDigestEnabled( true );
 				arcReader.setPayloadDigestEnabled( true );
 				while ( (arcRecord = arcReader.getNextRecord()) != null ) {
@@ -232,6 +238,7 @@ public class TestFile {
 			}
 			else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
 				warcReader = WarcReaderFactory.getReader( pbin );
+				warcReader.setWarcTargerUriProfile(uriProfile);
 				warcReader.setBlockDigestEnabled( true );
 				warcReader.setPayloadDigestEnabled( true );
 				while ( (warcRecord = warcReader.getNextRecord()) != null ) {
@@ -311,7 +318,7 @@ public class TestFile {
 		result.bArcReader = arcReader != null;
 		result.bWarcReader = warcReader != null;
 		if (gzipReader != null) {
-			//System.out.println( "    GZip.isValid: " + gzipReader.isCompliant() );
+			result.bGzipIsComppliant = gzipReader.isCompliant();
 		}
 		if (arcReader != null) {
 			result.bArcIsCompliant = arcReader.isCompliant();
@@ -336,7 +343,17 @@ public class TestFile {
     			plugin.getValidator().validate(payload.getInputStream());
     		}
     	}
-    }
+
+    	/*
+        protected static String reFragment = "^(?:[a-zA-Z0-9-._~!$&'()*+,;=:/?@]|%[0-9a-fA-F]{2}|%u[0-9a-fA-F]{4})*";
+        protected static Pattern patternFragment = Pattern.compile(reFragment);
+
+        matcher = patternFragment.matcher(fragmentRaw);
+        if (!matcher.matches()) {
+            throw new URISyntaxException(fragmentRaw, "Invalid URI fragment component");
+        }
+        */
+	}
 
     public static void validate_payload(WarcRecord warcRecord, ContentType contentType, Payload payload) {
     	if (contentType != null
