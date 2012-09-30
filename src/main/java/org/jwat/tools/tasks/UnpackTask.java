@@ -18,7 +18,11 @@ import org.jwat.tools.core.Task;
 
 public class UnpackTask extends Task {
 
-	public UnpackTask(CommandLine.Arguments arguments) {
+	public UnpackTask() {
+	}
+
+	@Override
+	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
 		taskFileListFeeder( filesList, this );

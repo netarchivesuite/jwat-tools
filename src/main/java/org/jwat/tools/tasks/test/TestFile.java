@@ -2,7 +2,6 @@ package org.jwat.tools.tasks.test;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.LinkedList;
@@ -25,67 +24,11 @@ import org.jwat.warc.WarcRecord;
 
 public class TestFile {
 
-	public static List<ValidatorPlugin> validatorPlugins = new LinkedList<ValidatorPlugin>();
+	public List<ValidatorPlugin> validatorPlugins = new LinkedList<ValidatorPlugin>();
 
-	public static UriProfile uriProfile = UriProfile.RFC3986;
+	public UriProfile uriProfile = UriProfile.RFC3986;
 
-	public static boolean checkfile(File file) {
-		boolean bValidate = false;
-		RandomAccessFile raf = null;
-		RandomAccessFileInputStream rafin;
-		ByteCountingPushBackInputStream pbin = null;
-		try {
-			byte[] magicBytes = new byte[16];
-			int magicLength = 0;
-			raf = new RandomAccessFile( file, "r" );
-			rafin = new RandomAccessFileInputStream( raf );
-			pbin = new ByteCountingPushBackInputStream(rafin, 16);
-			magicLength = pbin.readFully(magicBytes);
-			if (magicLength == 16) {
-				if (GzipReader.isGzipped(pbin)) {
-					bValidate = true;
-				} else if (ArcReaderFactory.isArcFile(pbin)) {
-					bValidate = true;
-				} else if (WarcReaderFactory.isWarcFile(pbin)) {
-					bValidate = true;
-				} else {
-					String fname = file.getName().toLowerCase();
-					if (fname.endsWith(".gz")) {
-						bValidate = true;
-					} else if (fname.endsWith(".arc")) {
-						bValidate = true;
-					} else if (fname.endsWith(".warc")) {
-						bValidate = true;
-					}
-				}
-			}
-			pbin.close();
-			raf.close();
-		} catch (FileNotFoundException e) {
-			System.out.println("Error reading: " + file.getPath());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		finally {
-			if (pbin != null) {
-				try {
-					pbin.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			if (raf != null) {
-				try {
-					raf.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-		return bValidate;
-	}
-
-	public static TestFileResult processFile(File file, boolean bShowErrors, TestFileUpdateCallback callback) {
+	public TestFileResult processFile(File file, boolean bShowErrors, TestFileUpdateCallback callback) {
 		//System.out.println(">" + file.getPath());
 		RandomAccessFile raf = null;
 		RandomAccessFileInputStream rafin;
@@ -333,7 +276,7 @@ public class TestFile {
 		return result;
 	}
 
-	public static void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload) {
+	protected void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload) {
     	if (contentType != null
     			&& "text".equalsIgnoreCase(contentType.contentType)
     			&& "xml".equalsIgnoreCase(contentType.mediaType)) {
@@ -355,7 +298,7 @@ public class TestFile {
         */
 	}
 
-    public static void validate_payload(WarcRecord warcRecord, ContentType contentType, Payload payload) {
+    protected void validate_payload(WarcRecord warcRecord, ContentType contentType, Payload payload) {
     	if (contentType != null
     			&& "text".equalsIgnoreCase(contentType.contentType)
     			&& "xml".equalsIgnoreCase(contentType.mediaType)) {

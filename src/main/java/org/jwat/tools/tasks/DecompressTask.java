@@ -18,7 +18,11 @@ import org.jwat.tools.core.Task;
 
 public class DecompressTask extends Task {
 
-	public DecompressTask(CommandLine.Arguments arguments) {
+	public DecompressTask() {
+	}
+
+	@Override
+	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
 		taskFileListFeeder( filesList, this );

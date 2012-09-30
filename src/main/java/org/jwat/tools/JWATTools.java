@@ -1,6 +1,7 @@
 package org.jwat.tools;
 
 import org.jwat.tools.core.CommandLine;
+import org.jwat.tools.core.Task;
 import org.jwat.tools.tasks.CDXTask;
 import org.jwat.tools.tasks.CompressTask;
 import org.jwat.tools.tasks.ConvertTask;
@@ -95,26 +96,34 @@ public class JWATTools {
 			System.out.println( " -l   relaxed URL URI validation" );
 		}
 		else {
+			Task task;
 			if ( arguments.idMap.containsKey( A_DECOMPRESS ) ) {
-				new DecompressTask( arguments );
+				task = new DecompressTask();
+				task.command(arguments);
 			}
 			else if ( arguments.idMap.containsKey( A_COMPRESS ) ) {
-				new CompressTask( arguments );
+				task = new CompressTask();
+				task.command(arguments);
 			}
 			else if ( arguments.idMap.containsKey( A_TEST ) ) {
-				new TestTask( arguments );
+				task = new TestTask();
+				task.command(arguments);
 			}
 			else if ( arguments.idMap.containsKey( A_INTERVAL ) ) {
-				new IntervalTask( arguments );
+				task = new IntervalTask();
+				task.command(arguments);
 			}
 			else if ( arguments.idMap.containsKey( A_UNPACK ) ) {
-				new UnpackTask( arguments );
+				task = new UnpackTask();
+				task.command(arguments);
 			}
 			else if ( arguments.idMap.containsKey( A_CONVERT ) ) {
-				new ConvertTask( arguments );
+				task = new ConvertTask();
+				task.command(arguments);
 			}
 			else if ( arguments.idMap.containsKey( A_CDX ) ) {
-				new CDXTask( arguments );
+				task = new CDXTask();
+				task.command(arguments);
 			}
 		}
 	}

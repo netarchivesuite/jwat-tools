@@ -30,9 +30,13 @@ import org.jwat.warc.WarcRecord;
 
 public class CompressTask extends Task {
 
-	protected int compressionLevel = Deflater.DEFAULT_COMPRESSION;
+	public int compressionLevel = Deflater.DEFAULT_COMPRESSION;
 
-	public CompressTask(CommandLine.Arguments arguments) {
+	public CompressTask() {
+	}
+
+	@Override
+	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
 		// Compression level.
 		argument = arguments.idMap.get( JWATTools.A_COMPRESS );

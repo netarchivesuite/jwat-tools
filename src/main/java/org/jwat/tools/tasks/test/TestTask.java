@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit;
 import org.jwat.common.UriProfile;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
+import org.jwat.tools.core.FileIdent;
 import org.jwat.tools.core.ProgressableOutput;
 import org.jwat.tools.core.SynchronizedOutput;
 import org.jwat.tools.core.Task;
@@ -62,16 +63,22 @@ public class TestTask extends Task {
 	/** Completed validation results list. */
 	private ConcurrentLinkedQueue<TestFileResult> results = new ConcurrentLinkedQueue<TestFileResult>();
 
-	public TestTask(CommandLine.Arguments arguments) {
+	protected TestFile testFile;
+
+	public TestTask() {
+		testFile = new TestFile();
+	}
+
+	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
 		if ( arguments.idMap.containsKey( JWATTools.A_SHOW_ERRORS ) ) {
 			bShowErrors = true;
 		}
 		if ( arguments.idMap.containsKey( JWATTools.A_XML ) ) {
-			TestFile.validatorPlugins.add(new XmlValidatorPlugin());
+			testFile.validatorPlugins.add(new XmlValidatorPlugin());
 		}
 		if ( arguments.idMap.containsKey( JWATTools.A_LAX ) ) {
-			TestFile.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
+			testFile.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
 			System.out.println("Using relaxed URI validation for ARC URL and WARC Target-URI.");
 		}
 		int threads = 1;
@@ -96,6 +103,7 @@ public class TestTask extends Task {
 
 		Thread thread = new Thread(new OutputThread());
 		thread.start();
+
 		long startCtm = System.currentTimeMillis();
 		try {
 			List<String> filesList = argument.values;
@@ -212,8 +220,8 @@ public class TestTask extends Task {
 	@Override
 	public void process(File srcFile) {
 		if (srcFile.length() > 0) {
-				boolean bValidate = TestFile.checkfile(srcFile);
-				if (bValidate) {
+				int fileId = FileIdent.identFile(srcFile);
+				if (fileId > 0) {
 					/*
 					Future<TestResult> future = executor.submit(new TestCallable(srcFile));
 					futures.add(future);
@@ -273,7 +281,7 @@ public class TestTask extends Task {
 		}
 		@Override
 		public TestFileResult call() throws Exception {
-			TestFileResult result = TestFile.processFile(srcFile, bShowErrors, null);
+			TestFileResult result = testFile.processFile(srcFile, bShowErrors, null);
 			results.add(result);
 			resultsReady.release();
 			return result;
@@ -287,7 +295,7 @@ public class TestTask extends Task {
 		}
 		@Override
 		public void run() {
-			TestFileResult result = TestFile.processFile(srcFile, bShowErrors, null);
+			TestFileResult result = testFile.processFile(srcFile, bShowErrors, null);
 			results.add(result);
 			resultsReady.release();
 		}

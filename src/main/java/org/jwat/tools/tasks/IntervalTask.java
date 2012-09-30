@@ -22,7 +22,11 @@ public class IntervalTask extends Task {
 
 	protected String dstName;
 
-	public IntervalTask(CommandLine.Arguments arguments) {
+	public IntervalTask() {
+	}
+
+	@Override
+	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
 		String tmpStr;
 		// Files

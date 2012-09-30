@@ -5,8 +5,9 @@ import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.List;
 
-
 public abstract class Task {
+
+	public abstract void command(CommandLine.Arguments arguments);
 
 	public abstract void process(File file);
 
