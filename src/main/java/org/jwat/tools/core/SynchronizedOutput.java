@@ -31,7 +31,7 @@ public class SynchronizedOutput {
 		}
 	}
 
-	public void acquired() {
+	public void acquire() {
 		semaphore.acquireUninterruptibly();
 	}
 

@@ -1,8 +1,8 @@
 package org.jwat.tools.tasks.test;
 
 import java.io.File;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -18,6 +18,7 @@ import org.jwat.tools.core.FileIdent;
 import org.jwat.tools.core.ProgressableOutput;
 import org.jwat.tools.core.SynchronizedOutput;
 import org.jwat.tools.core.Task;
+import org.jwat.tools.core.ValidatorPlugin;
 import org.jwat.tools.validators.XmlValidatorPlugin;
 
 public class TestTask extends Task {
@@ -39,7 +40,19 @@ public class TestTask extends Task {
 	private int queued = 0;
 	private int processed = 0;
 
+	/*
+	 * Settings.
+	 */
+
 	private boolean bShowErrors = false;
+
+	private List<ValidatorPlugin> validatorPlugins = new LinkedList<ValidatorPlugin>();
+
+	private UriProfile uriProfile = UriProfile.RFC3986;
+
+	/*
+	 * State.
+	 */
 
 	private ProgressableOutput cout = new ProgressableOutput(System.out);
 
@@ -63,10 +76,7 @@ public class TestTask extends Task {
 	/** Completed validation results list. */
 	private ConcurrentLinkedQueue<TestFileResult> results = new ConcurrentLinkedQueue<TestFileResult>();
 
-	protected TestFile testFile;
-
 	public TestTask() {
-		testFile = new TestFile();
 	}
 
 	public void command(CommandLine.Arguments arguments) {
@@ -75,10 +85,10 @@ public class TestTask extends Task {
 			bShowErrors = true;
 		}
 		if ( arguments.idMap.containsKey( JWATTools.A_XML ) ) {
-			testFile.validatorPlugins.add(new XmlValidatorPlugin());
+			validatorPlugins.add(new XmlValidatorPlugin());
 		}
 		if ( arguments.idMap.containsKey( JWATTools.A_LAX ) ) {
-			testFile.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
+			uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
 			System.out.println("Using relaxed URI validation for ARC URL and WARC Target-URI.");
 		}
 		int threads = 1;
@@ -152,7 +162,7 @@ public class TestTask extends Task {
 		}
 		exceptionsOutput.close();
 
-		validOutput.acquired();
+		validOutput.acquire();
 		validOutput.out.println( "#" );
 		validOutput.out.println( "# Job summary" );
 		validOutput.out.println( "#" );
@@ -169,7 +179,7 @@ public class TestTask extends Task {
 		validOutput.release();
 		validOutput.close();
 
-		invalidOutput.acquired();
+		invalidOutput.acquire();
 		invalidOutput.out.println( "#" );
 		invalidOutput.out.println( "# Job summary" );
 		invalidOutput.out.println( "#" );
@@ -220,17 +230,17 @@ public class TestTask extends Task {
 	@Override
 	public void process(File srcFile) {
 		if (srcFile.length() > 0) {
-				int fileId = FileIdent.identFile(srcFile);
-				if (fileId > 0) {
-					/*
-					Future<TestResult> future = executor.submit(new TestCallable(srcFile));
-					futures.add(future);
-					*/
-					Future<?> future = executor.submit(new TestRunnable(srcFile));
-					//futures.add(future);
-					++queued;
-				} else {
-				}
+			int fileId = FileIdent.identFile(srcFile);
+			if (fileId > 0) {
+				/*
+				Future<TestResult> future = executor.submit(new TestCallable(srcFile));
+				futures.add(future);
+				 */
+				Future<?> future = executor.submit(new TestRunnable(srcFile));
+				//futures.add(future);
+				++queued;
+			} else {
+			}
 		}
 	}
 
@@ -248,9 +258,9 @@ public class TestTask extends Task {
 					result = results.poll();
 					if (result != null) {
 						update_summary(result);
-						validOutput.acquired();
-						invalidOutput.acquired();
-						exceptionsOutput.acquired();
+						validOutput.acquire();
+						invalidOutput.acquire();
+						exceptionsOutput.acquire();
 						try {
 							result.printResult(bShowErrors, validOutput.out, invalidOutput.out, exceptionsOutput.out);
 						}
@@ -274,6 +284,7 @@ public class TestTask extends Task {
 		}
 	}
 
+	/*
 	class TestCallable implements Callable<TestFileResult> {
 		File srcFile;
 		TestCallable(File srcFile) {
@@ -287,6 +298,7 @@ public class TestTask extends Task {
 			return result;
 		}
 	}
+	*/
 
 	class TestRunnable implements Runnable {
 		File srcFile;
@@ -295,7 +307,12 @@ public class TestTask extends Task {
 		}
 		@Override
 		public void run() {
-			TestFileResult result = testFile.processFile(srcFile, bShowErrors, null);
+			TestFile2 testFile = new TestFile2();
+			testFile.bShowErrors = bShowErrors;
+			testFile.uriProfile = uriProfile;
+			testFile.validatorPlugins = validatorPlugins;
+			testFile.callback = null;
+			TestFileResult result = testFile.processFile(srcFile);
 			results.add(result);
 			resultsReady.release();
 		}

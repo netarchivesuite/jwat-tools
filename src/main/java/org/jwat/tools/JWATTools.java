@@ -2,12 +2,12 @@ package org.jwat.tools;
 
 import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.core.Task;
-import org.jwat.tools.tasks.CDXTask;
 import org.jwat.tools.tasks.CompressTask;
 import org.jwat.tools.tasks.ConvertTask;
 import org.jwat.tools.tasks.DecompressTask;
 import org.jwat.tools.tasks.IntervalTask;
 import org.jwat.tools.tasks.UnpackTask;
+import org.jwat.tools.tasks.cdx.CDXTask;
 import org.jwat.tools.tasks.test.TestTask;
 
 public class JWATTools {
@@ -92,7 +92,7 @@ public class JWATTools {
 			System.out.println( " -i   interval extract" );
 			System.out.println( " -u   unpack multifile gzip" );
 			System.out.println( " -c   convert arc to warc" );
-			System.out.println( " -cdx output CDX" );
+			System.out.println( " -C   output CDX" );
 			System.out.println( " -l   relaxed URL URI validation" );
 		}
 		else {

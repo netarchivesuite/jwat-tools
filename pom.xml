@@ -11,7 +11,7 @@
 
   <groupId>org.jwat</groupId>
   <artifactId>jwat-tools</artifactId>
-  <version>0.5.3-SNAPSHOT</version>
+  <version>0.5.4-SNAPSHOT</version>
 
   <packaging>jar</packaging>
 
@@ -19,7 +19,7 @@
   <description>JWAT Tools</description>
   <url>http://jwat.org/</url>
 
-  <inceptionYear>2012</inceptionYear>
+  <inceptionYear>2011</inceptionYear>
 
   <licenses>
     <license>
@@ -55,24 +55,6 @@
       <email>nicl@kb.dk</email>
       <organization>Det Kongelige Bibliotek/Royal Danish Library</organization>
       <organizationUrl>http://www.kb.dk</organizationUrl>
-    </developer>
-    <developer>
-      <name>Søren Vejrup Carlsen</name>
-      <roles>
-        <role>reviewer</role>
-      </roles>
-      <email>svc@kb.dk</email>
-      <organization>Det Kongelige Bibliotek/Royal Danish Library</organization>
-      <organizationUrl>http://www.kb.dk</organizationUrl>
-    </developer>
-    <developer>
-      <name>Mikis Seth Sørensen</name>
-      <roles>
-        <role>project manager</role>
-      </roles>
-      <email>mss@statsbiblioteket.dk</email>
-      <organization>Statsbiblioteket/Danish State Library</organization>
-      <organizationUrl>http://statsbiblioteket.dk</organizationUrl>
     </developer>
   </developers>
 

@@ -18,6 +18,8 @@ public final class FileIdent {
 	public static final int FILEID_GZIP = 1;
 	public static final int FILEID_ARC = 2;
 	public static final int FILEID_WARC = 3;
+	public static final int FILEID_ARC_GZ = 4;
+	public static final int FILEID_WARC_GZ = 5;
 
 	public static int identFile(File file) {
 		int fileId;
