@@ -1,0 +1,8 @@
+.classpath
+.project
+^bin$
+^tmp$
+^target$
+.settings$
+/target$
+.*~$
