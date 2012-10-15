@@ -3,11 +3,7 @@ package org.jwat.tools.tasks.cdx;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.jwat.tools.JWATTools;
@@ -18,9 +14,6 @@ import org.jwat.tools.core.Task;
 
 public class CDXTask extends Task {
 
-	/** ThreadPool executor. */
-	private ExecutorService executor; 
-
 	/** Valid results output stream. */
 	private SynchronizedOutput cdxOutput;
 
@@ -30,7 +23,6 @@ public class CDXTask extends Task {
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
-		int threads = 1;
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
 			try {
@@ -40,8 +32,7 @@ public class CDXTask extends Task {
 			}
 		}
 		argument = arguments.idMap.get( JWATTools.A_FILES );
-
-		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+		List<String> filesList = argument.values;
 
 		cdxOutput = new SynchronizedOutput("cdx.out");
 		cdxOutput.out.println("CDX b e a m s c v n g");
@@ -50,29 +41,8 @@ public class CDXTask extends Task {
 		Thread thread = new Thread(outputCDXThread);
 		thread.start();
 
-		try {
-			List<String> filesList = argument.values;
-			taskFileListFeeder( filesList, this );
-		} catch (Throwable t) {
-			System.out.println("Died unexpectedly!");
-		} finally {
-			if (executor != null) {
-				executor.shutdown();
-				/*
-				try {
-					executor.awaitTermination(60L, TimeUnit.MINUTES);
-				} catch (InterruptedException e) {
-				}
-				*/
-				while (!executor.isTerminated()) {
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-					}
-				}
-				outputCDXThread.bExit = true;
-			}
-		}
+		init_threadpool(filesList);
+		outputCDXThread.bExit = true;
 	}
 
 	@Override
@@ -80,7 +50,7 @@ public class CDXTask extends Task {
 		if (srcFile.length() > 0) {
 			int fileId = FileIdent.identFile(srcFile);
 			if (fileId > 0) {
-				Future<?> future = executor.submit(new TaskRunnable(srcFile));
+				executor.submit(new TaskRunnable(srcFile));
 			} else {
 			}
 		}
@@ -184,9 +154,8 @@ public class CDXTask extends Task {
 						bLoop = false;
 					}
 				} catch (InterruptedException e) {
-					bLoop = true;
+					bLoop = false;
 				}
-
 			}
 		}
 	}

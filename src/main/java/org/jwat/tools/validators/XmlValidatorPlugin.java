@@ -10,6 +10,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.jwat.tools.core.Validator;
 import org.jwat.tools.core.ValidatorPlugin;
+import org.w3c.dom.Document;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.SAXException;
 
@@ -21,10 +22,10 @@ import org.xml.sax.SAXException;
 public class XmlValidatorPlugin implements ValidatorPlugin {
 
 	/** Basic <code>DateFormat</code> is not thread safe. */
-    private static final ThreadLocal<Validator> XmlValidatorTL =
-        new ThreadLocal<Validator>() {
+    private static final ThreadLocal<XmlValidator> XmlValidatorTL =
+        new ThreadLocal<XmlValidator>() {
         @Override
-        public Validator initialValue() {
+        public XmlValidator initialValue() {
             return new XmlValidator();
         }
     };
@@ -36,7 +37,7 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
     }
 
     @Override
-	public Validator getValidator() {
+	public XmlValidator getValidator() {
         return XmlValidatorTL.get();
 	}
 
@@ -62,6 +63,8 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
 
     	/** <code>XmlErrorHandler</code> used to report errors and/or warnings. */
     	private XmlErrorHandler errorHandler;
+
+    	public Document document = null;
 
     	/**
     	 * Construct an <code>XmlValidator</code>.
@@ -89,10 +92,11 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
     	 * @param in XML input stream
     	 */
         public void parse(InputStream in) {
+        	document = null;
         	try {
         		builderParsing.reset();
         		builderParsing.setErrorHandler(errorHandler);
-        		builderParsing.parse(in);
+        		document = builderParsing.parse(in);
         	}
         	catch (IllegalArgumentException e) {
     			e.printStackTrace();
@@ -110,11 +114,12 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
     	 * @param in XML input stream
          */
         public void validate(InputStream in) {
+        	document = null;
         	try {
         		builderValidating.reset();
         		builderValidating.setEntityResolver(entityResolver);
         		builderValidating.setErrorHandler(errorHandler);
-        		builderValidating.parse(in);
+        		document = builderValidating.parse(in);
         	}
         	catch (IllegalArgumentException e) {
     			e.printStackTrace();

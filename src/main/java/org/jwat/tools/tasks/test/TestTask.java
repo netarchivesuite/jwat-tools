@@ -4,18 +4,13 @@ import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.jwat.common.UriProfile;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.core.FileIdent;
-import org.jwat.tools.core.ProgressableOutput;
 import org.jwat.tools.core.SynchronizedOutput;
 import org.jwat.tools.core.Task;
 import org.jwat.tools.core.ValidatorPlugin;
@@ -37,9 +32,6 @@ public class TestTask extends Task {
 	private int runtimeErrors = 0;
 	private int skipped = 0;
 
-	private int queued = 0;
-	private int processed = 0;
-
 	/*
 	 * Settings.
 	 */
@@ -54,8 +46,6 @@ public class TestTask extends Task {
 	 * State.
 	 */
 
-	private ProgressableOutput cout = new ProgressableOutput(System.out);
-
 	/** Valid results output stream. */
 	private SynchronizedOutput validOutput;
 
@@ -64,11 +54,6 @@ public class TestTask extends Task {
 
 	/** Exception output stream. */
 	private SynchronizedOutput exceptionsOutput;
-
-	/** ThreadPool executor. */
-	private ExecutorService executor; 
-
-	//private List<Future<TestResult>> futures = new LinkedList<Future<TestResult>>();
 
 	/** Results ready resource semaphore. */
 	private Semaphore resultsReady = new Semaphore(0);
@@ -91,7 +76,6 @@ public class TestTask extends Task {
 			uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
 			System.out.println("Using relaxed URI validation for ARC URL and WARC Target-URI.");
 		}
-		int threads = 1;
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
 			try {
@@ -102,64 +86,19 @@ public class TestTask extends Task {
 		}
 		//executor = Executors.newFixedThreadPool(16);
 		argument = arguments.idMap.get( JWATTools.A_FILES );
-
-		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-
-		cout.println("ThreadPool started.");
+		List<String> filesList = argument.values;
 
 		validOutput = new SynchronizedOutput("v.out");
 		invalidOutput = new SynchronizedOutput("i.out");
 		exceptionsOutput = new SynchronizedOutput("e.out");
 
-		Thread thread = new Thread(new OutputThread());
+		OutputThread outputThread = new OutputThread();
+		Thread thread = new Thread(outputThread);
 		thread.start();
 
-		long startCtm = System.currentTimeMillis();
-		try {
-			List<String> filesList = argument.values;
-			taskFileListFeeder( filesList, this );
-		} catch (Throwable t) {
-			cout.println("Died unexpectedly!");
-		} finally {
-			cout.println("Queued " + queued + " validation job(s).");
-			//System.out.println("Queued: " + queued + " - Processed: " + processed + ".");
-			if (executor != null) {
-				executor.shutdown();
-				/*
-				try {
-					executor.awaitTermination(60L, TimeUnit.MINUTES);
-				} catch (InterruptedException e) {
-				}
-				*/
-				while (!executor.isTerminated()) {
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-					}
-				}
-				cout.println("ThreadPool shut down.");
-				thread.interrupt();
-				/*
-				Iterator<Future<TestResult>> iter = futures.iterator();
-				Future<TestResult> future;
-				TestResult result;
-				while (iter.hasNext()) {
-					future = iter.next();
-					if (future.isDone()) {
-						try {
-							result = future.get();
-							update_summary(result);
-						} catch (CancellationException e) {
-						} catch (ExecutionException e) {
-						} catch (InterruptedException e) {
-						}
-					} else {
-						System.out.println("NOOOOOOOOOOOOOOOOOOOOOOO!");
-					}
-				}
-				*/
-			}
-		}
+		init_threadpool(filesList);
+		outputThread.bExit = true;
+
 		exceptionsOutput.close();
 
 		validOutput.acquire();
@@ -232,12 +171,7 @@ public class TestTask extends Task {
 		if (srcFile.length() > 0) {
 			int fileId = FileIdent.identFile(srcFile);
 			if (fileId > 0) {
-				/*
-				Future<TestResult> future = executor.submit(new TestCallable(srcFile));
-				futures.add(future);
-				 */
-				Future<?> future = executor.submit(new TestRunnable(srcFile));
-				//futures.add(future);
+				executor.submit(new TestRunnable(srcFile));
 				++queued;
 			} else {
 			}
@@ -246,17 +180,17 @@ public class TestTask extends Task {
 
 	class OutputThread implements Runnable {
 
-		boolean exit = false;
+		boolean bExit = false;
 
 		@Override
 		public void run() {
 			TestFileResult result;
 			cout.println("Output Thread started.");
-			while (!exit) {
+			boolean bLoop = true;
+			while (bLoop) {
 				try {
-					resultsReady.acquire();
-					result = results.poll();
-					if (result != null) {
+					if (resultsReady.tryAcquire(1, TimeUnit.SECONDS)) {
+						result = results.poll();
 						update_summary(result);
 						validOutput.acquire();
 						invalidOutput.acquire();
@@ -271,34 +205,18 @@ public class TestTask extends Task {
 						exceptionsOutput.release();
 						invalidOutput.release();
 						validOutput.release();
-					} else {
-						exit = true;
+						++processed;
+						cout.print_progress("Queued: " + queued + " - Processed: " + processed + ".");
+					} else if (bExit) {
+						bLoop = false;
 					}
-					++processed;
-					cout.print_progress("Queued: " + queued + " - Processed: " + processed + ".");
 				} catch (InterruptedException e) {
-					exit = true;
+					bLoop = false;
 				}
 			}
 			cout.println("Output Thread stopped.");
 		}
 	}
-
-	/*
-	class TestCallable implements Callable<TestFileResult> {
-		File srcFile;
-		TestCallable(File srcFile) {
-			this.srcFile = srcFile;
-		}
-		@Override
-		public TestFileResult call() throws Exception {
-			TestFileResult result = testFile.processFile(srcFile, bShowErrors, null);
-			results.add(result);
-			resultsReady.release();
-			return result;
-		}
-	}
-	*/
 
 	class TestRunnable implements Runnable {
 		File srcFile;
@@ -317,5 +235,21 @@ public class TestTask extends Task {
 			resultsReady.release();
 		}
 	}
+
+	/*
+	class TestCallable implements Callable<TestFileResult> {
+		File srcFile;
+		TestCallable(File srcFile) {
+			this.srcFile = srcFile;
+		}
+		@Override
+		public TestFileResult call() throws Exception {
+			TestFileResult result = testFile.processFile(srcFile, bShowErrors, null);
+			results.add(result);
+			resultsReady.release();
+			return result;
+		}
+	}
+	*/
 
 }

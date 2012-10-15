@@ -4,12 +4,85 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public abstract class Task {
+
+	/** Threads to use in thread pool. */
+	public int threads = 1;
+
+	/** ThreadPool executor. */
+	public ExecutorService executor; 
+
+	/** Thread pool processing start time. */
+	public long startCtm;
+
+	public ProgressableOutput cout = new ProgressableOutput(System.out);
+
+	public int queued = 0;
+
+	public int processed = 0;
 
 	public abstract void command(CommandLine.Arguments arguments);
 
 	public abstract void process(File file);
+
+	//private List<Future<TestResult>> futures = new LinkedList<Future<TestResult>>();
+	/*
+	Future<TestResult> future = executor.submit(new TestCallable(srcFile));
+	Future<?> future = executor.submit(new TestRunnable(srcFile));
+	futures.add(future);
+	 */
+
+	public void init_threadpool(List<String> filesList) {
+		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+		startCtm = System.currentTimeMillis();
+		cout.println("ThreadPool started.");
+		try {
+			taskFileListFeeder( filesList, this );
+		} catch (Throwable t) {
+			cout.println("Died unexpectedly!");
+		} finally {
+			cout.println("Queued " + queued + " file(s).");
+			//System.out.println("Queued: " + queued + " - Processed: " + processed + ".");
+			executor.shutdown();
+			/*
+			try {
+				executor.awaitTermination(60L, TimeUnit.MINUTES);
+			} catch (InterruptedException e) {
+			}
+			*/
+			while (!executor.isTerminated()) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+				}
+			}
+			cout.println("ThreadPool shut down.");
+			/*
+			Iterator<Future<TestResult>> iter = futures.iterator();
+			Future<TestResult> future;
+			TestResult result;
+			while (iter.hasNext()) {
+				future = iter.next();
+				if (future.isDone()) {
+					try {
+						result = future.get();
+						update_summary(result);
+					} catch (CancellationException e) {
+					} catch (ExecutionException e) {
+					} catch (InterruptedException e) {
+					}
+				} else {
+					System.out.println("NOOOOOOOOOOOOOOOOOOOOOOO!");
+				}
+			}
+			*/
+		}
+	}
 
 	public static void taskFileListFeeder(List<String> filesList, Task task) {
 		String fileSeparator = System.getProperty( "file.separator" );

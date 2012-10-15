@@ -8,6 +8,7 @@ import org.jwat.tools.tasks.DecompressTask;
 import org.jwat.tools.tasks.IntervalTask;
 import org.jwat.tools.tasks.UnpackTask;
 import org.jwat.tools.tasks.cdx.CDXTask;
+import org.jwat.tools.tasks.extract.ExtractTask;
 import org.jwat.tools.tasks.test.TestTask;
 
 public class JWATTools {
@@ -25,6 +26,7 @@ public class JWATTools {
 	public static final int A_XML = 10;
 	public static final int A_CDX = 11;
 	public static final int A_LAX = 12;
+	public static final int A_EXTRACT = 13;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -55,9 +57,10 @@ public class JWATTools {
 		cmdLine.addOption( "-i", A_INTERVAL );
 		cmdLine.addOption( "-u", A_UNPACK );
 		cmdLine.addOption( "-c", A_CONVERT );
-		cmdLine.addOption( "-x", A_XML );
-		cmdLine.addOption( "-C", A_CDX);
-		cmdLine.addOption( "-l", A_LAX);
+		cmdLine.addOption( "-X", A_XML );
+		cmdLine.addOption( "-C", A_CDX );
+		cmdLine.addOption( "-l", A_LAX );
+		cmdLine.addOption( "-x", A_EXTRACT );
 		cmdLine.addListArgument( "files", A_FILES, 1, Integer.MAX_VALUE );
 		try {
 			arguments = cmdLine.parse( args );
@@ -73,7 +76,7 @@ public class JWATTools {
 			System.exit( 1 );
 		}
 		if ( arguments == null ) {
-			System.out.println( "JWATTools v0.5.3" );
+			System.out.println( "JWATTools v0.5.4" );
 			/*
 			System.out.println( "usage: JWATTools [-dt19] [file ...]" );
 			System.out.println( " -t --test        test compressed file integrity" );
@@ -123,6 +126,10 @@ public class JWATTools {
 			}
 			else if ( arguments.idMap.containsKey( A_CDX ) ) {
 				task = new CDXTask();
+				task.command(arguments);
+			}
+			else if ( arguments.idMap.containsKey( A_EXTRACT ) ) {
+				task = new ExtractTask();
 				task.command(arguments);
 			}
 		}
