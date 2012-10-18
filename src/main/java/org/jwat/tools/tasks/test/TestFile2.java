@@ -99,44 +99,62 @@ public class TestFile2 implements ArchiveParserCallback {
 	public void apcArcRecordStart(ArcRecordBase arcRecord, long startOffset, boolean compressed) throws IOException {
 		++result.arcRecords;
 		//System.out.println(arcRecords + " - " + arcRecord.getStartOffset() + " (0x" + (Long.toHexString(arcRecord.getStartOffset())) + ")");
+		TestFileResultItemDiagnosis itemDiagnosis = new TestFileResultItemDiagnosis();
+		itemDiagnosis.offset = startOffset;
+		// TODO arc type string in JWAT.
 	    if (arcRecord.hasPayload() && !arcRecord.hasPseudoEmptyPayload()) {
-	    	validate_payload(arcRecord, arcRecord.header.contentType, arcRecord.getPayload());
+	    	validate_payload(arcRecord, arcRecord.header.contentType, arcRecord.getPayload(), itemDiagnosis);
 	    }
 		arcRecord.close();
-		result.arcErrors += arcRecord.diagnostics.getErrors().size();
-		result.arcWarnings += arcRecord.diagnostics.getWarnings().size();
+		if (arcRecord.diagnostics.hasErrors() || arcRecord.diagnostics.hasWarnings()) {
+			itemDiagnosis.errors = arcRecord.diagnostics.getErrors();
+			itemDiagnosis.warnings = arcRecord.diagnostics.getWarnings();
+		}
 		if ( bShowErrors ) {
 			//TestResult.showArcErrors( srcFile, arcRecord, System.out );
-			if (arcRecord.diagnostics.hasErrors() || arcRecord.diagnostics.hasWarnings()) {
-				TestFileResultItemDiagnosis itemDiagnosis = new TestFileResultItemDiagnosis();
-				itemDiagnosis.offset = startOffset;
-				// TODO arc type string in JWAT.
-				itemDiagnosis.errors = arcRecord.diagnostics.getErrors();
-				itemDiagnosis.warnings = arcRecord.diagnostics.getWarnings();
+			if (itemDiagnosis.errors.size() > 0 || itemDiagnosis.warnings.size() > 0) {
 				result.rdList.add(itemDiagnosis);
 			}
+		}
+		result.arcErrors += itemDiagnosis.errors.size();
+		result.arcWarnings += itemDiagnosis.warnings.size();
+		for (int i=0; i<itemDiagnosis.throwables.size(); ++i) {
+			TestFileResultItemThrowable itemThrowable = new TestFileResultItemThrowable();
+			itemThrowable.startOffset = startOffset;
+			itemThrowable.offset = startOffset;
+			itemThrowable.t = itemDiagnosis.throwables.get(i);
+			result.throwableList.add(itemThrowable);
 		}
 	}
 
 	public void apcWarcRecordStart(WarcRecord warcRecord, long startOffset, boolean compressed) throws IOException {
 		++result.warcRecords;
 		//System.out.println(warcRecords + " - " + warcRecord.getStartOffset() + " (0x" + (Long.toHexString(warcRecord.getStartOffset())) + ")");
+		TestFileResultItemDiagnosis itemDiagnosis = new TestFileResultItemDiagnosis();
+		itemDiagnosis.offset = startOffset;
+		itemDiagnosis.type = warcRecord.header.warcTypeStr;
 	    if (warcRecord.hasPayload()) {
-	    	validate_payload(warcRecord, warcRecord.header.contentType, warcRecord.getPayload());
+	    	validate_payload(warcRecord, warcRecord.header.contentType, warcRecord.getPayload(), itemDiagnosis);
 	    }
 		warcRecord.close();
-		result.warcErrors += warcRecord.diagnostics.getErrors().size();
-		result.warcWarnings += warcRecord.diagnostics.getWarnings().size();
+		if (warcRecord.diagnostics.hasErrors() || warcRecord.diagnostics.hasWarnings()) {
+			itemDiagnosis.errors = warcRecord.diagnostics.getErrors();
+			itemDiagnosis.warnings = warcRecord.diagnostics.getWarnings();
+		}
 		if ( bShowErrors ) {
 			//TestResult.showWarcErrors( srcFile, warcRecord, System.out );
-			if (warcRecord.diagnostics.hasErrors() || warcRecord.diagnostics.hasWarnings()) {
-				TestFileResultItemDiagnosis itemDiagnosis = new TestFileResultItemDiagnosis();
-				itemDiagnosis.offset = startOffset;
-				itemDiagnosis.type = warcRecord.header.warcTypeStr;
-				itemDiagnosis.errors = warcRecord.diagnostics.getErrors();
-				itemDiagnosis.warnings = warcRecord.diagnostics.getWarnings();
+			if (itemDiagnosis.errors.size() > 0 || itemDiagnosis.warnings.size() > 0) {
 				result.rdList.add(itemDiagnosis);
 			}
+		}
+		result.warcErrors += itemDiagnosis.errors.size();
+		result.warcWarnings += itemDiagnosis.warnings.size();
+		for (int i=0; i<itemDiagnosis.throwables.size(); ++i) {
+			TestFileResultItemThrowable itemThrowable = new TestFileResultItemThrowable();
+			itemThrowable.startOffset = startOffset;
+			itemThrowable.offset = startOffset;
+			itemThrowable.t = itemDiagnosis.throwables.get(i);
+			result.throwableList.add(itemThrowable);
 		}
 	}
 
@@ -147,7 +165,6 @@ public class TestFile2 implements ArchiveParserCallback {
 	}
 
 	public void apcRuntimeError(Throwable t, long startOffset, long consumed) {
-		++result.runtimeErrors;
 		TestFileResultItemThrowable itemThrowable = new TestFileResultItemThrowable();
 		itemThrowable.startOffset = startOffset;
 		itemThrowable.offset = consumed;
@@ -155,14 +172,15 @@ public class TestFile2 implements ArchiveParserCallback {
 		result.throwableList.add(itemThrowable);
 	}
 
-	protected void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload) {
+	protected void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload, TestFileResultItemDiagnosis itemDiagnosis) {
     	if (contentType != null
     			&& "text".equalsIgnoreCase(contentType.contentType)
     			&& "xml".equalsIgnoreCase(contentType.mediaType)) {
     		ValidatorPlugin plugin;
     		for (int i=0; i<validatorPlugins.size(); ++i) {
     			plugin = validatorPlugins.get(i);
-    			plugin.getValidator().validate(payload.getInputStream());
+    			plugin.getValidator().validate(payload.getInputStream(), itemDiagnosis);
+    			//plugin.getValidator().validate(payload.getInputStream(), itemDiagnosis);
     		}
     	}
 
@@ -177,14 +195,15 @@ public class TestFile2 implements ArchiveParserCallback {
         */
 	}
 
-    protected void validate_payload(WarcRecord warcRecord, ContentType contentType, Payload payload) {
+    protected void validate_payload(WarcRecord warcRecord, ContentType contentType, Payload payload, TestFileResultItemDiagnosis itemDiagnosis) {
     	if (contentType != null
     			&& "text".equalsIgnoreCase(contentType.contentType)
     			&& "xml".equalsIgnoreCase(contentType.mediaType)) {
     		ValidatorPlugin plugin;
     		for (int i=0; i<validatorPlugins.size(); ++i) {
     			plugin = validatorPlugins.get(i);
-    			plugin.getValidator().validate(payload.getInputStream());
+    			plugin.getValidator().validate(payload.getInputStream(), itemDiagnosis);
+    			//plugin.getValidator().validate(payload.getInputStream(), itemDiagnosis);
     		}
     	}
     }

@@ -121,6 +121,7 @@ public class TestFileResult {
 
 		// Report exceptions also in v.out
 
+		runtimeErrors += throwableList.size();
 		if ( throwableList.size() > 0 ) {
 			Iterator<TestFileResultItemThrowable> iter = throwableList.iterator();
 			TestFileResultItemThrowable itemThrowable;
@@ -215,6 +216,7 @@ public class TestFileResult {
 			diagnosis = diagnosisIterator.next();
 			out.println( "         Type: " + diagnosis.type.name() );
 			out.println( "       Entity: " + diagnosis.entity );
+			String[] labels = null;
 			switch (diagnosis.type) {
 			/*
 			 * 0
@@ -223,6 +225,7 @@ public class TestFileResult {
 			case INVALID:
 			case RECOMMENDED_MISSING:
 			case REQUIRED_MISSING:
+				labels = new String[0];
 				break;
 			/*
 			 * 1
@@ -231,67 +234,40 @@ public class TestFileResult {
 			case INVALID_DATA:
 			case RESERVED:
 			case UNKNOWN:
-				if (diagnosis.information != null) {
-					if (diagnosis.information.length >= 1) {
-						out.println( "        Value: " + diagnosis.information[0] );
-					}
-				}
+				labels = new String[] {"        Value: "};
 				break;
 			case ERROR_EXPECTED:
-				if (diagnosis.information != null) {
-					if (diagnosis.information.length >= 1) {
-						out.println( "     Expected: " + diagnosis.information[0] );
-					}
-				}
+				labels = new String[] {"     Expected: "};
 				break;
 			case ERROR:
-				if (diagnosis.information != null) {
-					if (diagnosis.information.length >= 1) {
-						out.println( "  Description: " + diagnosis.information[0] );
-					}
-				}
+				labels = new String[] {"  Description: "};
 				break;
 			case REQUIRED_INVALID:
 			case UNDESIRED_DATA:
-				if (diagnosis.information != null) {
-					if (diagnosis.information.length >= 1) {
-						out.println( "        Value: " + diagnosis.information[0] );
-					}
-				}
+				labels = new String[] {"        Value: "};
 				break;
 			/*
 			 * 2
 			 */
 			case INVALID_ENCODING:
-				if (diagnosis.information != null) {
-					if (diagnosis.information.length >= 1) {
-						out.println( "        Value: " + diagnosis.information[0] );
-					}
-					if (diagnosis.information.length >= 2) {
-						out.println( "     Encoding: " + diagnosis.information[1] );
-					}
-				}
+				labels = new String[] {"        Value: ", "     Encoding: "};
 				break;
 			case INVALID_EXPECTED:
-				if (diagnosis.information != null) {
-					if (diagnosis.information.length >= 1) {
-						out.println( "        Value: " + diagnosis.information[0] );
-					}
-					if (diagnosis.information.length >= 2) {
-						out.println( "     Expected: " + diagnosis.information[1] );
-					}
-				}
+				labels = new String[] {"        Value: ", "     Expected: "};
 				break;
 			case RECOMMENDED:
-				if (diagnosis.information != null) {
-					if (diagnosis.information.length >= 1) {
-						out.println( "  Recommended: " + diagnosis.information[0] );
+				labels = new String[] {"  Recommended: ", "   Instead of: "};
+				break;
+			}
+			if (diagnosis.information != null) {
+				for (int i=0; i<diagnosis.information.length; ++i) {
+					if (labels != null && i < labels.length) {
+						out.println( labels[i] + diagnosis.information[i] );
 					}
-					if (diagnosis.information.length >= 2) {
-						out.println( "   Instead of: " + diagnosis.information[1] );
+					else {
+						out.println( "             : " + diagnosis.information[i] );
 					}
 				}
-				break;
 			}
 		}
 	}

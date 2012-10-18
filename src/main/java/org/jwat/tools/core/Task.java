@@ -38,6 +38,7 @@ public abstract class Task {
 	 */
 
 	public void init_threadpool(List<String> filesList) {
+		cout.println( "Using " + threads + " thread(s)." );
 		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		startCtm = System.currentTimeMillis();
 		cout.println("ThreadPool started.");
@@ -84,7 +85,7 @@ public abstract class Task {
 		}
 	}
 
-	public static void taskFileListFeeder(List<String> filesList, Task task) {
+	public void taskFileListFeeder(List<String> filesList, Task task) {
 		String fileSeparator = System.getProperty( "file.separator" );
 		File parentFile;
 		String filepart;
@@ -113,13 +114,13 @@ public abstract class Task {
 				taskFileFeeder( parentFile, filter, task );
 			}
 			else {
-				System.out.println( "File does not exist -- " + parentFile.getPath() );
+				cout.println( "File does not exist -- " + parentFile.getPath() );
 				System.exit( 1 );
 			}
 		}
 	}
 
-	public static void taskFileFeeder(File parentFile, FileFilter filter, Task task) {
+	public void taskFileFeeder(File parentFile, FileFilter filter, Task task) {
 		if ( parentFile.isFile() ) {
 			task.process( parentFile );
 		}
@@ -136,7 +137,7 @@ public abstract class Task {
 				}
 			}
 			else {
-				System.out.println("Error reading: " + parentFile.getPath());
+				cout.println("Error reading: " + parentFile.getPath());
 			}
 		}
 	}

@@ -80,7 +80,6 @@ public class TestTask extends Task {
 		if ( argument != null && argument.value != null ) {
 			try {
 				threads = Integer.parseInt(argument.value);
-				System.out.println( "Using " + threads + " thread(s)." );
 			} catch (NumberFormatException e) {
 			}
 		}
@@ -191,7 +190,6 @@ public class TestTask extends Task {
 				try {
 					if (resultsReady.tryAcquire(1, TimeUnit.SECONDS)) {
 						result = results.poll();
-						update_summary(result);
 						validOutput.acquire();
 						invalidOutput.acquire();
 						exceptionsOutput.acquire();
@@ -205,6 +203,7 @@ public class TestTask extends Task {
 						exceptionsOutput.release();
 						invalidOutput.release();
 						validOutput.release();
+						update_summary(result);
 						++processed;
 						cout.print_progress("Queued: " + queued + " - Processed: " + processed + ".");
 					} else if (bExit) {

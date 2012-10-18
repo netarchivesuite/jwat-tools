@@ -50,6 +50,7 @@ public class ProgressableOutput extends PrintStream {
 	public synchronized void print(String s) {
 		if (lastProgressWidth > 0) {
 			String spaces = new String(spacesArr, 0, lastProgressWidth);
+			super.print("\r");
 			super.print(spaces);
 			super.print("\r");
 			lastProgressWidth = 0;
@@ -62,6 +63,7 @@ public class ProgressableOutput extends PrintStream {
 	public synchronized void println(String x) {
 		if (lastProgressWidth > 0) {
 			String spaces = new String(spacesArr, 0, lastProgressWidth);
+			super.print("\r");
 			super.print(spaces);
 			super.print("\r");
 			lastProgressWidth = 0;

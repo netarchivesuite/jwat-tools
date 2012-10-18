@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.jwat.arc.ArcDateParser;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.core.FileIdent;
@@ -27,7 +28,6 @@ public class CDXTask extends Task {
 		if ( argument != null && argument.value != null ) {
 			try {
 				threads = Integer.parseInt(argument.value);
-				System.out.println( "Using " + threads + " thread(s)." );
 			} catch (NumberFormatException e) {
 			}
 		}
@@ -51,20 +51,10 @@ public class CDXTask extends Task {
 			int fileId = FileIdent.identFile(srcFile);
 			if (fileId > 0) {
 				executor.submit(new TaskRunnable(srcFile));
+				++queued;
 			} else {
 			}
 		}
-		/*
-		date
-		ip
-		url
-		mimetype
-		response code
-		old stylechecksum
-		v uncompressed arc file offset * 
-		n arc document length * 
-		g file name 
-		*/
 	}
 
 	class TaskRunnable implements Runnable {
@@ -88,6 +78,18 @@ public class CDXTask extends Task {
 	/** Completed validation results list. */
 	private ConcurrentLinkedQueue<List<CDXEntry>> results = new ConcurrentLinkedQueue<List<CDXEntry>>();
 
+	/*
+	date
+	ip
+	url
+	mimetype
+	response code
+	old stylechecksum
+	v uncompressed arc file offset * 
+	n arc document length * 
+	g file name 
+	*/
+
 	class OutputCDXThread implements Runnable {
 
 		boolean bExit = false;
@@ -107,7 +109,7 @@ public class CDXTask extends Task {
 							entry = entries.get(i);
 							sb.setLength(0);
 							if (entry.date != null) {
-								sb.append(entry.date);
+								sb.append(ArcDateParser.getDateFormat().format(entry.date));
 							} else {
 								sb.append('-');
 							}
@@ -150,6 +152,8 @@ public class CDXTask extends Task {
 							cdxOutput.out.println(sb.toString());
 						}
 						cdxOutput.release();
+						++processed;
+						cout.print_progress("Queued: " + queued + " - Processed: " + processed + ".");
 					} else if (bExit) {
 						bLoop = false;
 					}

@@ -85,18 +85,20 @@ public class JWATTools {
 			System.out.println( " -9 --best        compress better" );
 			*/
 			System.out.println( "usage: JWATTools [-dte19] [file ...]" );
-			System.out.println( " -t   test validity of ARC, WARC and/or GZip file(s)" );
-			System.out.println( " -x   to validate text/xml payload (eg. mets)" );
-			System.out.println( " -e   show errors" );
-			System.out.println( " -d   decompress" );
-			System.out.println( " -r   recursive" );
-			System.out.println( " -1   compress faster" );
-			System.out.println( " -9   compress better" );
-			System.out.println( " -i   interval extract" );
-			System.out.println( " -u   unpack multifile gzip" );
-			System.out.println( " -c   convert arc to warc" );
-			System.out.println( " -C   output CDX" );
-			System.out.println( " -l   relaxed URL URI validation" );
+			System.out.println( " -t     test validity of ARC/WARC/GZip file(s)" );
+			System.out.println( " -w<x>  thread(s)" );
+			System.out.println( " -X     to validate text/xml payload (eg. mets)" );
+			System.out.println( " -e     show errors" );
+			System.out.println( " -d     decompress" );
+			System.out.println( " -r     recursive" );
+			System.out.println( " -1     compress faster" );
+			System.out.println( " -9     compress better" );
+			System.out.println( " -i     interval extract" );
+			System.out.println( " -u     unpack multifile GZip" );
+			System.out.println( " -c     convert ARC to WARC" );
+			System.out.println( " -C     output CDX" );
+			System.out.println( " -l     relaxed URL URI validation" );
+			System.out.println( " -x     extract ARC/WARC record(s)" );
 		}
 		else {
 			Task task;

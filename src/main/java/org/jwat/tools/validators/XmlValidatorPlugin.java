@@ -1,7 +1,6 @@
 package org.jwat.tools.validators;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -10,9 +9,10 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.jwat.tools.core.Validator;
 import org.jwat.tools.core.ValidatorPlugin;
+import org.jwat.tools.tasks.test.TestFileResultItemDiagnosis;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.xml.sax.EntityResolver;
-import org.xml.sax.SAXException;
 
 /**
  * Thread safe XmlValidator dispenser.
@@ -66,7 +66,9 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
 
     	public Document document = null;
 
-    	/**
+		public String systemId = null; 
+
+		/**
     	 * Construct an <code>XmlValidator</code>.
     	 */
     	public XmlValidator() {
@@ -91,45 +93,56 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
     	 * Parse an XML document without validating DTD/XSD.
     	 * @param in XML input stream
     	 */
-        public void parse(InputStream in) {
+        public void parse(InputStream in, TestFileResultItemDiagnosis itemDiagnosis) {
         	document = null;
         	try {
+        		errorHandler.itemDiagnosis = itemDiagnosis;
         		builderParsing.reset();
         		builderParsing.setErrorHandler(errorHandler);
         		document = builderParsing.parse(in);
+        		String systemId = document.getDoctype().getSystemId(); 
+        		if (systemId == null) {
+        			Node node = document.getDocumentElement();
+        			Node attribute = node.getAttributes().getNamedItemNS("xmlns", "xsi");
+        			if (attribute != null) {
+        				System.out.println("xmlnsXsi: " + attribute.getNodeValue());
+        			}
+        		}
+        		else {
+        			System.out.println("systemId: " + systemId);
+        		}
         	}
-        	catch (IllegalArgumentException e) {
-    			e.printStackTrace();
+        	catch (Throwable t) {
+        		if (itemDiagnosis != null) {
+        			itemDiagnosis.throwables.add(t);
+        		}
+        		else {
+        			t.printStackTrace();
+        		}
         	}
-        	catch (SAXException e) {
-    			e.printStackTrace();
-    		}
-        	catch (IOException e) {
-    			e.printStackTrace();
-    		}
         }
 
         /**
          * Parse an XML document and validate using DTD/XSD.
     	 * @param in XML input stream
          */
-        public void validate(InputStream in) {
+        public void validate(InputStream in, TestFileResultItemDiagnosis itemDiagnosis) {
         	document = null;
         	try {
+        		errorHandler.itemDiagnosis = itemDiagnosis;
         		builderValidating.reset();
         		builderValidating.setEntityResolver(entityResolver);
         		builderValidating.setErrorHandler(errorHandler);
         		document = builderValidating.parse(in);
         	}
-        	catch (IllegalArgumentException e) {
-    			e.printStackTrace();
+        	catch (Throwable t) {
+        		if (itemDiagnosis != null) {
+        			itemDiagnosis.throwables.add(t);
+        		}
+        		else {
+        			t.printStackTrace();
+        		}
         	}
-        	catch (SAXException e) {
-    			e.printStackTrace();
-    		}
-        	catch (IOException e) {
-    			e.printStackTrace();
-    		}
         }
 
     }

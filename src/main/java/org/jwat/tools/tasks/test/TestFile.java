@@ -216,7 +216,6 @@ public class TestFile {
 			}
 		}
 		catch (Throwable t) {
-			++result.runtimeErrors;
 			itemThrowable = new TestFileResultItemThrowable();
 			long startOffset = -1;
 			Long length = null;
@@ -283,7 +282,7 @@ public class TestFile {
     		ValidatorPlugin plugin;
     		for (int i=0; i<validatorPlugins.size(); ++i) {
     			plugin = validatorPlugins.get(i);
-    			plugin.getValidator().validate(payload.getInputStream());
+    			plugin.getValidator().validate(payload.getInputStream(), null);
     		}
     	}
 
@@ -305,7 +304,7 @@ public class TestFile {
     		ValidatorPlugin plugin;
     		for (int i=0; i<validatorPlugins.size(); ++i) {
     			plugin = validatorPlugins.get(i);
-    			plugin.getValidator().validate(payload.getInputStream());
+    			plugin.getValidator().validate(payload.getInputStream(), null);
     		}
     	}
     }

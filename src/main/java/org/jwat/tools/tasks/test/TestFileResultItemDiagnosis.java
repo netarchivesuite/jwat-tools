@@ -15,4 +15,6 @@ public class TestFileResultItemDiagnosis {
 
 	public List<Diagnosis> warnings = new LinkedList<Diagnosis>();
 
+	public List<Throwable> throwables = new LinkedList<Throwable>();;
+
 }
