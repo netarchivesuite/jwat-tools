@@ -42,6 +42,9 @@ public class TestTask extends Task {
 
 	private UriProfile uriProfile = UriProfile.RFC3986;
 
+	private int recordHeaderMaxSize = 1024 * 1024;
+    private int payloadHeaderMaxSize = 1024 * 1024;
+
 	/*
 	 * State.
 	 */
@@ -227,6 +230,8 @@ public class TestTask extends Task {
 			TestFile2 testFile = new TestFile2();
 			testFile.bShowErrors = bShowErrors;
 			testFile.uriProfile = uriProfile;
+		    testFile.recordHeaderMaxSize = recordHeaderMaxSize;
+		    testFile.payloadHeaderMaxSize = payloadHeaderMaxSize;
 			testFile.validatorPlugins = validatorPlugins;
 			testFile.callback = null;
 			TestFileResult result = testFile.processFile(srcFile);

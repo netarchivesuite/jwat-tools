@@ -29,6 +29,11 @@ public class ArchiveParser {
 
 	public boolean bPayloadDigestEnabled = true;
 
+    public int recordHeaderMaxSize = 8192;
+
+    public int payloadHeaderMaxSize = 32768;
+
+
 	/*
 	 * State.
 	 */
@@ -69,6 +74,8 @@ public class ArchiveParser {
 							arcReader.setUriProfile(uriProfile);
 							arcReader.setBlockDigestEnabled( bBlockDigestEnabled );
 							arcReader.setPayloadDigestEnabled( bPayloadDigestEnabled );
+						    arcReader.setRecordHeaderMaxSize( recordHeaderMaxSize );
+						    arcReader.setPayloadHeaderMaxSize( payloadHeaderMaxSize );
 							callbacks.apcFileId(FileIdent.FILEID_ARC_GZ);
 						}
 						else if ( WarcReaderFactory.isWarcFile( in ) ) {
@@ -76,6 +83,8 @@ public class ArchiveParser {
 							warcReader.setWarcTargerUriProfile(uriProfile);
 							warcReader.setBlockDigestEnabled( bBlockDigestEnabled );
 							warcReader.setPayloadDigestEnabled( bPayloadDigestEnabled );
+						    warcReader.setRecordHeaderMaxSize( recordHeaderMaxSize );
+						    warcReader.setPayloadHeaderMaxSize( payloadHeaderMaxSize );
 							callbacks.apcFileId(FileIdent.FILEID_WARC_GZ);
 						}
 						else {
@@ -107,6 +116,8 @@ public class ArchiveParser {
 				arcReader.setUriProfile(uriProfile);
 				arcReader.setBlockDigestEnabled( bBlockDigestEnabled );
 				arcReader.setPayloadDigestEnabled( bPayloadDigestEnabled );
+			    arcReader.setRecordHeaderMaxSize( recordHeaderMaxSize );
+			    arcReader.setPayloadHeaderMaxSize( payloadHeaderMaxSize );
 				while ( (arcRecord = arcReader.getNextRecord()) != null ) {
 					callbacks.apcArcRecordStart(arcRecord, arcReader.getStartOffset(), false);
 					callbacks.apcUpdateConsumed(pbin.getConsumed());
@@ -115,10 +126,12 @@ public class ArchiveParser {
 				callbacks.apcFileId(FileIdent.FILEID_ARC);
 			}
 			else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
-				warcReader = WarcReaderFactory.getReader( pbin );
+				warcReader = WarcReaderFactory.getReaderUncompressed( pbin );
 				warcReader.setWarcTargerUriProfile(uriProfile);
 				warcReader.setBlockDigestEnabled( bBlockDigestEnabled );
 				warcReader.setPayloadDigestEnabled( bPayloadDigestEnabled );
+			    warcReader.setRecordHeaderMaxSize( recordHeaderMaxSize );
+			    warcReader.setPayloadHeaderMaxSize( payloadHeaderMaxSize );
 				while ( (warcRecord = warcReader.getNextRecord()) != null ) {
 					callbacks.apcWarcRecordStart(warcRecord, warcReader.getStartOffset(), false);
 					callbacks.apcUpdateConsumed(pbin.getConsumed());

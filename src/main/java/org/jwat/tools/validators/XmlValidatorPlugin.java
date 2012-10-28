@@ -11,6 +11,7 @@ import org.jwat.tools.core.Validator;
 import org.jwat.tools.core.ValidatorPlugin;
 import org.jwat.tools.tasks.test.TestFileResultItemDiagnosis;
 import org.w3c.dom.Document;
+import org.w3c.dom.DocumentType;
 import org.w3c.dom.Node;
 import org.xml.sax.EntityResolver;
 
@@ -100,7 +101,11 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
         		builderParsing.reset();
         		builderParsing.setErrorHandler(errorHandler);
         		document = builderParsing.parse(in);
-        		String systemId = document.getDoctype().getSystemId(); 
+        		systemId = null;
+        		DocumentType documentType = document.getDoctype();
+        		if (documentType != null) {
+            		systemId = documentType.getSystemId();
+        		}
         		if (systemId == null) {
         			Node node = document.getDocumentElement();
         			Node attribute = node.getAttributes().getNamedItemNS("xmlns", "xsi");

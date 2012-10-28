@@ -21,7 +21,11 @@ public class TestFile2 implements ArchiveParserCallback {
 
 	public UriProfile uriProfile;
 
-	public List<ValidatorPlugin> validatorPlugins;
+    public int recordHeaderMaxSize = 8192;
+
+    public int payloadHeaderMaxSize = 32768;
+
+    public List<ValidatorPlugin> validatorPlugins;
 
 	public TestFileUpdateCallback callback;
 
@@ -35,6 +39,8 @@ public class TestFile2 implements ArchiveParserCallback {
 		archiveParser.uriProfile = uriProfile;
 		archiveParser.bBlockDigestEnabled = true;
 		archiveParser.bPayloadDigestEnabled = true;
+	    archiveParser.recordHeaderMaxSize = recordHeaderMaxSize;
+	    archiveParser.payloadHeaderMaxSize = payloadHeaderMaxSize;
 
 		long consumed = archiveParser.parse(file, this);
 
