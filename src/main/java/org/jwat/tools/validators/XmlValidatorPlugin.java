@@ -135,6 +135,37 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
         	document = null;
         	try {
         		errorHandler.itemDiagnosis = itemDiagnosis;
+        		builderParsing.reset();
+        		builderParsing.setErrorHandler(errorHandler);
+        		document = builderParsing.parse(in);
+        		systemId = null;
+        		DocumentType documentType = document.getDoctype();
+        		if (documentType != null) {
+            		systemId = documentType.getSystemId();
+        		}
+        		if (systemId == null) {
+        			Node node = document.getDocumentElement();
+        			Node attribute = node.getAttributes().getNamedItemNS("xmlns", "xsi");
+        			if (attribute != null) {
+        				System.out.println("xmlnsXsi: " + attribute.getNodeValue());
+        			}
+        		}
+        		else {
+        			System.out.println("systemId: " + systemId);
+        		}
+        	}
+        	catch (Throwable t) {
+        		if (itemDiagnosis != null) {
+        			itemDiagnosis.throwables.add(t);
+        		}
+        		else {
+        			t.printStackTrace();
+        		}
+        	}
+        	/*
+        	document = null;
+        	try {
+        		errorHandler.itemDiagnosis = itemDiagnosis;
         		builderValidating.reset();
         		builderValidating.setEntityResolver(entityResolver);
         		builderValidating.setErrorHandler(errorHandler);
@@ -148,6 +179,7 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
         			t.printStackTrace();
         		}
         	}
+        	*/
         }
 
     }

@@ -28,7 +28,7 @@ public class CDXFile implements ArchiveParserCallback {
 	}
 
 	public List<CDXEntry> processFile(File file) {
-		fileName = file.getPath();
+		fileName = file.getName();
 		ArchiveParser archiveParser = new ArchiveParser();
 		archiveParser.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
 		archiveParser.bBlockDigestEnabled = true;
@@ -38,7 +38,7 @@ public class CDXFile implements ArchiveParserCallback {
 	}
 
 	@Override
-	public void apcFileId(int fileId) {
+	public void apcFileId(File file, int fileId) {
 	}
 
 	@Override
@@ -125,6 +125,10 @@ public class CDXFile implements ArchiveParserCallback {
 
 	@Override
 	public void apcRuntimeError(Throwable t, long offset, long consumed) {
+	}
+
+	@Override
+	public void apcDone() {
 	}
 
 }

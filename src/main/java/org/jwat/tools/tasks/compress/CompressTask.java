@@ -1,4 +1,4 @@
-package org.jwat.tools.tasks;
+package org.jwat.tools.tasks.compress;
 
 import java.io.BufferedInputStream;
 import java.io.File;

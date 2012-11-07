@@ -1,5 +1,6 @@
 package org.jwat.tools.tasks.extract;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.jwat.arc.ArcRecordBase;
@@ -10,7 +11,7 @@ import org.jwat.warc.WarcRecord;
 public class ExtractFile implements ArchiveParserCallback {
 
 	@Override
-	public void apcFileId(int fileId) {
+	public void apcFileId(File file, int fileId) {
 	}
 
 	@Override
@@ -33,6 +34,10 @@ public class ExtractFile implements ArchiveParserCallback {
 
 	@Override
 	public void apcRuntimeError(Throwable t, long offset, long consumed) {
+	}
+
+	@Override
+	public void apcDone() {
 	}
 
 }

@@ -94,12 +94,20 @@ public class TestTask extends Task {
 		invalidOutput = new SynchronizedOutput("i.out");
 		exceptionsOutput = new SynchronizedOutput("e.out");
 
-		OutputThread outputThread = new OutputThread();
-		Thread thread = new Thread(outputThread);
+		ResultThread resultThread = new ResultThread();
+		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		init_threadpool(filesList);
-		outputThread.bExit = true;
+		threadpool_feeder_lifecycle(filesList);
+
+		resultThread.bExit = true;
+		while (!resultThread.bClosed) {
+			try {
+				Thread.sleep( 100 );
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 
 		exceptionsOutput.close();
 
@@ -180,9 +188,11 @@ public class TestTask extends Task {
 		}
 	}
 
-	class OutputThread implements Runnable {
+	class ResultThread implements Runnable {
 
 		boolean bExit = false;
+
+		boolean bClosed = false;
 
 		@Override
 		public void run() {
@@ -217,6 +227,8 @@ public class TestTask extends Task {
 				}
 			}
 			cout.println("Output Thread stopped.");
+
+			bClosed = true;
 		}
 	}
 

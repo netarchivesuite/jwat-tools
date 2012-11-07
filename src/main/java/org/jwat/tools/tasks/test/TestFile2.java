@@ -63,7 +63,8 @@ public class TestFile2 implements ArchiveParserCallback {
 		return result;
 	}
 
-	public void apcFileId(int fileId) {
+	@Override
+	public void apcFileId(File file, int fileId) {
 		switch (fileId) {
 		case FileIdent.FILEID_GZIP:
 			++result.gzFiles;
@@ -86,6 +87,7 @@ public class TestFile2 implements ArchiveParserCallback {
 		}
 	}
 
+	@Override
 	public void apcGzipEntryStart(GzipEntry gzipEntry, long startOffset) {
 		++result.gzipEntries;
 		result.gzipErrors = gzipEntry.diagnostics.getErrors().size();
@@ -102,6 +104,7 @@ public class TestFile2 implements ArchiveParserCallback {
 		}
 	}
 
+	@Override
 	public void apcArcRecordStart(ArcRecordBase arcRecord, long startOffset, boolean compressed) throws IOException {
 		++result.arcRecords;
 		//System.out.println(arcRecords + " - " + arcRecord.getStartOffset() + " (0x" + (Long.toHexString(arcRecord.getStartOffset())) + ")");
@@ -133,6 +136,7 @@ public class TestFile2 implements ArchiveParserCallback {
 		}
 	}
 
+	@Override
 	public void apcWarcRecordStart(WarcRecord warcRecord, long startOffset, boolean compressed) throws IOException {
 		++result.warcRecords;
 		//System.out.println(warcRecords + " - " + warcRecord.getStartOffset() + " (0x" + (Long.toHexString(warcRecord.getStartOffset())) + ")");
@@ -164,18 +168,24 @@ public class TestFile2 implements ArchiveParserCallback {
 		}
 	}
 
+	@Override
 	public void apcUpdateConsumed(long consumed) {
 		if (callback != null) {
 			callback.update(result, consumed);
 		}
 	}
 
+	@Override
 	public void apcRuntimeError(Throwable t, long startOffset, long consumed) {
 		TestFileResultItemThrowable itemThrowable = new TestFileResultItemThrowable();
 		itemThrowable.startOffset = startOffset;
 		itemThrowable.offset = consumed;
 		itemThrowable.t = t;
 		result.throwableList.add(itemThrowable);
+	}
+
+	@Override
+	public void apcDone() {
 	}
 
 	protected void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload, TestFileResultItemDiagnosis itemDiagnosis) {

@@ -1,13 +1,16 @@
 package org.jwat.tools;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.core.Task;
-import org.jwat.tools.tasks.CompressTask;
 import org.jwat.tools.tasks.ConvertTask;
-import org.jwat.tools.tasks.DecompressTask;
 import org.jwat.tools.tasks.IntervalTask;
 import org.jwat.tools.tasks.UnpackTask;
 import org.jwat.tools.tasks.cdx.CDXTask;
+import org.jwat.tools.tasks.compress.CompressTask;
+import org.jwat.tools.tasks.decompress.DecompressTask;
 import org.jwat.tools.tasks.extract.ExtractTask;
 import org.jwat.tools.tasks.test.TestTask;
 
@@ -27,6 +30,7 @@ public class JWATTools {
 	public static final int A_CDX = 11;
 	public static final int A_LAX = 12;
 	public static final int A_EXTRACT = 13;
+	public static final int A_COMMAND = 14;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -36,6 +40,7 @@ public class JWATTools {
 	public void Main(String[] args) {
 		CommandLine.Arguments arguments = null;
 		CommandLine cmdLine = new CommandLine();
+		//cmdLine.addListArgument( "command", A_FILES, 1, Integer.MAX_VALUE );
 		cmdLine.addOption( "-d", A_DECOMPRESS );
 		cmdLine.addOption( "--decompress", A_DECOMPRESS );
 		cmdLine.addOption( "-1", A_COMPRESS, 1 );
@@ -75,6 +80,19 @@ public class JWATTools {
 			System.out.println( getClass().getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}
+
+		/*
+		Map<String, Class<? extends Task>> commands = new HashMap<String, Class<? extends Task>>();
+		commands.put("compress", DecompressTask.class);
+		commands.put("decompress", CompressTask.class);
+		commands.put("test", TestTask.class);
+		commands.put("interval", IntervalTask.class);
+		commands.put("unpack", UnpackTask.class);
+		commands.put("arc2warc", ConvertTask.class);
+		commands.put("cdx", CDXTask.class);
+		commands.put("extract", ExtractTask.class);
+		*/
+
 		if ( arguments == null ) {
 			System.out.println( "JWATTools v0.5.4" );
 			/*

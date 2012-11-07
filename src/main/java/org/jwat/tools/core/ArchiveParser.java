@@ -76,7 +76,7 @@ public class ArchiveParser {
 							arcReader.setPayloadDigestEnabled( bPayloadDigestEnabled );
 						    arcReader.setRecordHeaderMaxSize( recordHeaderMaxSize );
 						    arcReader.setPayloadHeaderMaxSize( payloadHeaderMaxSize );
-							callbacks.apcFileId(FileIdent.FILEID_ARC_GZ);
+							callbacks.apcFileId(file, FileIdent.FILEID_ARC_GZ);
 						}
 						else if ( WarcReaderFactory.isWarcFile( in ) ) {
 							warcReader = WarcReaderFactory.getReaderUncompressed();
@@ -85,10 +85,10 @@ public class ArchiveParser {
 							warcReader.setPayloadDigestEnabled( bPayloadDigestEnabled );
 						    warcReader.setRecordHeaderMaxSize( recordHeaderMaxSize );
 						    warcReader.setPayloadHeaderMaxSize( payloadHeaderMaxSize );
-							callbacks.apcFileId(FileIdent.FILEID_WARC_GZ);
+							callbacks.apcFileId(file, FileIdent.FILEID_WARC_GZ);
 						}
 						else {
-							callbacks.apcFileId(FileIdent.FILEID_GZIP);
+							callbacks.apcFileId(file, FileIdent.FILEID_GZIP);
 						}
 					}
 					if ( arcReader != null ) {
@@ -118,12 +118,12 @@ public class ArchiveParser {
 				arcReader.setPayloadDigestEnabled( bPayloadDigestEnabled );
 			    arcReader.setRecordHeaderMaxSize( recordHeaderMaxSize );
 			    arcReader.setPayloadHeaderMaxSize( payloadHeaderMaxSize );
+				callbacks.apcFileId(file, FileIdent.FILEID_ARC);
 				while ( (arcRecord = arcReader.getNextRecord()) != null ) {
 					callbacks.apcArcRecordStart(arcRecord, arcReader.getStartOffset(), false);
 					callbacks.apcUpdateConsumed(pbin.getConsumed());
 				}
 				arcReader.close();
-				callbacks.apcFileId(FileIdent.FILEID_ARC);
 			}
 			else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
 				warcReader = WarcReaderFactory.getReaderUncompressed( pbin );
@@ -132,16 +132,17 @@ public class ArchiveParser {
 				warcReader.setPayloadDigestEnabled( bPayloadDigestEnabled );
 			    warcReader.setRecordHeaderMaxSize( recordHeaderMaxSize );
 			    warcReader.setPayloadHeaderMaxSize( payloadHeaderMaxSize );
+				callbacks.apcFileId(file, FileIdent.FILEID_WARC);
 				while ( (warcRecord = warcReader.getNextRecord()) != null ) {
 					callbacks.apcWarcRecordStart(warcRecord, warcReader.getStartOffset(), false);
 					callbacks.apcUpdateConsumed(pbin.getConsumed());
 				}
 				warcReader.close();
-				callbacks.apcFileId(FileIdent.FILEID_WARC);
 			}
 			else {
-				callbacks.apcFileId(FileIdent.FILEID_UNKNOWN);
+				callbacks.apcFileId(file, FileIdent.FILEID_UNKNOWN);
 			}
+			callbacks.apcDone();
 		}
 		catch (Throwable t) {
 			// TODO just use reader.getStartOffset?

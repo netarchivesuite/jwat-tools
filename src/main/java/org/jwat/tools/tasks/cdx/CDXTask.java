@@ -37,12 +37,20 @@ public class CDXTask extends Task {
 		cdxOutput = new SynchronizedOutput("cdx.out");
 		cdxOutput.out.println("CDX b e a m s c v n g");
 
-		OutputCDXThread outputCDXThread = new OutputCDXThread();
-		Thread thread = new Thread(outputCDXThread);
+		ResultThread resultThread = new ResultThread();
+		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		init_threadpool(filesList);
-		outputCDXThread.bExit = true;
+		threadpool_feeder_lifecycle(filesList);
+
+		resultThread.bExit = true;
+		while (!resultThread.bClosed) {
+			try {
+				Thread.sleep( 100 );
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override
@@ -90,9 +98,11 @@ public class CDXTask extends Task {
 	g file name 
 	*/
 
-	class OutputCDXThread implements Runnable {
+	class ResultThread implements Runnable {
 
 		boolean bExit = false;
+
+		boolean bClosed = false;
 
 		@Override
 		public void run() {
@@ -161,6 +171,7 @@ public class CDXTask extends Task {
 					bLoop = false;
 				}
 			}
+			bClosed = true;
 		}
 	}
 
