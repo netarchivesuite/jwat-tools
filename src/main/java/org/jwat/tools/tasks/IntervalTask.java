@@ -83,7 +83,7 @@ public class IntervalTask extends Task {
 		else {
 			System.out.println("Incorrect arguments!");
 		}
-		taskFileListFeeder( filesList, this );
+		filelist_feeder( filesList, this );
 	}
 
 	@Override

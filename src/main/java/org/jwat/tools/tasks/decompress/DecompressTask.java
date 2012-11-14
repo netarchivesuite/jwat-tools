@@ -23,9 +23,18 @@ public class DecompressTask extends Task {
 
 	@Override
 	public void command(CommandLine.Arguments arguments) {
-		CommandLine.Argument argument = arguments.idMap.get( JWATTools.A_FILES );
+		CommandLine.Argument argument;
+		argument = arguments.idMap.get( JWATTools.A_WORKERS );
+		if ( argument != null && argument.value != null ) {
+			try {
+				threads = Integer.parseInt(argument.value);
+			} catch (NumberFormatException e) {
+			}
+		}
+		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
-		taskFileListFeeder( filesList, this );
+
+		threadpool_feeder_lifecycle(filesList, this);
 	}
 
 	@Override

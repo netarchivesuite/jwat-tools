@@ -7,6 +7,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.jwat.arc.ArcDateParser;
+import org.jwat.common.Uri;
+import org.jwat.common.UriProfile;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.core.FileIdent;
@@ -34,14 +36,14 @@ public class CDXTask extends Task {
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
 
-		cdxOutput = new SynchronizedOutput("cdx.out");
-		cdxOutput.out.println("CDX b e a m s c v n g");
+		cdxOutput = new SynchronizedOutput("cdx-unsorted.out");
+		//cdxOutput.out.println("CDX b e a m s c v n g");
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle(filesList);
+		threadpool_feeder_lifecycle(filesList, this);
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -86,18 +88,6 @@ public class CDXTask extends Task {
 	/** Completed validation results list. */
 	private ConcurrentLinkedQueue<List<CDXEntry>> results = new ConcurrentLinkedQueue<List<CDXEntry>>();
 
-	/*
-	date
-	ip
-	url
-	mimetype
-	response code
-	old stylechecksum
-	v uncompressed arc file offset * 
-	n arc document length * 
-	g file name 
-	*/
-
 	class ResultThread implements Runnable {
 
 		boolean bExit = false;
@@ -108,7 +98,6 @@ public class CDXTask extends Task {
 		public void run() {
 			List<CDXEntry> entries;
 			CDXEntry entry;
-			StringBuilder sb = new StringBuilder();
 			boolean bLoop = true;
 			while (bLoop) {
 				try {
@@ -117,49 +106,7 @@ public class CDXTask extends Task {
 						cdxOutput.acquire();
 						for (int i=0; i<entries.size(); ++i) {
 							entry = entries.get(i);
-							sb.setLength(0);
-							if (entry.date != null) {
-								sb.append(ArcDateParser.getDateFormat().format(entry.date));
-							} else {
-								sb.append('-');
-							}
-							sb.append(' ');
-							if (entry.ip != null && entry.ip.length() > 0) {
-								sb.append(entry.ip);
-							} else {
-								sb.append('-');
-							}
-							sb.append(' ');
-							if (entry.url != null && entry.url.length() > 0) {
-								sb.append(entry.url);
-							} else {
-								sb.append('-');
-							}
-							sb.append(' ');
-							if (entry.mimetype != null && entry.mimetype.length() > 0) {
-								sb.append(entry.mimetype);
-							} else {
-								sb.append('-');
-							}
-							sb.append(' ');
-							if (entry.responseCode != null && entry.responseCode.length() > 0) {
-								sb.append(entry.responseCode);
-							} else {
-								sb.append('-');
-							}
-							sb.append(' ');
-							if (entry.checksum != null && entry.checksum.length() > 0) {
-								sb.append(entry.checksum);
-							} else {
-								sb.append('-');
-							}
-							sb.append(' ');
-							sb.append(entry.offset); 
-							sb.append(' ');
-							sb.append(entry.length); 
-							sb.append(' ');
-							sb.append(entry.fileName); 
-							cdxOutput.out.println(sb.toString());
+							cdxOutput.out.println(cdxEntry(entry, "Abams--vg".toCharArray()));
 						}
 						cdxOutput.release();
 						++processed;
@@ -172,6 +119,126 @@ public class CDXTask extends Task {
 				}
 			}
 			bClosed = true;
+		}
+
+		/*
+		cdxOutput.out.println("CDX b e a m s c v n g");
+		date
+		ip
+		url
+		mimetype
+		response code
+		old stylechecksum
+		v uncompressed arc file offset * 
+		n arc document length * 
+		g file name 
+		*/
+
+		// vinavisen.dk/vinavisen/website.nsf/pages/ 20050506142753 http://www.vinavisen.dk/vinavisen/website.nsf/pages/ text/html 200 - - 294494 kb-pligtsystem-44290-20121018212853-00000.warc
+
+		//b e a m s c v n g
+		//A b a m s - - v g
+
+		public String cdxEntry(CDXEntry entry, char[] format) {
+			StringBuilder sb = new StringBuilder();
+			sb.setLength(0);
+			char c;
+			Uri uri;
+			String host;
+			int port;
+			String query;
+			for (int i=0; i<format.length; ++i) {
+				if (sb.length() > 0) {
+					sb.append(' ');
+				}
+				c = format[i];
+				switch (c) {
+				case '-':
+					sb.append('-');
+					break;
+				case 'b':
+					if (entry.date != null) {
+						sb.append(ArcDateParser.getDateFormat().format(entry.date));
+					} else {
+						sb.append('-');
+					}
+					break;
+				case 'e':
+					if (entry.ip != null && entry.ip.length() > 0) {
+						sb.append(entry.ip);
+					} else {
+						sb.append('-');
+					}
+					break;
+				case 'A':
+					if (entry.url != null && entry.url.length() > 0) {
+						uri = Uri.create(entry.url, UriProfile.RFC3986_ABS_16BIT_LAX);
+						StringBuilder cUrl = new StringBuilder();
+						if ("http".equalsIgnoreCase(uri.getScheme())) {
+							host = uri.getHost();
+							port = uri.getPort();
+							query = uri.getRawQuery();
+							if (host.startsWith("www.")) {
+								host = host.substring("www.".length());
+							}
+							cUrl.append(host);
+							if (port != -1 && port != 80) {
+								cUrl.append(':');
+								cUrl.append(port);
+							}
+							cUrl.append(uri.getRawPath());
+							if (query != null) {
+								cUrl.append('?');
+								cUrl.append(query);
+							}
+							sb.append(cUrl.toString());
+						} else {
+							sb.append(entry.url);
+						}
+					} else {
+						sb.append('-');
+					}
+					break;
+				case 'a':
+					if (entry.url != null && entry.url.length() > 0) {
+						sb.append(entry.url);
+					} else {
+						sb.append('-');
+					}
+					break;
+				case 'm':
+					if (entry.mimetype != null && entry.mimetype.length() > 0) {
+						sb.append(entry.mimetype);
+					} else {
+						sb.append('-');
+					}
+					break;
+				case 's':
+					if (entry.responseCode != null && entry.responseCode.length() > 0) {
+						sb.append(entry.responseCode);
+					} else {
+						sb.append('-');
+					}
+					break;
+				case 'c':
+					if (entry.checksum != null && entry.checksum.length() > 0) {
+						sb.append(entry.checksum);
+					} else {
+						sb.append('-');
+					}
+					break;
+				case 'v':
+					sb.append(entry.offset);
+					break;
+				case 'n':
+					sb.append(entry.length);
+					break;
+				case 'g':
+					sb.append(entry.fileName);
+					break;
+				}
+			}
+			return sb.toString();
 		}
 	}
 

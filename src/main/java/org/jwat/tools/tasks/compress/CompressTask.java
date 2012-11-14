@@ -47,7 +47,7 @@ public class CompressTask extends Task {
 		// Files
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
-		taskFileListFeeder( filesList, this );
+		filelist_feeder( filesList, this );
 	}
 
 	@Override

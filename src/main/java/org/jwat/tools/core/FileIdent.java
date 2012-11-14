@@ -24,6 +24,7 @@ public final class FileIdent {
 	public static int identFile(File file) {
 		int fileId;
 		String fname = file.getName().toLowerCase();
+		// TODO check to arc.gz and warc.gz
 		if (fname.endsWith(".gz")) {
 			fileId = FILEID_GZIP;
 		} else if (fname.endsWith(".arc")) {
@@ -51,6 +52,7 @@ public final class FileIdent {
 			if (magicLength == 16) {
 				if (GzipReader.isGzipped(pbin)) {
 					fileId = FILEID_GZIP;
+					// TODO check for compress arc or warc too
 				} else if (ArcReaderFactory.isArcFile(pbin)) {
 					fileId = FILEID_ARC;
 				} else if (WarcReaderFactory.isWarcFile(pbin)) {

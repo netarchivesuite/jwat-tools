@@ -37,13 +37,13 @@ public abstract class Task {
 	futures.add(future);
 	 */
 
-	public void threadpool_feeder_lifecycle(List<String> filesList) {
+	public void threadpool_feeder_lifecycle(List<String> filesList, Task task) {
 		cout.println( "Using " + threads + " thread(s)." );
 		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		startCtm = System.currentTimeMillis();
 		cout.println("ThreadPool started.");
 		try {
-			taskFileListFeeder( filesList, this );
+			filelist_feeder( filesList, task );
 		} catch (Throwable t) {
 			cout.println("Died unexpectedly!");
 		} finally {
@@ -85,7 +85,7 @@ public abstract class Task {
 		}
 	}
 
-	public void taskFileListFeeder(List<String> filesList, Task task) {
+	public void filelist_feeder(List<String> filesList, Task task) {
 		String fileSeparator = System.getProperty( "file.separator" );
 		File parentFile;
 		String filepart;
@@ -111,7 +111,7 @@ public abstract class Task {
 				filter = new AcceptWildcardFileFilter(filepart);
 			}
 			if ( parentFile.exists() ) {
-				taskFileFeeder( parentFile, filter, task );
+				filelist_feeder_process( parentFile, filter, task );
 			}
 			else {
 				cout.println( "File does not exist -- " + parentFile.getPath() );
@@ -120,7 +120,7 @@ public abstract class Task {
 		}
 	}
 
-	public void taskFileFeeder(File parentFile, FileFilter filter, Task task) {
+	public void filelist_feeder_process(File parentFile, FileFilter filter, Task task) {
 		if ( parentFile.isFile() ) {
 			task.process( parentFile );
 		}
@@ -132,7 +132,7 @@ public abstract class Task {
 						task.process( files[ i ] );
 					}
 					else {
-						taskFileFeeder( files[ i ], filter, task );
+						filelist_feeder_process( files[ i ], filter, task );
 					}
 				}
 			}

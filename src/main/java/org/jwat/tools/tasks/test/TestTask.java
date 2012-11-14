@@ -98,7 +98,7 @@ public class TestTask extends Task {
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle(filesList);
+		threadpool_feeder_lifecycle(filesList, this);
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {

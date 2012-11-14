@@ -4,9 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.jwat.tools.core.CommandLine;
+import org.jwat.tools.core.CommandLine.Argument;
 import org.jwat.tools.core.Task;
 import org.jwat.tools.tasks.ConvertTask;
 import org.jwat.tools.tasks.IntervalTask;
+import org.jwat.tools.tasks.PathIndexTask;
 import org.jwat.tools.tasks.UnpackTask;
 import org.jwat.tools.tasks.cdx.CDXTask;
 import org.jwat.tools.tasks.compress.CompressTask;
@@ -16,33 +18,38 @@ import org.jwat.tools.tasks.test.TestTask;
 
 public class JWATTools {
 
-	public static final int A_DECOMPRESS = 1;
-	public static final int A_COMPRESS = 2;
-	public static final int A_FILES = 3;
-	public static final int A_TEST = 4;
+	public static final int A_COMMAND = 1;
+	public static final int A_FILES = 2;
+	public static final int A_WORKERS = 3;
+	public static final int A_COMPRESS = 4;
 	public static final int A_SHOW_ERRORS = 5;
 	public static final int A_RECURSIVE = 6;
-	public static final int A_WORKERS = 6;
-	public static final int A_INTERVAL = 7;
-	public static final int A_UNPACK = 8;
-	public static final int A_CONVERT = 9;
-	public static final int A_XML = 10;
-	public static final int A_CDX = 11;
-	public static final int A_LAX = 12;
-	public static final int A_EXTRACT = 13;
-	public static final int A_COMMAND = 14;
+	public static final int A_XML = 7;
+	public static final int A_LAX = 8;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
 		tools.Main( args );
 	}
 
+	protected static Map<String, Class<? extends Task>> commands = new HashMap<String, Class<? extends Task>>();
+
+	static {
+		commands.put("arc2warc", ConvertTask.class);
+		commands.put("cdx", CDXTask.class);
+		commands.put("compress", DecompressTask.class);
+		commands.put("decompress", CompressTask.class);
+		commands.put("extract", ExtractTask.class);
+		commands.put("interval", IntervalTask.class);
+		commands.put("pathindex", PathIndexTask.class);
+		commands.put("test", TestTask.class);
+		commands.put("unpack", UnpackTask.class);
+	}
+
 	public void Main(String[] args) {
 		CommandLine.Arguments arguments = null;
 		CommandLine cmdLine = new CommandLine();
-		//cmdLine.addListArgument( "command", A_FILES, 1, Integer.MAX_VALUE );
-		cmdLine.addOption( "-d", A_DECOMPRESS );
-		cmdLine.addOption( "--decompress", A_DECOMPRESS );
+		cmdLine.addListArgument( "command", A_COMMAND, 1, 1 );
 		cmdLine.addOption( "-1", A_COMPRESS, 1 );
 		cmdLine.addOption( "-2", A_COMPRESS, 2 );
 		cmdLine.addOption( "-3", A_COMPRESS, 3 );
@@ -54,19 +61,13 @@ public class JWATTools {
 		cmdLine.addOption( "-9", A_COMPRESS, 9 );
 		cmdLine.addOption( "--fast", A_COMPRESS, 1 );
 		cmdLine.addOption( "--best", A_COMPRESS, 9 );
-		cmdLine.addOption( "-t", A_TEST );
 		cmdLine.addOption( "-e", A_SHOW_ERRORS );
+		cmdLine.addOption( "-l", A_LAX );
 		cmdLine.addOption( "-r", A_RECURSIVE );
 		cmdLine.addOption( "-w=", A_WORKERS );
-		cmdLine.addOption( "--test", A_TEST );
-		cmdLine.addOption( "-i", A_INTERVAL );
-		cmdLine.addOption( "-u", A_UNPACK );
-		cmdLine.addOption( "-c", A_CONVERT );
-		cmdLine.addOption( "-X", A_XML );
-		cmdLine.addOption( "-C", A_CDX );
-		cmdLine.addOption( "-l", A_LAX );
-		cmdLine.addOption( "-x", A_EXTRACT );
+		cmdLine.addOption( "-x", A_XML );
 		cmdLine.addListArgument( "files", A_FILES, 1, Integer.MAX_VALUE );
+
 		try {
 			arguments = cmdLine.parse( args );
 			/*
@@ -81,76 +82,54 @@ public class JWATTools {
 			System.exit( 1 );
 		}
 
-		/*
-		Map<String, Class<? extends Task>> commands = new HashMap<String, Class<? extends Task>>();
-		commands.put("compress", DecompressTask.class);
-		commands.put("decompress", CompressTask.class);
-		commands.put("test", TestTask.class);
-		commands.put("interval", IntervalTask.class);
-		commands.put("unpack", UnpackTask.class);
-		commands.put("arc2warc", ConvertTask.class);
-		commands.put("cdx", CDXTask.class);
-		commands.put("extract", ExtractTask.class);
-		*/
-
 		if ( arguments == null ) {
-			System.out.println( "JWATTools v0.5.4" );
-			/*
-			System.out.println( "usage: JWATTools [-dt19] [file ...]" );
-			System.out.println( " -t --test        test compressed file integrity" );
-			System.out.println( " -d --decompress  decompress" );
-			System.out.println( " -1 --fast        compress faster" );
-			System.out.println( " -9 --best        compress better" );
-			*/
-			System.out.println( "usage: JWATTools [-dte19] [file ...]" );
-			System.out.println( " -t     test validity of ARC/WARC/GZip file(s)" );
-			System.out.println( " -w<x>  thread(s)" );
-			System.out.println( " -X     to validate text/xml payload (eg. mets)" );
-			System.out.println( " -e     show errors" );
-			System.out.println( " -d     decompress" );
-			System.out.println( " -r     recursive" );
-			System.out.println( " -1     compress faster" );
-			System.out.println( " -9     compress better" );
-			System.out.println( " -i     interval extract" );
-			System.out.println( " -u     unpack multifile GZip" );
-			System.out.println( " -c     convert ARC to WARC" );
-			System.out.println( " -C     output CDX" );
-			System.out.println( " -l     relaxed URL URI validation" );
-			System.out.println( " -x     extract ARC/WARC record(s)" );
+			System.out.println( "JWATTools v0.5.5" );
+			System.out.println( "usage: JWATTools [-dte19] command [file ...]" );
+			System.out.println( "" );
+			System.out.println( "Commands:" );
+			System.out.println( "   arc2warc     convert ARC to WARC");
+			System.out.println( "   cdx          create a CDX index (unsorted)");
+			System.out.println( "   compress     compress");
+			System.out.println( "   decompress   decompress");
+			System.out.println( "   extract      extract ARC/WARC record(s)");
+			System.out.println( "   interval     interval extract");
+			System.out.println( "   pathindex    create a heritrix path index (unsorted)");
+			System.out.println( "   test         test validity of ARC/WARC/GZip file(s)");
+			System.out.println( "   unpack       unpack multifile GZip");
+			System.out.println( "" );
+			System.out.println( "Options:" );
+			System.out.println( "   -r      recursive (currently has no effect)" );
+			System.out.println( "   -w<x>   set the amount of worker thread(s) (defaults to 1)" );
+			System.out.println( "" );
+			System.out.println( "Test options:" );
+			System.out.println( "   -e   show errors" );
+			System.out.println( "   -l   relaxed URL URI validation" );
+			System.out.println( "   -x   to validate text/xml payload (eg. mets)" );
+			System.out.println( "" );
+			System.out.println( "Compress options:" );
+			System.out.println( "   -1, --fast   compress faster" );
+			System.out.println( "   -9, --slow   compress better" );
+			System.out.println( "" );
 		}
 		else {
-			Task task;
-			if ( arguments.idMap.containsKey( A_DECOMPRESS ) ) {
-				task = new DecompressTask();
-				task.command(arguments);
+			Argument argument = arguments.idMap.get( JWATTools.A_COMMAND );
+			String commandStr = argument.value.toLowerCase();
+
+			Class<? extends Task> clazz = commands.get(commandStr);
+			if (clazz != null) {
+				try {
+					Task task = clazz.newInstance();
+					task.command(arguments);
+				}
+				catch (InstantiationException e) {
+					e.printStackTrace();
+				}
+				catch (IllegalAccessException e) {
+					e.printStackTrace();
+				}
 			}
-			else if ( arguments.idMap.containsKey( A_COMPRESS ) ) {
-				task = new CompressTask();
-				task.command(arguments);
-			}
-			else if ( arguments.idMap.containsKey( A_TEST ) ) {
-				task = new TestTask();
-				task.command(arguments);
-			}
-			else if ( arguments.idMap.containsKey( A_INTERVAL ) ) {
-				task = new IntervalTask();
-				task.command(arguments);
-			}
-			else if ( arguments.idMap.containsKey( A_UNPACK ) ) {
-				task = new UnpackTask();
-				task.command(arguments);
-			}
-			else if ( arguments.idMap.containsKey( A_CONVERT ) ) {
-				task = new ConvertTask();
-				task.command(arguments);
-			}
-			else if ( arguments.idMap.containsKey( A_CDX ) ) {
-				task = new CDXTask();
-				task.command(arguments);
-			}
-			else if ( arguments.idMap.containsKey( A_EXTRACT ) ) {
-				task = new ExtractTask();
-				task.command(arguments);
+			else {
+				System.out.println("Unknown command -- " + commandStr);
 			}
 		}
 	}
