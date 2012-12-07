@@ -39,6 +39,7 @@ public abstract class Task {
 
 	public void threadpool_feeder_lifecycle(List<String> filesList, Task task) {
 		cout.println( "Using " + threads + " thread(s)." );
+		//executor = Executors.newFixedThreadPool(16);
 		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		startCtm = System.currentTimeMillis();
 		cout.println("ThreadPool started.");

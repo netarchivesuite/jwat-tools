@@ -1,12 +1,21 @@
 package org.jwat.tools.tasks.test;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.jwat.common.Diagnosis;
+import org.jwat.common.DiagnosisType;
 import org.jwat.common.UriProfile;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
@@ -69,16 +78,6 @@ public class TestTask extends Task {
 
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
-		if ( arguments.idMap.containsKey( JWATTools.A_SHOW_ERRORS ) ) {
-			bShowErrors = true;
-		}
-		if ( arguments.idMap.containsKey( JWATTools.A_XML ) ) {
-			validatorPlugins.add(new XmlValidatorPlugin());
-		}
-		if ( arguments.idMap.containsKey( JWATTools.A_LAX ) ) {
-			uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
-			System.out.println("Using relaxed URI validation for ARC URL and WARC Target-URI.");
-		}
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
 			try {
@@ -86,7 +85,17 @@ public class TestTask extends Task {
 			} catch (NumberFormatException e) {
 			}
 		}
-		//executor = Executors.newFixedThreadPool(16);
+		if ( arguments.idMap.containsKey( JWATTools.A_SHOW_ERRORS ) ) {
+			bShowErrors = true;
+			System.out.println("Showing errors.");
+		}
+		if ( arguments.idMap.containsKey( JWATTools.A_LAX ) ) {
+			uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
+			System.out.println("Using relaxed URI validation for ARC URL and WARC Target-URI.");
+		}
+		if ( arguments.idMap.containsKey( JWATTools.A_XML ) ) {
+			validatorPlugins.add(new XmlValidatorPlugin());
+		}
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
 
@@ -158,23 +167,52 @@ public class TestTask extends Task {
 		cout.println( "RuntimeErr: " + runtimeErrors );
 		cout.println( "   Skipped: " + skipped );
 		cout.println( "Validation took " + (System.currentTimeMillis() - startCtm) + " ms." );
+
+		List<Entry<DiagnosisType, Integer>> typeNumbersList = new ArrayList<Entry<DiagnosisType, Integer>>(typeNumbers.entrySet());
+		//Collections.sort(typeNumbersList, new EntryDiagnosisTypeComparator());
+		Collections.sort(typeNumbersList, new EntryComparator<DiagnosisType>());
+		Entry<DiagnosisType, Integer> typeNumberEntry;
+		for (int i=0; i<typeNumbersList.size(); ++i) {
+			typeNumberEntry = typeNumbersList.get(i);
+			System.out.println(typeNumberEntry.getKey().toString() + ": " + typeNumberEntry.getValue());
+		}
+
+		List<Entry<String, Integer>> entityNumbersList = new ArrayList<Entry<String, Integer>>(entityNumbers.entrySet());
+		//Collections.sort(entityNumbersList, new EntryStringComparator());
+		Collections.sort(entityNumbersList, new EntryComparator<String>());
+		Entry<String, Integer> entityNumberEntry;
+		for (int i=0; i<entityNumbersList.size(); ++i) {
+			entityNumberEntry = entityNumbersList.get(i);
+			System.out.println(entityNumberEntry.getKey().toString() + ": " + entityNumberEntry.getValue());
+		}
 	}
 
-	public void update_summary(TestFileResult result) {
-		arcGzFiles += result.arcGzFiles;
-		warcGzFiles += result.warcGzFiles;
-		gzFiles += result.gzFiles;
-		arcFiles += result.arcFiles;
-		warcFiles += result.warcFiles;
-		runtimeErrors += result.runtimeErrors;
-		skipped += result.skipped;
-		errors += result.gzipErrors;
-		warnings += result.gzipWarnings;
-		errors += result.arcErrors;
-		warnings += result.arcWarnings;
-		errors += result.warcErrors;
-		warnings += result.warcWarnings;
+	public class EntryComparator<K extends Comparable<? super K>> implements Comparator<Map.Entry<K, ?>> {
+		@Override
+		public int compare(Map.Entry<K, ?> o1, Map.Entry<K, ?> o2) {
+			return o1.getKey().compareTo(o2.getKey());
+		}
 	}
+
+	/*
+	public class EntryDiagnosisTypeComparator implements Comparator {
+		@Override
+		public int compare(Object o1, Object o2) {
+			Entry<DiagnosisType, Integer> e1 = (Entry<DiagnosisType, Integer>)o1;
+			Entry<DiagnosisType, Integer> e2 = (Entry<DiagnosisType, Integer>)o2;
+			return e1.getKey().compareTo(e2.getKey());
+		}
+	}
+
+	public class EntryStringComparator implements Comparator {
+		@Override
+		public int compare(Object o1, Object o2) {
+			Entry<String, Integer> e1 = (Entry<String, Integer>)o1;
+			Entry<String, Integer> e2 = (Entry<String, Integer>)o2;
+			return e1.getKey().compareTo(e2.getKey());
+		}
+	}
+	*/
 
 	@Override
 	public void process(File srcFile) {
@@ -187,6 +225,42 @@ public class TestTask extends Task {
 			}
 		}
 	}
+
+	class TestRunnable implements Runnable {
+		File srcFile;
+		TestRunnable(File srcFile) {
+			this.srcFile = srcFile;
+		}
+		@Override
+		public void run() {
+			TestFile2 testFile = new TestFile2();
+			testFile.bShowErrors = bShowErrors;
+			testFile.uriProfile = uriProfile;
+		    testFile.recordHeaderMaxSize = recordHeaderMaxSize;
+		    testFile.payloadHeaderMaxSize = payloadHeaderMaxSize;
+			testFile.validatorPlugins = validatorPlugins;
+			testFile.callback = null;
+			TestFileResult result = testFile.processFile(srcFile);
+			results.add(result);
+			resultsReady.release();
+		}
+	}
+
+	/*
+	class TestCallable implements Callable<TestFileResult> {
+		File srcFile;
+		TestCallable(File srcFile) {
+			this.srcFile = srcFile;
+		}
+		@Override
+		public TestFileResult call() throws Exception {
+			TestFileResult result = testFile.processFile(srcFile, bShowErrors, null);
+			results.add(result);
+			resultsReady.release();
+			return result;
+		}
+	}
+	*/
 
 	class ResultThread implements Runnable {
 
@@ -232,40 +306,51 @@ public class TestTask extends Task {
 		}
 	}
 
-	class TestRunnable implements Runnable {
-		File srcFile;
-		TestRunnable(File srcFile) {
-			this.srcFile = srcFile;
-		}
-		@Override
-		public void run() {
-			TestFile2 testFile = new TestFile2();
-			testFile.bShowErrors = bShowErrors;
-			testFile.uriProfile = uriProfile;
-		    testFile.recordHeaderMaxSize = recordHeaderMaxSize;
-		    testFile.payloadHeaderMaxSize = payloadHeaderMaxSize;
-			testFile.validatorPlugins = validatorPlugins;
-			testFile.callback = null;
-			TestFileResult result = testFile.processFile(srcFile);
-			results.add(result);
-			resultsReady.release();
-		}
-	}
+	Map<DiagnosisType, Integer> typeNumbers = new TreeMap<DiagnosisType, Integer>();
 
-	/*
-	class TestCallable implements Callable<TestFileResult> {
-		File srcFile;
-		TestCallable(File srcFile) {
-			this.srcFile = srcFile;
-		}
-		@Override
-		public TestFileResult call() throws Exception {
-			TestFileResult result = testFile.processFile(srcFile, bShowErrors, null);
-			results.add(result);
-			resultsReady.release();
-			return result;
+	Map<String, Integer> entityNumbers = new HashMap<String, Integer>();
+
+	public void update_summary(TestFileResult result) {
+		arcGzFiles += result.arcGzFiles;
+		warcGzFiles += result.warcGzFiles;
+		gzFiles += result.gzFiles;
+		arcFiles += result.arcFiles;
+		warcFiles += result.warcFiles;
+		runtimeErrors += result.runtimeErrors;
+		skipped += result.skipped;
+		errors += result.gzipErrors;
+		warnings += result.gzipWarnings;
+		errors += result.arcErrors;
+		warnings += result.arcWarnings;
+		errors += result.warcErrors;
+		warnings += result.warcWarnings;
+
+		List<TestFileResultItemDiagnosis> resultDiagnoses = result.rdList;
+		TestFileResultItemDiagnosis resultDiagnosis;
+		List<Diagnosis> diagnoses;
+		Diagnosis diagnosis;
+		Integer number;
+		if (resultDiagnoses != null) {
+			for (int i=0; i<resultDiagnoses.size(); ++i) {
+				resultDiagnosis = resultDiagnoses.get(i);
+				diagnoses = resultDiagnosis.errors;
+				for (int j=0; j<diagnoses.size(); ++j) {
+					diagnosis = diagnoses.get(j);
+					number = typeNumbers.get(diagnosis.type);
+					if (number == null) {
+						number = 0;
+					}
+					++number;
+					typeNumbers.put(diagnosis.type, number);
+					number = entityNumbers.get(diagnosis.entity);
+					if (number == null) {
+						number = 0;
+					}
+					++number;
+					entityNumbers.put(diagnosis.entity, number);
+				}
+			}
 		}
 	}
-	*/
 
 }

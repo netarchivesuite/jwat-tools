@@ -54,18 +54,19 @@ public class CDXFile implements ArchiveParserCallback {
 			boolean compressed) throws IOException {
 		if (arcRecord.recordType == ArcRecord.RT_ARC_RECORD) {
 			CDXEntry entry = new CDXEntry();
-			ArcHeader header = arcRecord.header;
-			entry.date = header.archiveDate;
-			entry.ip = header.ipAddressStr;
-			entry.url = header.urlStr;
-			String mimeType = header.contentTypeStr;
+			ArcHeader arcHeader = arcRecord.header;
+			entry.date = arcHeader.archiveDate;
+			entry.ip = arcHeader.ipAddressStr;
+			entry.url = arcHeader.urlStr;
+			String mimeType = arcHeader.contentTypeStr;
 			String responseCode = null;
-			ContentType contentType = header.contentType;
-			long length = header.archiveLength;
+			ContentType contentType = arcHeader.contentType;
+			long length = arcHeader.archiveLength;
+			// TODO
 	        if (contentType != null
-	                && header.contentType.contentType.equals("application")
-	                && header.contentType.mediaType.equals("http")) {
-	            String value = header.contentType.getParameter("msgtype");
+	                && arcHeader.contentType.contentType.equals("application")
+	                && arcHeader.contentType.mediaType.equals("http")) {
+	            String value = arcHeader.contentType.getParameter("msgtype");
 	            HttpHeader httpHeader = arcRecord.getHttpHeader();
 	            if ("response".equalsIgnoreCase(value)) {
 	            	if (httpHeader != null && httpHeader.contentType != null) {
@@ -91,18 +92,18 @@ public class CDXFile implements ArchiveParserCallback {
 			boolean compressed) throws IOException {
 		if (warcRecord.header.warcTypeIdx == WarcConstants.RT_IDX_RESPONSE) {
 			CDXEntry entry = new CDXEntry();
-			WarcHeader header = warcRecord.header;
-			entry.date = header.warcDate;
-			entry.ip = header.warcIpAddress;
-			entry.url = header.warcTargetUriStr;
-			String mimeType = header.contentTypeStr;
+			WarcHeader WarcHeader = warcRecord.header;
+			entry.date = WarcHeader.warcDate;
+			entry.ip = WarcHeader.warcIpAddress;
+			entry.url = WarcHeader.warcTargetUriStr;
+			String mimeType = WarcHeader.contentTypeStr;
 			String responseCode = null;
-			ContentType contentType = header.contentType;
-			long length = header.contentLength;
+			ContentType contentType = WarcHeader.contentType;
+			long length = WarcHeader.contentLength;
 	        if (contentType != null
-	                && header.contentType.contentType.equals("application")
-	                && header.contentType.mediaType.equals("http")) {
-	            String value = header.contentType.getParameter("msgtype");
+	                && WarcHeader.contentType.contentType.equals("application")
+	                && WarcHeader.contentType.mediaType.equals("http")) {
+	            String value = WarcHeader.contentType.getParameter("msgtype");
 	            HttpHeader httpHeader = warcRecord.getHttpHeader();
 	            if ("response".equalsIgnoreCase(value)) {
 	            	if (httpHeader != null && httpHeader.contentType != null) {

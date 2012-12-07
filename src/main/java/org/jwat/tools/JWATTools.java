@@ -32,9 +32,15 @@ public class JWATTools {
 		tools.Main( args );
 	}
 
-	protected static Map<String, Class<? extends Task>> commands = new HashMap<String, Class<? extends Task>>();
+	public class Command {
+		Class<? extends Task> task;
+	}
 
-	static {
+	protected Map<String, Class<? extends Task>> commands = new HashMap<String, Class<? extends Task>>();
+
+	protected CommandLine cmdLine = new CommandLine();
+
+	public void configure_cli() {
 		commands.put("arc2warc", ConvertTask.class);
 		commands.put("cdx", CDXTask.class);
 		commands.put("compress", DecompressTask.class);
@@ -44,11 +50,7 @@ public class JWATTools {
 		commands.put("pathindex", PathIndexTask.class);
 		commands.put("test", TestTask.class);
 		commands.put("unpack", UnpackTask.class);
-	}
 
-	public void Main(String[] args) {
-		CommandLine.Arguments arguments = null;
-		CommandLine cmdLine = new CommandLine();
 		cmdLine.addListArgument( "command", A_COMMAND, 1, 1 );
 		cmdLine.addOption( "-1", A_COMPRESS, 1 );
 		cmdLine.addOption( "-2", A_COMPRESS, 2 );
@@ -67,7 +69,41 @@ public class JWATTools {
 		cmdLine.addOption( "-w=", A_WORKERS );
 		cmdLine.addOption( "-x", A_XML );
 		cmdLine.addListArgument( "files", A_FILES, 1, Integer.MAX_VALUE );
+	}
 
+	public void show_help() {
+		System.out.println( "JWATTools v0.5.5" );
+		System.out.println( "usage: JWATTools [-dte19] command [file ...]" );
+		System.out.println( "" );
+		System.out.println( "Commands:" );
+		System.out.println( "   arc2warc     convert ARC to WARC");
+		System.out.println( "   cdx          create a CDX index (unsorted)");
+		System.out.println( "   compress     compress");
+		System.out.println( "   decompress   decompress");
+		System.out.println( "   extract      extract ARC/WARC record(s)");
+		System.out.println( "   interval     interval extract");
+		System.out.println( "   pathindex    create a heritrix path index (unsorted)");
+		System.out.println( "   test         test validity of ARC/WARC/GZip file(s)");
+		System.out.println( "   unpack       unpack multifile GZip");
+		System.out.println( "" );
+		System.out.println( "Options:" );
+		System.out.println( "   -r      recursive (currently has no effect)" );
+		System.out.println( "   -w<x>   set the amount of worker thread(s) (defaults to 1)" );
+		System.out.println( "" );
+		System.out.println( "Test options:" );
+		System.out.println( "   -e   show errors" );
+		System.out.println( "   -l   relaxed URL URI validation" );
+		System.out.println( "   -x   to validate text/xml payload (eg. mets)" );
+		System.out.println( "" );
+		System.out.println( "Compress options:" );
+		System.out.println( "   -1, --fast   compress faster" );
+		System.out.println( "   -9, --slow   compress better" );
+		System.out.println( "" );
+	}
+
+	public void Main(String[] args) {
+		configure_cli();
+		CommandLine.Arguments arguments = null;
 		try {
 			arguments = cmdLine.parse( args );
 			/*
@@ -81,35 +117,8 @@ public class JWATTools {
 			System.out.println( getClass().getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}
-
 		if ( arguments == null ) {
-			System.out.println( "JWATTools v0.5.5" );
-			System.out.println( "usage: JWATTools [-dte19] command [file ...]" );
-			System.out.println( "" );
-			System.out.println( "Commands:" );
-			System.out.println( "   arc2warc     convert ARC to WARC");
-			System.out.println( "   cdx          create a CDX index (unsorted)");
-			System.out.println( "   compress     compress");
-			System.out.println( "   decompress   decompress");
-			System.out.println( "   extract      extract ARC/WARC record(s)");
-			System.out.println( "   interval     interval extract");
-			System.out.println( "   pathindex    create a heritrix path index (unsorted)");
-			System.out.println( "   test         test validity of ARC/WARC/GZip file(s)");
-			System.out.println( "   unpack       unpack multifile GZip");
-			System.out.println( "" );
-			System.out.println( "Options:" );
-			System.out.println( "   -r      recursive (currently has no effect)" );
-			System.out.println( "   -w<x>   set the amount of worker thread(s) (defaults to 1)" );
-			System.out.println( "" );
-			System.out.println( "Test options:" );
-			System.out.println( "   -e   show errors" );
-			System.out.println( "   -l   relaxed URL URI validation" );
-			System.out.println( "   -x   to validate text/xml payload (eg. mets)" );
-			System.out.println( "" );
-			System.out.println( "Compress options:" );
-			System.out.println( "   -1, --fast   compress faster" );
-			System.out.println( "   -9, --slow   compress better" );
-			System.out.println( "" );
+			show_help();
 		}
 		else {
 			Argument argument = arguments.idMap.get( JWATTools.A_COMMAND );

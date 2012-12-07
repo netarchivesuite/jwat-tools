@@ -96,6 +96,10 @@ public class CDXTask extends Task {
 
 		@Override
 		public void run() {
+			cdxOutput.acquire();
+			cdxOutput.out.println(" CDX N b a m s k r M V g");
+			cdxOutput.release();
+
 			List<CDXEntry> entries;
 			CDXEntry entry;
 			boolean bLoop = true;
@@ -106,7 +110,8 @@ public class CDXTask extends Task {
 						cdxOutput.acquire();
 						for (int i=0; i<entries.size(); ++i) {
 							entry = entries.get(i);
-							cdxOutput.out.println(cdxEntry(entry, "Abams--vg".toCharArray()));
+							//cdxOutput.out.println(cdxEntry(entry, "Abams--vg".toCharArray()));
+							cdxOutput.out.println(cdxEntry(entry, "NbamskrMVg".toCharArray()));
 						}
 						cdxOutput.release();
 						++processed;
@@ -136,8 +141,16 @@ public class CDXTask extends Task {
 
 		// vinavisen.dk/vinavisen/website.nsf/pages/ 20050506142753 http://www.vinavisen.dk/vinavisen/website.nsf/pages/ text/html 200 - - 294494 kb-pligtsystem-44290-20121018212853-00000.warc
 
+		// NAS
 		//b e a m s c v n g
-		//A b a m s - - v g
+
+		// Wayback-1.4.2
+		// A b a m s - - v g
+		// net-bog-klubben.dk/1000028.pdf 20050520084930 http://www.net-bog-klubben.dk/1000028.pdf application/pdf 200 - - 820 kb-pligtsystem-44761-20121107134629-00000.warc
+
+		// CDX N b a m s k r M V g
+		// filedesc:kb-pligtsystem-44761-20121107134629-00000.warc 20121107134629 filedesc:kb-pligtsystem-44761-20121107134629-00000.warc warc/warcinfo0.1.0 - - - - 0 kb-pligtsystem-44761-20121107134629-00000.warc
+		// net-bog-klubben.dk/1000028.pdf 20050520084930 http://www.net-bog-klubben.dk/1000028.pdf application/pdf 200 - - - 820 kb-pligtsystem-44761-20121107134629-00000.warc
 
 		public String cdxEntry(CDXEntry entry, char[] format) {
 			StringBuilder sb = new StringBuilder();
@@ -153,9 +166,6 @@ public class CDXTask extends Task {
 				}
 				c = format[i];
 				switch (c) {
-				case '-':
-					sb.append('-');
-					break;
 				case 'b':
 					if (entry.date != null) {
 						sb.append(ArcDateParser.getDateFormat().format(entry.date));
@@ -171,6 +181,7 @@ public class CDXTask extends Task {
 					}
 					break;
 				case 'A':
+				case 'N':
 					if (entry.url != null && entry.url.length() > 0) {
 						uri = Uri.create(entry.url, UriProfile.RFC3986_ABS_16BIT_LAX);
 						StringBuilder cUrl = new StringBuilder();
@@ -191,9 +202,9 @@ public class CDXTask extends Task {
 								cUrl.append('?');
 								cUrl.append(query);
 							}
-							sb.append(cUrl.toString());
+							sb.append(cUrl.toString().toLowerCase());
 						} else {
-							sb.append(entry.url);
+							sb.append(entry.url.toLowerCase());
 						}
 					} else {
 						sb.append('-');
@@ -228,6 +239,7 @@ public class CDXTask extends Task {
 					}
 					break;
 				case 'v':
+				case 'V':
 					sb.append(entry.offset);
 					break;
 				case 'n':
@@ -235,6 +247,10 @@ public class CDXTask extends Task {
 					break;
 				case 'g':
 					sb.append(entry.fileName);
+					break;
+				case '-':
+				default:
+					sb.append('-');
 					break;
 				}
 			}
