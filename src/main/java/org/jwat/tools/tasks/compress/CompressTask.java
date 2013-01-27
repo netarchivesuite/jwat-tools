@@ -38,16 +38,27 @@ public class CompressTask extends Task {
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+		// Thread workers.
+		argument = arguments.idMap.get( JWATTools.A_WORKERS );
+		if ( argument != null && argument.value != null ) {
+			try {
+				threads = Integer.parseInt(argument.value);
+			} catch (NumberFormatException e) {
+			}
+		}
+
 		// Compression level.
 		argument = arguments.idMap.get( JWATTools.A_COMPRESS );
 		if (argument != null) {
 			compressionLevel = argument.argDef.subId;
 			System.out.println( "Compression level: " + compressionLevel );
 		}
-		// Files
+
+		// Files.
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
-		filelist_feeder( filesList, this );
+
+		threadpool_feeder_lifecycle( filesList, this );
 	}
 
 	@Override
@@ -194,7 +205,7 @@ public class CompressTask extends Task {
 		        writer.writeEntryHeader(entry);
 
 		        cout = entry.getOutputStream();
-		        //cout.write(arcRecord.headerBytes);
+		        cout.write(arcRecord.header.headerBytes);
 
 				payload = arcRecord.getPayload();
 				if (payload != null) {

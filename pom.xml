@@ -36,15 +36,15 @@
     <url>http://bitbucket.org/nclarkekb/jwat-tools</url>
   </scm>
 
-  <!--issueManagement>
+  <issueManagement>
     <system>jira</system> 
     <url>https://sbforge.org/jira/browse/JWAT</url> 
-  </issueManagement-->
+  </issueManagement>
 
-  <!--ciManagement>
+  <ciManagement>
     <system>jenkins</system>
     <url>https://sbforge.org/jenkins/view/JWAT/</url>
-  </ciManagement-->
+  </ciManagement>
 
   <developers>
     <developer>
@@ -93,60 +93,59 @@
 
   <build>
     <plugins>
-
       <plugin>
-	<artifactId>maven-compiler-plugin</artifactId>
-	<version>2.3.2</version>
-	<configuration>
-	  <source>1.6</source>
-	  <target>1.6</target>
-	</configuration>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
       </plugin>
 
-			<!-- generate the JWAT-Tools Command Line jar executable -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.3</version>
-				<configuration>
-					<archive>
-						<addMavenDescriptor>false</addMavenDescriptor>
-						<!-- make jar executable -->
-						<manifest>
-							<mainClass>org.jwat.tools.JWATTools</mainClass>
-						</manifest>
-						<manifestEntries>
-							<Sealed>false</Sealed>
-						</manifestEntries>
-					</archive>
- 					<forceCreation>true</forceCreation>
-					<finalName>${project.build.finalName}</finalName>
-				</configuration>
-			</plugin>
-			<!--
-				package the jar, artifacts,and bin scripts into zip and tar files
-				for JWAT-Tools release
-			-->
-			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.2.2</version>
-				<executions>
-					<execution>
-						<id>distro-assembly</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-						<configuration>
-							<descriptors>
-								<descriptor>src/main/assembly/release.xml</descriptor>
-							</descriptors>
-							<appendAssemblyId>false</appendAssemblyId>
-							<tarLongFileMode>gnu</tarLongFileMode>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+      <!-- generate the JWAT-Tools Command Line jar executable -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.3</version>
+        <configuration>
+          <archive>
+            <addMavenDescriptor>false</addMavenDescriptor>
+            <!-- make jar executable -->
+            <manifest>
+              <mainClass>org.jwat.tools.JWATTools</mainClass>
+            </manifest>
+            <manifestEntries>
+              <Sealed>false</Sealed>
+            </manifestEntries>
+          </archive>
+           <forceCreation>true</forceCreation>
+          <finalName>${project.build.finalName}</finalName>
+        </configuration>
+      </plugin>
+      <!--
+        package the jar, artifacts,and bin scripts into zip and tar files
+        for JWAT-Tools release
+      -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.2.2</version>
+        <executions>
+          <execution>
+            <id>distro-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>src/main/assembly/release.xml</descriptor>
+              </descriptors>
+              <appendAssemblyId>false</appendAssemblyId>
+              <tarLongFileMode>gnu</tarLongFileMode>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 

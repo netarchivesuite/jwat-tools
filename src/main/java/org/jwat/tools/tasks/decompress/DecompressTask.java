@@ -24,6 +24,7 @@ public class DecompressTask extends Task {
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+		// Thread workers.
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
 			try {
@@ -31,6 +32,8 @@ public class DecompressTask extends Task {
 			} catch (NumberFormatException e) {
 			}
 		}
+
+		// Files.
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
 
@@ -50,7 +53,10 @@ public class DecompressTask extends Task {
 			if (GzipReader.isGzipped(pbin)) {
 				String dstFname;
 				if (srcFname.endsWith(".gz")) {
-					dstFname = srcFname.substring( 0, srcFname.length() - 3 );
+					dstFname = srcFname.substring( 0, srcFname.length() - ".gz".length() );
+				}
+				else if (srcFname.endsWith(".tgz")) {
+					dstFname = srcFname.substring( 0, srcFname.length() - ".tgz".length() ) + ".tar";
 				}
 				else {
 					dstFname = srcFname + ".org";

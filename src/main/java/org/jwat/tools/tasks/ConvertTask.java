@@ -3,6 +3,7 @@ package org.jwat.tools.tasks;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -25,6 +26,7 @@ import org.jwat.common.RandomAccessFileInputStream;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.core.Task;
+import org.jwat.warc.WarcConstants;
 import org.jwat.warc.WarcRecord;
 import org.jwat.warc.WarcWriter;
 import org.jwat.warc.WarcWriterFactory;
@@ -36,9 +38,21 @@ public class ConvertTask extends Task {
 
 	@Override
 	public void command(CommandLine.Arguments arguments) {
-		CommandLine.Argument argument = arguments.idMap.get( JWATTools.A_FILES );
+		CommandLine.Argument argument;
+		// Thread workers.
+		argument = arguments.idMap.get( JWATTools.A_WORKERS );
+		if ( argument != null && argument.value != null ) {
+			try {
+				threads = Integer.parseInt(argument.value);
+			} catch (NumberFormatException e) {
+			}
+		}
+
+		// Files.
+		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
-		filelist_feeder( filesList, this );
+
+		threadpool_feeder_lifecycle( filesList, this );
 	}
 
 	@Override
@@ -101,14 +115,14 @@ public class ConvertTask extends Task {
 				    cal.setTimeInMillis(System.currentTimeMillis());
 
 				    record = WarcRecord.createRecord(writer);
-					record.header.addHeader("WARC-Type", "warcinfo");
-					record.header.addHeader("WARC-Date", cal.getTime(), null);
-					record.header.addHeader("WARC-Filename", dstFname);
-					record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + warcinfoUuid + ">");
-					record.header.addHeader("Content-Type", "application/warc-fields");
-					record.header.addHeader("Content-Length", "0");
+					record.header.addHeader(WarcConstants.FN_WARC_TYPE, "warcinfo");
+					record.header.addHeader(WarcConstants.FN_WARC_DATE, cal.getTime(), null);
+					record.header.addHeader(WarcConstants.FN_WARC_FILENAME, dstFname);
+					record.header.addHeader(WarcConstants.FN_WARC_RECORD_ID, "<urn:uuid:" + warcinfoUuid + ">");
+					record.header.addHeader(WarcConstants.FN_CONTENT_TYPE, "application/warc-fields");
+					record.header.addHeader(WarcConstants.FN_CONTENT_LENGTH, "0");
 					// Standard says no.
-					//record.header.addHeader("WARC-Concurrent-To", "<urn:uuid:" + filedescUuid + ">");
+					//record.header.addHeader(WarcConstants.FN_WARC_CONCURRENT_TO, "<urn:uuid:" + filedescUuid + ">");
 					writer.writeHeader(record);
 					writer.closeRecord();
 
@@ -118,30 +132,35 @@ public class ConvertTask extends Task {
 
 					if (arcRecord.recordType == ArcRecordBase.RT_VERSION_BLOCK) {
 						record = WarcRecord.createRecord(writer);
-						record.header.addHeader("WARC-Type", "metadata");
-						record.header.addHeader("WARC-Target-URI", arcRecord.header.urlUri, arcRecord.header.urlStr );
-						record.header.addHeader("WARC-Date", arcRecord.header.archiveDate, arcRecord.header.archiveDateStr);
-						record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + filedescUuid + ">");
-						record.header.addHeader("WARC-Concurrent-To", "<urn:uuid:" + warcinfoUuid + ">");
+						record.header.addHeader(WarcConstants.FN_WARC_TYPE, "metadata");
+						record.header.addHeader(WarcConstants.FN_WARC_TARGET_URI, arcRecord.header.urlUri, arcRecord.header.urlStr );
+						record.header.addHeader(WarcConstants.FN_WARC_DATE, arcRecord.header.archiveDate, arcRecord.header.archiveDateStr);
+						record.header.addHeader(WarcConstants.FN_WARC_RECORD_ID, "<urn:uuid:" + filedescUuid + ">");
+						record.header.addHeader(WarcConstants.FN_WARC_CONCURRENT_TO, "<urn:uuid:" + warcinfoUuid + ">");
+						record.header.addHeader(WarcConstants.FN_WARC_IP_ADDRESS, arcRecord.header.inetAddress, arcRecord.header.ipAddressStr);
+						record.header.addHeader(WarcConstants.FN_WARC_WARCINFO_ID, "<urn:uuid:" + warcinfoUuid + ">");
 						// "WARC-Block-Digest"
 						// "WARC-Payload-Digest"
 						contentLength = 0L;
 						contentType = "text/plain";
+						ByteArrayOutputStream payloadOut = new ByteArrayOutputStream();
+						payloadOut.write(arcRecord.header.headerBytes);
 						in = null;
 						payload = arcRecord.getPayload();
 						if (payload != null) {
-							// TODO Add record line when available in JWAT.
 							in = payload.getInputStreamComplete();
-							contentLength = payload.getTotalLength();
+							byte[] tmpBuf = new byte[8192];
+							int read;
+							while((read = in.read(tmpBuf)) != -1) {
+								payloadOut.write(tmpBuf, 0, read);
+							}
+							in.close();
 						}
-						record.header.addHeader("Content-Length", contentLength, null);
-						if (contentType != null) {
-							record.header.addHeader("Content-Type", contentType);
-						}
+						contentLength = new Long(payloadOut.size());
+						record.header.addHeader(WarcConstants.FN_CONTENT_LENGTH, contentLength, null);
+						record.header.addHeader(WarcConstants.FN_CONTENT_TYPE, contentType);
 						writer.writeHeader(record);
-						if (in != null) {
-							writer.streamPayload(in);
-						}
+						writer.writePayload(payloadOut.toByteArray());
 						writer.closeRecord();
 					}
 					else {
@@ -157,10 +176,12 @@ public class ConvertTask extends Task {
 					while ((arcRecord = reader.getNextRecord()) != null) {
 						recordUuid = UUID.randomUUID();
 						record = WarcRecord.createRecord(writer);
-						record.header.addHeader("WARC-Type", "response");
-						record.header.addHeader("WARC-Target-URI", arcRecord.header.urlUri, arcRecord.header.urlStr);
-						record.header.addHeader("WARC-Date", arcRecord.header.archiveDate, arcRecord.header.archiveDateStr);
-						record.header.addHeader("WARC-Record-ID", "<urn:uuid:" + recordUuid + ">");
+						record.header.addHeader(WarcConstants.FN_WARC_TYPE, "response");
+						record.header.addHeader(WarcConstants.FN_WARC_TARGET_URI, arcRecord.header.urlUri, arcRecord.header.urlStr);
+						record.header.addHeader(WarcConstants.FN_WARC_DATE, arcRecord.header.archiveDate, arcRecord.header.archiveDateStr);
+						record.header.addHeader(WarcConstants.FN_WARC_RECORD_ID, "<urn:uuid:" + recordUuid + ">");
+						record.header.addHeader(WarcConstants.FN_WARC_IP_ADDRESS, arcRecord.header.inetAddress, arcRecord.header.ipAddressStr);
+						record.header.addHeader(WarcConstants.FN_WARC_WARCINFO_ID, "<urn:uuid:" + warcinfoUuid + ">");
 						// "WARC-Block-Digest"
 						// "WARC-Payload-Digest"
 						contentLength = 0L;
@@ -188,9 +209,9 @@ public class ConvertTask extends Task {
 							}
 							contentLength = arcRecord.header.archiveLength;
 						}
-						record.header.addHeader("Content-Length", contentLength, null);
+						record.header.addHeader(WarcConstants.FN_CONTENT_LENGTH, contentLength, null);
 						if (contentType != null) {
-							record.header.addHeader("Content-Type", contentType);
+							record.header.addHeader(WarcConstants.FN_CONTENT_TYPE, contentType);
 						}
 						writer.writeHeader(record);
 						if (httpResponse != null && httpResponse.isValid()) {
@@ -202,6 +223,9 @@ public class ConvertTask extends Task {
 							writer.streamPayload(in);
 						}
 						writer.closeRecord();
+						if (in != null) {
+							in.close();
+						}
 						arcRecord.close();
 					}
 					writer.close();

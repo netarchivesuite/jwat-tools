@@ -33,10 +33,25 @@ public class CDXTask extends Task {
 			} catch (NumberFormatException e) {
 			}
 		}
+		File outputFile = new File("cdx.unsorted.out");
+		argument = arguments.idMap.get( JWATTools.A_OUTPUT );
+		if ( argument != null && argument.value != null ) {
+			outputFile = new File(argument.value);
+			if (outputFile.isDirectory()) {
+				System.out.println("Can not output to a directory!");
+				System.exit(1);
+			} else if (outputFile.getParentFile() != null && !outputFile.getParentFile().exists()) {
+				if (!outputFile.getParentFile().mkdirs()) {
+					System.out.println("Could not create parent directories!");
+					System.exit(1);
+				}
+			}
+		}
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
 
-		cdxOutput = new SynchronizedOutput("cdx-unsorted.out");
+		System.out.println("Using output: " + outputFile.getPath());
+		cdxOutput = new SynchronizedOutput(outputFile);
 		//cdxOutput.out.println("CDX b e a m s c v n g");
 
 		ResultThread resultThread = new ResultThread();
@@ -53,6 +68,7 @@ public class CDXTask extends Task {
 				e.printStackTrace();
 			}
 		}
+		cdxOutput.close();
 	}
 
 	@Override
@@ -102,6 +118,7 @@ public class CDXTask extends Task {
 
 			List<CDXEntry> entries;
 			CDXEntry entry;
+			String tmpLine;
 			boolean bLoop = true;
 			while (bLoop) {
 				try {
@@ -110,8 +127,15 @@ public class CDXTask extends Task {
 						cdxOutput.acquire();
 						for (int i=0; i<entries.size(); ++i) {
 							entry = entries.get(i);
-							//cdxOutput.out.println(cdxEntry(entry, "Abams--vg".toCharArray()));
-							cdxOutput.out.println(cdxEntry(entry, "NbamskrMVg".toCharArray()));
+							try {
+								tmpLine = cdxEntry(entry, "NbamskrMVg".toCharArray());
+								if (tmpLine != null) {
+									//cdxOutput.out.println(cdxEntry(entry, "Abams--vg".toCharArray()));
+									cdxOutput.out.println(tmpLine);
+								}
+							} catch (Throwable t) {
+								cout.println(t.toString());
+							}
 						}
 						cdxOutput.release();
 						++processed;

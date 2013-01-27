@@ -26,6 +26,7 @@ public class JWATTools {
 	public static final int A_RECURSIVE = 6;
 	public static final int A_XML = 7;
 	public static final int A_LAX = 8;
+	public static final int A_OUTPUT = 9;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -68,6 +69,7 @@ public class JWATTools {
 		cmdLine.addOption( "-r", A_RECURSIVE );
 		cmdLine.addOption( "-w=", A_WORKERS );
 		cmdLine.addOption( "-x", A_XML );
+		cmdLine.addOption( "-o=", A_OUTPUT );
 		cmdLine.addListArgument( "files", A_FILES, 1, Integer.MAX_VALUE );
 	}
 

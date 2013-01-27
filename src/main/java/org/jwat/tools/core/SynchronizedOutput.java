@@ -1,5 +1,7 @@
 package org.jwat.tools.core;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -13,6 +15,7 @@ public class SynchronizedOutput {
 	private RandomAccessFile raf = null;
 	private RandomAccessFileOutputStream rafOut = null;
 	private Semaphore semaphore = new Semaphore(1);
+
 	public PrintStream out = null;
 
 	public SynchronizedOutput(String fname) {
@@ -21,7 +24,23 @@ public class SynchronizedOutput {
 			raf.seek(0);
 			raf.setLength(0);
 			RandomAccessFileOutputStream fout = new RandomAccessFileOutputStream(raf);
-			out = new PrintStream(fout);
+			out = new PrintStream(new BufferedOutputStream(fout, 1024*1024), false, "UTF-8");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public SynchronizedOutput(File file) {
+		try {
+			raf = new RandomAccessFile(file, "rw");
+			raf.seek(0);
+			raf.setLength(0);
+			RandomAccessFileOutputStream fout = new RandomAccessFileOutputStream(raf);
+			out = new PrintStream(new BufferedOutputStream(fout, 1024*1024), false, "UTF-8");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

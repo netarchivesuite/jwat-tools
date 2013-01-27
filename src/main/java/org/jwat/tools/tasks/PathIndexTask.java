@@ -20,10 +20,24 @@ public class PathIndexTask extends Task {
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+		File outputFile = new File("path-index.unsorted.out");
+		argument = arguments.idMap.get( JWATTools.A_OUTPUT );
+		if ( argument != null && argument.value != null ) {
+			outputFile = new File(argument.value);
+			if (outputFile.isDirectory()) {
+				System.out.println("Can not output to a directory!");
+				System.exit(1);
+			} else if (outputFile.getParentFile() != null && !outputFile.getParentFile().exists()) {
+				if (!outputFile.getParentFile().mkdirs()) {
+					System.out.println("Could not create parent directories!");
+					System.exit(1);
+				}
+			}
+		}
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
 
-		pathIndexOutput = new SynchronizedOutput("path-index.unsorted.txt");
+		pathIndexOutput = new SynchronizedOutput(outputFile);
 
 		filelist_feeder(filesList, this);
 
