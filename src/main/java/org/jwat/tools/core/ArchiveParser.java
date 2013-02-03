@@ -80,7 +80,7 @@ public class ArchiveParser {
 						}
 						else if ( WarcReaderFactory.isWarcFile( in ) ) {
 							warcReader = WarcReaderFactory.getReaderUncompressed();
-							warcReader.setWarcTargerUriProfile(uriProfile);
+							warcReader.setWarcTargetUriProfile(uriProfile);
 							warcReader.setBlockDigestEnabled( bBlockDigestEnabled );
 							warcReader.setPayloadDigestEnabled( bPayloadDigestEnabled );
 						    warcReader.setRecordHeaderMaxSize( recordHeaderMaxSize );
@@ -127,7 +127,7 @@ public class ArchiveParser {
 			}
 			else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
 				warcReader = WarcReaderFactory.getReaderUncompressed( pbin );
-				warcReader.setWarcTargerUriProfile(uriProfile);
+				warcReader.setWarcTargetUriProfile(uriProfile);
 				warcReader.setBlockDigestEnabled( bBlockDigestEnabled );
 				warcReader.setPayloadDigestEnabled( bPayloadDigestEnabled );
 			    warcReader.setRecordHeaderMaxSize( recordHeaderMaxSize );

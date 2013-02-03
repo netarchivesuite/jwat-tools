@@ -65,7 +65,7 @@ public class TestFile {
 						}
 						else if ( WarcReaderFactory.isWarcFile( in ) ) {
 							warcReader = WarcReaderFactory.getReaderUncompressed();
-							warcReader.setWarcTargerUriProfile(uriProfile);
+							warcReader.setWarcTargetUriProfile(uriProfile);
 							warcReader.setBlockDigestEnabled( true );
 							warcReader.setPayloadDigestEnabled( true );
 							++result.warcGzFiles;
@@ -181,7 +181,7 @@ public class TestFile {
 			}
 			else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
 				warcReader = WarcReaderFactory.getReader( pbin );
-				warcReader.setWarcTargerUriProfile(uriProfile);
+				warcReader.setWarcTargetUriProfile(uriProfile);
 				warcReader.setBlockDigestEnabled( true );
 				warcReader.setPayloadDigestEnabled( true );
 				while ( (warcRecord = warcReader.getNextRecord()) != null ) {
