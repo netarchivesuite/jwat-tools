@@ -20,21 +20,24 @@ import org.jwat.warc.WarcRecord;
 
 public class CDXFile implements ArchiveParserCallback {
 
-	protected List<CDXEntry> entries = new ArrayList<CDXEntry>();
+	protected File srcFile;
 
 	protected String fileName;
+
+	protected List<CDXEntry> entries = new ArrayList<CDXEntry>();
+
+	protected long consumed = 0;
 
 	public CDXFile() {
 	}
 
-	public List<CDXEntry> processFile(File file) {
+	public void processFile(File file) {
 		fileName = file.getName();
 		ArchiveParser archiveParser = new ArchiveParser();
 		archiveParser.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
 		archiveParser.bBlockDigestEnabled = true;
 		archiveParser.bPayloadDigestEnabled = true;
-		long consumed = archiveParser.parse(file, this);
-		return entries;
+		consumed = archiveParser.parse(file, this);
 	}
 
 	@Override

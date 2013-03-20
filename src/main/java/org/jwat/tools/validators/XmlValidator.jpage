@@ -1,0 +1,101 @@
+    	/**
+    	 * Parse an XML document without validating DTD/XSD.
+    	 * @param in XML input stream
+    	 */
+        public void parse(InputStream in, TestFileResultItemDiagnosis itemDiagnosis) {
+        	document = null;
+        	try {
+        		errorHandler.itemDiagnosis = itemDiagnosis;
+        		builderParsing.reset();
+        		builderParsing.setErrorHandler(errorHandler);
+        		document = builderParsing.parse(in);
+        		systemId = null;
+        		DocumentType documentType = document.getDoctype();
+        		if (documentType != null) {
+            		systemId = documentType.getSystemId();
+        		}
+        		if (systemId == null) {
+        			Node node = document.getDocumentElement();
+        			Node attribute = node.getAttributes().getNamedItemNS("xmlns", "xsi");
+        			if (attribute != null) {
+        				System.out.println("xmlnsXsi: " + attribute.getNodeValue());
+        			}
+        		}
+        		else {
+        			System.out.println("systemId: " + systemId);
+        		}
+        	}
+        	catch (Throwable t) {
+        		if (itemDiagnosis != null) {
+        			itemDiagnosis.throwables.add(t);
+        		}
+        		else {
+        			t.printStackTrace();
+        		}
+        	}
+        }
+
+        /**
+         * Parse an XML document and validate using DTD/XSD.
+    	 * @param in XML input stream
+         */
+        public void validate(ManagedPayload managedPayload, TestFileResultItemDiagnosis itemDiagnosis) {
+        	document = null;
+        	try {
+        		errorHandler.itemDiagnosis = itemDiagnosis;
+        		builderParsing.reset();
+        		builderParsing.setErrorHandler(errorHandler);
+        		document = builderParsing.parse(in);
+        		systemId = null;
+        		DocumentType documentType = document.getDoctype();
+        		if (documentType != null) {
+            		systemId = documentType.getSystemId();
+        		}
+        		if (systemId == null) {
+        			Node node = document.getDocumentElement();
+        			Node attribute = node.getAttributes().getNamedItemNS("xmlns", "xsi");
+        			if (attribute != null) {
+        				System.out.println("xmlnsXsi: " + attribute.getNodeValue());
+        			}
+        		}
+        		else {
+        			System.out.println("systemId: " + systemId);
+        		}
+        	}
+        	catch (Throwable t) {
+        		if (itemDiagnosis != null) {
+        			itemDiagnosis.throwables.add(t);
+        		}
+        		else {
+        			t.printStackTrace();
+        		}
+        	}
+        }
+
+			/*
+	       	document = null;
+        	try {
+        		errorHandler.itemDiagnosis = itemDiagnosis;
+        		builderValidating.reset();
+        		builderValidating.setEntityResolver(entityResolver);
+        		builderValidating.setErrorHandler(errorHandler);
+        		document = builderValidating.parse(in);
+        	}
+        	catch (Throwable t) {
+        		if (itemDiagnosis != null) {
+        			itemDiagnosis.throwables.add(t);
+        		}
+        		else {
+        			t.printStackTrace();
+        		}
+        	}
+        	*/
+
+		/*
+	    System.out.println(">" + nodes.item(i));
+	    NamedNodeMap nnm = nodes.item(i).getAttributes();
+	    for (int j=0; j<nnm.getLength(); ++j) {
+	    	System.out.println(nnm.item(j).getNodeName());
+	    	System.out.println(nnm.item(j).getNodeValue());
+	    }
+	    */

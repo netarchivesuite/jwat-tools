@@ -1,4 +1,4 @@
-package org.jwat.tools.tasks;
+package org.jwat.tools.tasks.pathindex;
 
 import java.io.File;
 import java.util.List;
@@ -7,14 +7,27 @@ import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.core.FileIdent;
 import org.jwat.tools.core.SynchronizedOutput;
-import org.jwat.tools.core.Task;
+import org.jwat.tools.tasks.ProcessTask;
 
-public class PathIndexTask extends Task {
+public class PathIndexTask extends ProcessTask {
 
 	/** Output stream. */
 	private SynchronizedOutput pathIndexOutput;
 
 	public PathIndexTask() {
+	}
+
+	@Override
+	public void show_help() {
+		System.out.println("jwattools pathindex [-o OUTPUT_FILE] <paths>");
+		System.out.println("");
+		System.out.println("create a pathindex from one or more ARC/WARC files");
+		System.out.println("");
+		System.out.println("\tRead through ARC/WARC file(s) and create a pathindex file.");
+		System.out.println("");
+		System.out.println("options:");
+		System.out.println("");
+		System.out.println(" -o<file>  output cdx filename (unsorted)");
 	}
 
 	@Override
@@ -34,6 +47,8 @@ public class PathIndexTask extends Task {
 				}
 			}
 		}
+
+		// Files.
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
 
@@ -41,15 +56,21 @@ public class PathIndexTask extends Task {
 
 		filelist_feeder(filesList, this);
 
+		pathIndexOutput.out.flush();
+		pathIndexOutput.out.close();
 	}
 
 	@Override
 	public void process(File srcFile) {
 		StringBuilder sb = new StringBuilder();
+		FileIdent fileIdent = FileIdent.ident(srcFile);
 		if (srcFile.length() > 0) {
-			int fileId = FileIdent.identFile(srcFile);
-			switch (fileId) {
-			case FileIdent.FILEID_GZIP:
+			// debug
+			//System.out.println(fileIdent.filenameId + " " + fileIdent.streamId + " " + srcFile.getName());
+			if (fileIdent.filenameId != fileIdent.streamId) {
+				cout.println("Wrong extension: '" + srcFile.getPath() + "'");
+			}
+			switch (fileIdent.streamId) {
 			case FileIdent.FILEID_ARC:
 			case FileIdent.FILEID_WARC:
 			case FileIdent.FILEID_ARC_GZ:
@@ -61,7 +82,17 @@ public class PathIndexTask extends Task {
 				pathIndexOutput.out.println(sb.toString());
 				break;
 			default:
-				System.out.println("Skipping: " + srcFile.getName());
+				break;
+			}
+		} else {
+			switch (fileIdent.filenameId) {
+			case FileIdent.FILEID_ARC:
+			case FileIdent.FILEID_WARC:
+			case FileIdent.FILEID_ARC_GZ:
+			case FileIdent.FILEID_WARC_GZ:
+				cout.println("Empty file: '" + srcFile.getPath() + "'");
+				break;
+			default:
 				break;
 			}
 		}

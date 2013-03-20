@@ -46,13 +46,13 @@ public class TestFile {
 		try {
 			raf = new RandomAccessFile( file, "r" );
 			rafin = new RandomAccessFileInputStream( raf );
-			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( rafin, 8192 ), 16 );
+			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( rafin, 8192 ), 32 );
 			if ( GzipReader.isGzipped( pbin ) ) {
 				gzipReader = new GzipReader( pbin );
 				ByteCountingPushBackInputStream in;
 				byte[] buffer = new byte[ 8192 ];
 				while ( (gzipEntry = gzipReader.getNextEntry()) != null ) {
-					in = new ByteCountingPushBackInputStream( new BufferedInputStream( gzipEntry.getInputStream(), 8192 ), 16 );
+					in = new ByteCountingPushBackInputStream( new BufferedInputStream( gzipEntry.getInputStream(), 8192 ), 32 );
 					++result.gzipEntries;
 					//System.out.println(gzipEntries + " - " + gzipEntry.getStartOffset() + " (0x" + (Long.toHexString(gzipEntry.getStartOffset())) + ")");
 					if ( result.gzipEntries == 1 ) {
@@ -276,6 +276,7 @@ public class TestFile {
 	}
 
 	protected void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload) {
+		/*
     	if (contentType != null
     			&& "text".equalsIgnoreCase(contentType.contentType)
     			&& "xml".equalsIgnoreCase(contentType.mediaType)) {
@@ -285,6 +286,7 @@ public class TestFile {
     			plugin.getValidator().validate(payload.getInputStream(), null);
     		}
     	}
+    	*/
 
     	/*
         protected static String reFragment = "^(?:[a-zA-Z0-9-._~!$&'()*+,;=:/?@]|%[0-9a-fA-F]{2}|%u[0-9a-fA-F]{4})*";
@@ -298,6 +300,7 @@ public class TestFile {
 	}
 
     protected void validate_payload(WarcRecord warcRecord, ContentType contentType, Payload payload) {
+    	/*
     	if (contentType != null
     			&& "text".equalsIgnoreCase(contentType.contentType)
     			&& "xml".equalsIgnoreCase(contentType.mediaType)) {
@@ -307,6 +310,7 @@ public class TestFile {
     			plugin.getValidator().validate(payload.getInputStream(), null);
     		}
     	}
+    	*/
     }
 
 }

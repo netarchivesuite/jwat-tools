@@ -17,6 +17,8 @@ public class TestFileResult {
 	 * File.
 	 */
 
+	public File srcFile;
+
 	public String file;
 	public boolean bGzipReader = false;
 	public boolean bGzipIsComppliant = false;

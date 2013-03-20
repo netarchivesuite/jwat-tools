@@ -16,22 +16,29 @@ import org.jwat.warc.WarcRecord;
 
 public class ExtractFile implements ArchiveParserCallback {
 
+	protected File srcFile;
+
 	protected String fileName;
+
+	protected String targetUri;
 
 	protected int recordNr = 1;
 
 	protected byte[] tmpBuf = new byte[8192];
 
+	protected long consumed = 0;
+
 	public ExtractFile() {
 	}
 
-	public void processFile(File file) {
+	public void processFile(File file, String targetUri) {
 		fileName = file.getName();
+		this.targetUri = targetUri;
 		ArchiveParser archiveParser = new ArchiveParser();
 		archiveParser.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
 		archiveParser.bBlockDigestEnabled = true;
 		archiveParser.bPayloadDigestEnabled = true;
-		long consumed = archiveParser.parse(file, this);
+		consumed = archiveParser.parse(file, this);
 	}
 
 	@Override
@@ -50,35 +57,37 @@ public class ExtractFile implements ArchiveParserCallback {
 	@Override
 	public void apcWarcRecordStart(WarcRecord warcRecord, long startOffset,
 			boolean compressed) throws IOException {
-		Payload payload = warcRecord.getPayload();
-		HttpHeader httpHeader = null;
-		InputStream payloadStream = null;
-		if (payload != null) {
-			httpHeader = warcRecord.getHttpHeader();
-			if (httpHeader != null ) {
-				payloadStream = httpHeader.getPayloadInputStream();
-			} else {
-				payloadStream = payload.getInputStreamComplete();
+		if (targetUri == null || targetUri.equalsIgnoreCase(warcRecord.header.warcTargetUriStr)) {
+			Payload payload = warcRecord.getPayload();
+			HttpHeader httpHeader = null;
+			InputStream payloadStream = null;
+			if (payload != null) {
+				httpHeader = warcRecord.getHttpHeader();
+				if (httpHeader != null ) {
+					payloadStream = httpHeader.getPayloadInputStream();
+				} else {
+					payloadStream = payload.getInputStreamComplete();
+				}
 			}
-		}
-		if (payloadStream != null) {
-			FileOutputStream out = new FileOutputStream(new File("extracted." + recordNr), false);
-			int read;
-			while ((read = payloadStream.read(tmpBuf)) != -1) {
-				out.write(tmpBuf, 0, read);
+			if (payloadStream != null) {
+				FileOutputStream out = new FileOutputStream(new File("extracted." + recordNr), false);
+				int read;
+				while ((read = payloadStream.read(tmpBuf)) != -1) {
+					out.write(tmpBuf, 0, read);
+				}
+				out.flush();
+				out.close();
+				payloadStream.close();
 			}
-			out.flush();
-			out.close();
-			payloadStream.close();
+			if (httpHeader != null) {
+				httpHeader.close();
+			}
+			if (payload != null) {
+				payload.close();
+			}
+			warcRecord.close();
+			++recordNr;
 		}
-		if (httpHeader != null) {
-			httpHeader.close();
-		}
-		if (payload != null) {
-			payload.close();
-		}
-		warcRecord.close();
-		++recordNr;
 	}
 
 	@Override

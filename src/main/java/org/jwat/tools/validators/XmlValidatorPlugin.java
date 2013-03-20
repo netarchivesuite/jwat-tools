@@ -1,18 +1,24 @@
 package org.jwat.tools.validators;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 
+import org.jwat.tools.core.ManagedPayload;
 import org.jwat.tools.core.Validator;
 import org.jwat.tools.core.ValidatorPlugin;
 import org.jwat.tools.tasks.test.TestFileResultItemDiagnosis;
 import org.w3c.dom.Document;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
 
 /**
@@ -90,68 +96,65 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
     		errorHandler = new XmlErrorHandler();
         }
 
-    	/**
-    	 * Parse an XML document without validating DTD/XSD.
-    	 * @param in XML input stream
-    	 */
-        public void parse(InputStream in, TestFileResultItemDiagnosis itemDiagnosis) {
-        	document = null;
-        	try {
-        		errorHandler.itemDiagnosis = itemDiagnosis;
-        		builderParsing.reset();
-        		builderParsing.setErrorHandler(errorHandler);
-        		document = builderParsing.parse(in);
-        		systemId = null;
-        		DocumentType documentType = document.getDoctype();
-        		if (documentType != null) {
-            		systemId = documentType.getSystemId();
-        		}
-        		if (systemId == null) {
-        			Node node = document.getDocumentElement();
-        			Node attribute = node.getAttributes().getNamedItemNS("xmlns", "xsi");
-        			if (attribute != null) {
-        				System.out.println("xmlnsXsi: " + attribute.getNodeValue());
-        			}
-        		}
-        		else {
-        			System.out.println("systemId: " + systemId);
-        		}
-        	}
-        	catch (Throwable t) {
-        		if (itemDiagnosis != null) {
-        			itemDiagnosis.throwables.add(t);
-        		}
-        		else {
-        			t.printStackTrace();
-        		}
-        	}
-        }
-
         /**
-         * Parse an XML document and validate using DTD/XSD.
+    	 * Load and validate an XML document in two passes.
+    	 * First pass load the XML document for wellformedness.
+    	 * Second pass looks for DTD/XSD and validate against it.
     	 * @param in XML input stream
          */
-        public void validate(InputStream in, TestFileResultItemDiagnosis itemDiagnosis) {
+        public void validate(ManagedPayload managedPayload, TestFileResultItemDiagnosis itemDiagnosis) {
+        	InputStream payloadStream = null;
         	document = null;
         	try {
+        		payloadStream = managedPayload.getPayloadStream();
         		errorHandler.itemDiagnosis = itemDiagnosis;
         		builderParsing.reset();
         		builderParsing.setErrorHandler(errorHandler);
-        		document = builderParsing.parse(in);
+        		document = builderParsing.parse(payloadStream);
+        		payloadStream.close();
+        		payloadStream = null;
         		systemId = null;
         		DocumentType documentType = document.getDoctype();
+        		boolean bValidate = false;
         		if (documentType != null) {
             		systemId = documentType.getSystemId();
         		}
-        		if (systemId == null) {
-        			Node node = document.getDocumentElement();
-        			Node attribute = node.getAttributes().getNamedItemNS("xmlns", "xsi");
-        			if (attribute != null) {
-        				System.out.println("xmlnsXsi: " + attribute.getNodeValue());
-        			}
+        		if (systemId != null) {
+        			// debug
+        			//System.out.println("systemId: " + systemId);
+            		bValidate = true;
         		}
         		else {
-        			System.out.println("systemId: " + systemId);
+            		XPathFactory xpf = XPathFactory.newInstance();
+            		XPath xp = xpf.newXPath();
+            		NodeList nodes;
+        			Node node;
+        			// JDK6 XPath engine supposedly only implements v1.0 of the specs.
+            		nodes = (NodeList)xp.evaluate("//*", document.getDocumentElement(), XPathConstants.NODESET);
+            		for (int i = 0; i < nodes.getLength(); i++) {
+            			node = nodes.item(i).getAttributes().getNamedItem("xmlns:xsi");
+            			if (node != null) {
+            				// debug
+            				//System.out.println(node.getNodeValue());
+                    		bValidate = true;
+            			}
+            			node = nodes.item(i).getAttributes().getNamedItem("xsi:schemaLocation");
+            			if (node != null) {
+            				// debug
+            				//System.out.println(node.getNodeValue());
+                    		bValidate = true;
+            			}
+            		}
+        		}
+        		if (bValidate) {
+            		payloadStream = managedPayload.getPayloadStream();
+            		errorHandler.itemDiagnosis = itemDiagnosis;
+            		builderValidating.reset();
+            		builderValidating.setEntityResolver(entityResolver);
+            		builderValidating.setErrorHandler(errorHandler);
+            		document = builderValidating.parse(payloadStream);
+            		payloadStream.close();
+            		payloadStream = null;
         		}
         	}
         	catch (Throwable t) {
@@ -162,24 +165,21 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
         			t.printStackTrace();
         		}
         	}
-        	/*
-        	document = null;
-        	try {
-        		errorHandler.itemDiagnosis = itemDiagnosis;
-        		builderValidating.reset();
-        		builderValidating.setEntityResolver(entityResolver);
-        		builderValidating.setErrorHandler(errorHandler);
-        		document = builderValidating.parse(in);
-        	}
-        	catch (Throwable t) {
-        		if (itemDiagnosis != null) {
-        			itemDiagnosis.throwables.add(t);
-        		}
-        		else {
-        			t.printStackTrace();
+        	finally {
+        		if (payloadStream != null) {
+        			try {
+						payloadStream.close();
+					} catch (IOException e) {
+		        		if (itemDiagnosis != null) {
+		        			itemDiagnosis.throwables.add(e);
+		        		}
+		        		else {
+		        			e.printStackTrace();
+		        		}
+					}
+        			payloadStream = null;
         		}
         	}
-        	*/
         }
 
     }

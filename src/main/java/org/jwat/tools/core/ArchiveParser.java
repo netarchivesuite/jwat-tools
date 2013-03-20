@@ -59,13 +59,13 @@ public class ArchiveParser {
 		try {
 			raf = new RandomAccessFile( file, "r" );
 			rafin = new RandomAccessFileInputStream( raf );
-			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( rafin, 8192 ), 16 );
+			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( rafin, 8192 ), 32 );
 			if ( GzipReader.isGzipped( pbin ) ) {
 				gzipReader = new GzipReader( pbin );
 				ByteCountingPushBackInputStream in;
 				int gzipEntries = 0;
 				while ( (gzipEntry = gzipReader.getNextEntry()) != null ) {
-					in = new ByteCountingPushBackInputStream( new BufferedInputStream( gzipEntry.getInputStream(), 8192 ), 16 );
+					in = new ByteCountingPushBackInputStream( new BufferedInputStream( gzipEntry.getInputStream(), 8192 ), 32 );
 					++gzipEntries;
 					//System.out.println(gzipEntries + " - " + gzipEntry.getStartOffset() + " (0x" + (Long.toHexString(gzipEntry.getStartOffset())) + ")");
 					if ( gzipEntries == 1 ) {

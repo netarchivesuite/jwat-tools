@@ -1,4 +1,4 @@
-package org.jwat.tools.core;
+package org.jwat.tools.tasks;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -9,7 +9,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public abstract class Task {
+import org.jwat.tools.core.ProgressableOutput;
+import org.jwat.tools.core.WildcardMatcher;
+
+public abstract class ProcessTask extends Task {
 
 	/** Threads to use in thread pool. */
 	public int threads = 1;
@@ -17,16 +20,22 @@ public abstract class Task {
 	/** ThreadPool executor. */
 	public ExecutorService executor; 
 
+	public ProgressableOutput cout = new ProgressableOutput(System.out);
+
 	/** Thread pool processing start time. */
 	public long startCtm;
 
-	public ProgressableOutput cout = new ProgressableOutput(System.out);
+	/** Size of queue files for estimation of completion. */
+    public long queued_size;
 
+    /** Size of processed files for estimation of completion. */
+    public long current_size;
+
+    /** Files queued. */
 	public int queued = 0;
 
+	/** Files processed. */
 	public int processed = 0;
-
-	public abstract void command(CommandLine.Arguments arguments);
 
 	public abstract void process(File file);
 
@@ -37,7 +46,7 @@ public abstract class Task {
 	futures.add(future);
 	 */
 
-	public void threadpool_feeder_lifecycle(List<String> filesList, Task task) {
+	public void threadpool_feeder_lifecycle(List<String> filesList, ProcessTask task) {
 		cout.println( "Using " + threads + " thread(s)." );
 		//executor = Executors.newFixedThreadPool(16);
 		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
@@ -86,7 +95,7 @@ public abstract class Task {
 		}
 	}
 
-	public void filelist_feeder(List<String> filesList, Task task) {
+	public void filelist_feeder(List<String> filesList, ProcessTask task) {
 		String fileSeparator = System.getProperty( "file.separator" );
 		File parentFile;
 		String filepart;
@@ -121,7 +130,7 @@ public abstract class Task {
 		}
 	}
 
-	public void filelist_feeder_process(File parentFile, FileFilter filter, Task task) {
+	protected void filelist_feeder_process(File parentFile, FileFilter filter, ProcessTask task) {
 		if ( parentFile.isFile() ) {
 			task.process( parentFile );
 		}
@@ -169,6 +178,129 @@ public abstract class Task {
 			}
 			return true;
 		}
+	}
+
+	public double current_progress;
+	public String current_timestr;
+	public long current_avgbpsec;
+
+	public void calculate_progress() {
+		long ctm = System.currentTimeMillis();
+		long dtm = ctm - startCtm;
+		current_progress = (double)current_size / (double)queued_size * 100.0;
+		long etm = (long)((double)dtm / current_progress * 100.0);
+		long rtm = etm - dtm;
+
+		long rts = rtm / 1000;
+		if (rts > 0) {
+			long l = rts;
+			long l3 = (l % 60);
+			l = l / 60;
+			long l2 = (l % 60);
+			l = l / 60;
+			current_timestr = String.format("%02d:%02d:%02d", l, l2, l3);
+		}
+		else {
+			current_timestr = "--:--:--";
+		}
+
+		long dts = dtm / 1000;
+		if (dts > 0) {
+			current_avgbpsec = current_size / dts;
+		} else {
+			current_avgbpsec = current_size;
+		}
+	}
+
+	public long run_dtm;
+	public long run_avgbpsec;
+	public String run_timestr;
+
+	public void calucate_runstats() {
+		run_dtm = System.currentTimeMillis() - startCtm;
+		long run_dts = run_dtm / 1000;
+		if (run_dts > 0) {
+			run_avgbpsec = current_size / run_dts;
+		}
+		long l = run_dts;
+		long l3 = (l % 60);
+		l = l / 60;
+		long l2 = (l % 60);
+		l = l / 60;
+		run_timestr = String.format("%02d:%02d:%02d", l, l2, l3);
+	}
+
+	public static String toSizeString(long l) {
+		StringBuffer strBuf = new StringBuffer();
+		if ( l < (1024*1024) ) {
+			strBuf.append( Long.toString( (l * 10) / 1024 ) );
+			if ( strBuf.length() == 1 ) {
+				strBuf.insert( 0, "0" );
+			}
+			strBuf.insert( strBuf.length() - 1, "." );
+			strBuf.append( " kb" );
+			return strBuf.toString();
+		}
+		else if ( l < (1024*1024*1024) ) {
+			strBuf.append( Long.toString( (l * 10) / (1024*1024) ) );
+			if ( strBuf.length() == 1 ) {
+				strBuf.insert( 0, "0" );
+			}
+			strBuf.insert( strBuf.length() - 1, "." );
+			strBuf.append( " mb" );
+			return strBuf.toString();
+		}
+		else {
+			strBuf.append( Long.toString( (l * 10) / (1024*1024*1024) ) );
+			if ( strBuf.length() == 1 ) {
+				strBuf.insert( 0, "0" );
+			}
+			strBuf.insert( strBuf.length() - 1, "." );
+			strBuf.append( " gb" );
+			return strBuf.toString();
+		}
+	}
+
+	public static String toSizePerSecondString(long l) {
+		StringBuffer strBuf = new StringBuffer();
+		if ( l < (1024*1024) ) {
+			strBuf.append( Long.toString( (l * 10) / 1024 ) );
+			if ( strBuf.length() == 1 ) {
+				strBuf.insert( 0, "0" );
+			}
+			strBuf.insert( strBuf.length() - 1, "." );
+			strBuf.append( " kb/s" );
+			return strBuf.toString();
+		}
+		else if ( l < (1024*1024*1024) ) {
+			strBuf.append( Long.toString( (l * 10) / (1024*1024) ) );
+			if ( strBuf.length() == 1 ) {
+				strBuf.insert( 0, "0" );
+			}
+			strBuf.insert( strBuf.length() - 1, "." );
+			strBuf.append( " mb/s" );
+			return strBuf.toString();
+		}
+		else {
+			strBuf.append( Long.toString( (l * 10) / (1024*1024*1024) ) );
+			if ( strBuf.length() == 1 ) {
+				strBuf.insert( 0, "0" );
+			}
+			strBuf.insert( strBuf.length() - 1, "." );
+			strBuf.append( " gb/s" );
+			return strBuf.toString();
+		}
+	}
+
+	public static String toByteSizeString(long l) {
+		StringBuffer strBuf = new StringBuffer( Long.toString( l ) );
+		int idx = strBuf.length() - 3;
+		while ( idx > 0 ) {
+			strBuf.insert( idx, "." );
+			idx -= 3;
+		}
+		strBuf.append( " bytes" );
+		return strBuf.toString();
 	}
 
 }

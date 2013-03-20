@@ -1,5 +1,6 @@
 package org.jwat.tools.core;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.io.RandomAccessFile;
 import org.jwat.arc.ArcReaderFactory;
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.RandomAccessFileInputStream;
+import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
 import org.jwat.warc.WarcReaderFactory;
 
@@ -21,8 +23,19 @@ public final class FileIdent {
 	public static final int FILEID_ARC_GZ = 4;
 	public static final int FILEID_WARC_GZ = 5;
 
+	public int filenameId;
+
+	public int streamId;
+
+	public static FileIdent ident(File file) {
+		FileIdent fId = new FileIdent();
+		fId.filenameId = identFile(file);
+		fId.streamId = identFileStream(file);
+		return fId;
+	}
+
 	public static int identFile(File file) {
-		int fileId;
+		int fileId = FILEID_UNKNOWN;
 		String fname = file.getName().toLowerCase();
 		if (fname.endsWith(".arc.gz")) {
 			fileId = FILEID_ARC_GZ;
@@ -34,31 +47,41 @@ public final class FileIdent {
 			fileId = FILEID_WARC;
 		} else if (fname.endsWith(".gz")) {
 			fileId = FILEID_GZIP;
-		} else {
-			fileId = identFileMagic(file);
 		}
 		return fileId;
 	}
 
-	public static int identFileMagic(File file) {
+	public static int identFileStream(File file) {
 		int fileId = FILEID_UNKNOWN;
-		byte[] magicBytes = new byte[16];
-		int magicLength;
+		byte[] magicBytes = new byte[32];
+		int read;
 		RandomAccessFile raf = null;
 		RandomAccessFileInputStream rafin;
 		ByteCountingPushBackInputStream pbin = null;
+		GzipReader gzipReader = null;
+		GzipEntry gzipEntry = null;
 		try {
 			raf = new RandomAccessFile( file, "r" );
 			rafin = new RandomAccessFileInputStream( raf );
-			pbin = new ByteCountingPushBackInputStream(rafin, 16);
-			magicLength = pbin.readFully(magicBytes);
-			if (magicLength == 16) {
+			pbin = new ByteCountingPushBackInputStream(rafin, 32);
+			read = pbin.peek(magicBytes);
+			if (read == 32) {
 				if (GzipReader.isGzipped(pbin)) {
-					fileId = FILEID_GZIP;
-					// TODO check for compress arc or warc too
-				} else if (ArcReaderFactory.isArcFile(pbin)) {
+					gzipReader = new GzipReader( pbin );
+					ByteCountingPushBackInputStream in;
+					if ( (gzipEntry = gzipReader.getNextEntry()) != null ) {
+						in = new ByteCountingPushBackInputStream( new BufferedInputStream( gzipEntry.getInputStream(), 8192 ), 32 );
+						if (ArcReaderFactory.isArcRecord(in)) {
+							fileId = FILEID_ARC_GZ;
+						} else if (WarcReaderFactory.isWarcRecord(in)) {
+							fileId = FILEID_WARC_GZ;
+						} else {
+							fileId = FILEID_GZIP;
+						}
+					}
+				} else if (ArcReaderFactory.isArcRecord(pbin)) {
 					fileId = FILEID_ARC;
-				} else if (WarcReaderFactory.isWarcFile(pbin)) {
+				} else if (WarcReaderFactory.isWarcRecord(pbin)) {
 					fileId = FILEID_WARC;
 				}
 			}

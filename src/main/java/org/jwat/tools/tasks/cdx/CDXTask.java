@@ -13,9 +13,9 @@ import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.core.FileIdent;
 import org.jwat.tools.core.SynchronizedOutput;
-import org.jwat.tools.core.Task;
+import org.jwat.tools.tasks.ProcessTask;
 
-public class CDXTask extends Task {
+public class CDXTask extends ProcessTask {
 
 	/** Valid results output stream. */
 	private SynchronizedOutput cdxOutput;
@@ -24,15 +24,37 @@ public class CDXTask extends Task {
 	}
 
 	@Override
+	public void show_help() {
+		System.out.println("jwattools cdx [-o OUTPUT_FILE] [-w THREADS] <paths>");
+		System.out.println("");
+		System.out.println("cdx one or more ARC/WARC files");
+		System.out.println("");
+		System.out.println("\tRead through ARC/WARC file(s) and create a CDX file.");
+		System.out.println("");
+		System.out.println("options:");
+		System.out.println("");
+		System.out.println(" -o<file>  output cdx filename (unsorted)");
+		System.out.println(" -w<x>     set the amount of worker thread(s) (defaults to 1)");
+	}
+
+	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+		// Thread workers.
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
 			try {
 				threads = Integer.parseInt(argument.value);
 			} catch (NumberFormatException e) {
+				System.out.println( "Invalid number of threads requested: " + argument.value );
+				System.exit( 1 );
 			}
 		}
+		if ( threads < 1 ) {
+			System.out.println( "Invalid number of threads requested: " + threads );
+			System.exit( 1 );
+		}
+
 		File outputFile = new File("cdx.unsorted.out");
 		argument = arguments.idMap.get( JWATTools.A_OUTPUT );
 		if ( argument != null && argument.value != null ) {
@@ -47,6 +69,8 @@ public class CDXTask extends Task {
 				}
 			}
 		}
+
+		// Files.
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
 
@@ -69,16 +93,45 @@ public class CDXTask extends Task {
 			}
 		}
 		cdxOutput.close();
+
+		calucate_runstats();
+
+		cout.println( "      Time: " + run_timestr + " (" + run_dtm + " ms.)" );
+		cout.println( "TotalBytes: " + toSizeString(current_size));
+		cout.println( "  AvgBytes: " + toSizePerSecondString(run_avgbpsec));
 	}
 
 	@Override
 	public void process(File srcFile) {
+		FileIdent fileIdent = FileIdent.ident(srcFile);
 		if (srcFile.length() > 0) {
-			int fileId = FileIdent.identFile(srcFile);
-			if (fileId > 0) {
+			// debug
+			//System.out.println(fileIdent.filenameId + " " + fileIdent.streamId + " " + srcFile.getName());
+			if (fileIdent.filenameId != fileIdent.streamId) {
+				cout.println("Wrong extension: '" + srcFile.getPath() + "'");
+			}
+			switch (fileIdent.streamId) {
+			case FileIdent.FILEID_ARC:
+			case FileIdent.FILEID_ARC_GZ:
+			case FileIdent.FILEID_WARC:
+			case FileIdent.FILEID_WARC_GZ:
 				executor.submit(new TaskRunnable(srcFile));
+				queued_size += srcFile.length();
 				++queued;
-			} else {
+				break;
+			default:
+				break;
+			}
+		} else {
+			switch (fileIdent.filenameId) {
+			case FileIdent.FILEID_ARC:
+			case FileIdent.FILEID_ARC_GZ:
+			case FileIdent.FILEID_WARC:
+			case FileIdent.FILEID_WARC_GZ:
+				cout.println("Empty file: '" + srcFile.getPath() + "'");
+				break;
+			default:
+				break;
 			}
 		}
 	}
@@ -91,9 +144,9 @@ public class CDXTask extends Task {
 		@Override
 		public void run() {
 			CDXFile cdxFile = new CDXFile();
-			//testFile.callback = null;
-			List<CDXEntry> entries = cdxFile.processFile(srcFile);
-			results.add(entries);
+			cdxFile.processFile(srcFile);
+			cdxFile.srcFile = srcFile;
+			results.add(cdxFile);
 			resultsReady.release();
 		}
 	}
@@ -102,7 +155,7 @@ public class CDXTask extends Task {
 	private Semaphore resultsReady = new Semaphore(0);
 
 	/** Completed validation results list. */
-	private ConcurrentLinkedQueue<List<CDXEntry>> results = new ConcurrentLinkedQueue<List<CDXEntry>>();
+	private ConcurrentLinkedQueue<CDXFile> results = new ConcurrentLinkedQueue<CDXFile>();
 
 	class ResultThread implements Runnable {
 
@@ -116,6 +169,7 @@ public class CDXTask extends Task {
 			cdxOutput.out.println(" CDX N b a m s k r M V g");
 			cdxOutput.release();
 
+			CDXFile cdxFile;
 			List<CDXEntry> entries;
 			CDXEntry entry;
 			String tmpLine;
@@ -123,7 +177,8 @@ public class CDXTask extends Task {
 			while (bLoop) {
 				try {
 					if (resultsReady.tryAcquire(1, TimeUnit.SECONDS)) {
-						entries = results.poll();
+						cdxFile = results.poll();
+						entries = cdxFile.entries;
 						cdxOutput.acquire();
 						for (int i=0; i<entries.size(); ++i) {
 							entry = entries.get(i);
@@ -138,9 +193,14 @@ public class CDXTask extends Task {
 							}
 						}
 						cdxOutput.release();
+						current_size += cdxFile.srcFile.length();
 						++processed;
-						cout.print_progress("Queued: " + queued + " - Processed: " + processed + ".");
-					} else if (bExit) {
+
+						calculate_progress();
+
+						//cout.print_progress("Queued: " + queued + " - Processed: " + processed + " - Estimated: " + new Date(ctm + etm).toString() + ".");
+						cout.print_progress(String.format("Queued: %d - Processed: %d - %s - Estimated: %s (%.2f%%).", queued, processed, toSizePerSecondString(current_avgbpsec), current_timestr, current_progress));
+					} else if (bExit && processed == queued) {
 						bLoop = false;
 					}
 				} catch (InterruptedException e) {

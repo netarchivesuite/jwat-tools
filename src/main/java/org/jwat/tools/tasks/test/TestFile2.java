@@ -11,7 +11,10 @@ import org.jwat.common.UriProfile;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.tools.core.ArchiveParser;
 import org.jwat.tools.core.ArchiveParserCallback;
+import org.jwat.tools.core.Cloner;
 import org.jwat.tools.core.FileIdent;
+import org.jwat.tools.core.ManagedPayloadContentTypeIdentifier;
+import org.jwat.tools.core.ManagedPayload;
 import org.jwat.tools.core.ValidatorPlugin;
 import org.jwat.warc.WarcRecord;
 
@@ -19,30 +22,46 @@ public class TestFile2 implements ArchiveParserCallback {
 
 	public boolean bShowErrors;
 
+	public boolean bValidateDigest;
+
 	public UriProfile uriProfile;
 
     public int recordHeaderMaxSize = 8192;
 
     public int payloadHeaderMaxSize = 32768;
 
-    public List<ValidatorPlugin> validatorPlugins;
+	protected ManagedPayload managedPayload;
+
+	protected ManagedPayloadContentTypeIdentifier managedPayloadContentTypeIdentifier;
+
+	protected Cloner cloner;
+
+	public List<ValidatorPlugin> validatorPlugins;
 
 	public TestFileUpdateCallback callback;
 
-	public TestFileResult result;
+	protected TestFileResult result;
 
-	public TestFileResult processFile(File file) {
+	public TestFileResult processFile(File file, Cloner cloner) {
 		result = new TestFileResult();
 		result.file = file.getPath();
 
+		managedPayloadContentTypeIdentifier = ManagedPayloadContentTypeIdentifier.getManagedPayloadContentTypeIdentifier();
+
+		//this.cloner = cloner;
+
 		ArchiveParser archiveParser = new ArchiveParser();
 		archiveParser.uriProfile = uriProfile;
-		archiveParser.bBlockDigestEnabled = true;
-		archiveParser.bPayloadDigestEnabled = true;
+		archiveParser.bBlockDigestEnabled = bValidateDigest;
+		archiveParser.bPayloadDigestEnabled = bValidateDigest;
 	    archiveParser.recordHeaderMaxSize = recordHeaderMaxSize;
 	    archiveParser.payloadHeaderMaxSize = payloadHeaderMaxSize;
 
+		managedPayload = ManagedPayload.checkout();
+
 		long consumed = archiveParser.parse(file, this);
+
+		managedPayload.checkin();
 
 		result.bGzipReader = archiveParser.gzipReader != null;
 		result.bArcReader = archiveParser.arcReader != null;
@@ -111,14 +130,27 @@ public class TestFile2 implements ArchiveParserCallback {
 		TestFileResultItemDiagnosis itemDiagnosis = new TestFileResultItemDiagnosis();
 		itemDiagnosis.offset = startOffset;
 		// TODO arc type string in JWAT.
-	    if (arcRecord.hasPayload() && !arcRecord.hasPseudoEmptyPayload()) {
-	    	validate_payload(arcRecord, arcRecord.header.contentType, arcRecord.getPayload(), itemDiagnosis);
-	    }
+		switch (arcRecord.recordType) {
+		case ArcRecordBase.RT_VERSION_BLOCK:
+			managedPayload.manageVersionBlock(arcRecord, false);
+			break;
+		case ArcRecordBase.RT_ARC_RECORD:
+			managedPayload.manageVersionBlock(arcRecord, false);
+			break;
+		default:
+			throw new IllegalStateException();
+		}
 		arcRecord.close();
 		if (arcRecord.diagnostics.hasErrors() || arcRecord.diagnostics.hasWarnings()) {
 			itemDiagnosis.errors = arcRecord.diagnostics.getErrors();
 			itemDiagnosis.warnings = arcRecord.diagnostics.getWarnings();
+			if (cloner != null) {
+				cloner.cloneArcRecord(arcRecord, managedPayload);
+			}
 		}
+	    if (arcRecord.hasPayload() && !arcRecord.hasPseudoEmptyPayload()) {
+	    	validate_payload(arcRecord, arcRecord.header.contentType, arcRecord.getPayload(), itemDiagnosis);
+	    }
 		if ( bShowErrors ) {
 			//TestResult.showArcErrors( srcFile, arcRecord, System.out );
 			if (itemDiagnosis.errors.size() > 0 || itemDiagnosis.warnings.size() > 0) {
@@ -143,14 +175,18 @@ public class TestFile2 implements ArchiveParserCallback {
 		TestFileResultItemDiagnosis itemDiagnosis = new TestFileResultItemDiagnosis();
 		itemDiagnosis.offset = startOffset;
 		itemDiagnosis.type = warcRecord.header.warcTypeStr;
-	    if (warcRecord.hasPayload()) {
-	    	validate_payload(warcRecord, warcRecord.header.contentType, warcRecord.getPayload(), itemDiagnosis);
-	    }
+		managedPayload.manageWarcRecord(warcRecord, false);
 		warcRecord.close();
 		if (warcRecord.diagnostics.hasErrors() || warcRecord.diagnostics.hasWarnings()) {
 			itemDiagnosis.errors = warcRecord.diagnostics.getErrors();
 			itemDiagnosis.warnings = warcRecord.diagnostics.getWarnings();
+			if (cloner != null) {
+				cloner.cloneWarcRecord(warcRecord, managedPayload);
+			}
 		}
+	    if (warcRecord.hasPayload()) {
+	    	validate_payload(warcRecord, warcRecord.header.contentType, warcRecord.getPayload(), itemDiagnosis);
+	    }
 		if ( bShowErrors ) {
 			//TestResult.showWarcErrors( srcFile, warcRecord, System.out );
 			if (itemDiagnosis.errors.size() > 0 || itemDiagnosis.warnings.size() > 0) {
@@ -188,15 +224,14 @@ public class TestFile2 implements ArchiveParserCallback {
 	public void apcDone() {
 	}
 
-	protected void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload, TestFileResultItemDiagnosis itemDiagnosis) {
-    	if (contentType != null
-    			&& "text".equalsIgnoreCase(contentType.contentType)
-    			&& "xml".equalsIgnoreCase(contentType.mediaType)) {
-    		ValidatorPlugin plugin;
-    		for (int i=0; i<validatorPlugins.size(); ++i) {
-    			plugin = validatorPlugins.get(i);
-    			plugin.getValidator().validate(payload.getInputStream(), itemDiagnosis);
-    			//plugin.getValidator().validate(payload.getInputStream(), itemDiagnosis);
+	protected void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload, TestFileResultItemDiagnosis itemDiagnosis) throws IOException {
+    	if (contentType != null) {
+    		if ("text".equalsIgnoreCase(contentType.contentType) && "xml".equalsIgnoreCase(contentType.mediaType)) {
+        		ValidatorPlugin plugin;
+        		for (int i=0; i<validatorPlugins.size(); ++i) {
+        			plugin = validatorPlugins.get(i);
+        			plugin.getValidator().validate(managedPayload, itemDiagnosis);
+        		}
     		}
     	}
 
@@ -211,16 +246,17 @@ public class TestFile2 implements ArchiveParserCallback {
         */
 	}
 
-    protected void validate_payload(WarcRecord warcRecord, ContentType contentType, Payload payload, TestFileResultItemDiagnosis itemDiagnosis) {
-    	if (contentType != null
-    			&& "text".equalsIgnoreCase(contentType.contentType)
-    			&& "xml".equalsIgnoreCase(contentType.mediaType)) {
-    		ValidatorPlugin plugin;
-    		for (int i=0; i<validatorPlugins.size(); ++i) {
-    			plugin = validatorPlugins.get(i);
-    			plugin.getValidator().validate(payload.getInputStream(), itemDiagnosis);
-    			//plugin.getValidator().validate(payload.getInputStream(), itemDiagnosis);
+	protected void validate_payload(WarcRecord warcRecord, ContentType contentType, Payload payload, TestFileResultItemDiagnosis itemDiagnosis) throws IOException {
+    	if (contentType != null) {
+    		if ("text".equalsIgnoreCase(contentType.contentType) && "xml".equalsIgnoreCase(contentType.mediaType)) {
+        		ValidatorPlugin plugin;
+        		for (int i=0; i<validatorPlugins.size(); ++i) {
+        			plugin = validatorPlugins.get(i);
+        			plugin.getValidator().validate(managedPayload, itemDiagnosis);
+        		}
     		}
+    	} else {
+    		//managedPayloadContentTypeIdentifier.guestimateContentType(managedPayload);
     	}
     }
 

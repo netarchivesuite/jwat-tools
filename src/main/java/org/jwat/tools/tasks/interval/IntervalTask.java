@@ -1,4 +1,4 @@
-package org.jwat.tools.tasks;
+package org.jwat.tools.tasks.interval;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -10,9 +10,9 @@ import java.util.List;
 
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
-import org.jwat.tools.core.Task;
+import org.jwat.tools.tasks.ProcessTask;
 
-public class IntervalTask extends Task {
+public class IntervalTask extends ProcessTask {
 
 	protected long sIdx;
 
@@ -23,6 +23,11 @@ public class IntervalTask extends Task {
 	protected String dstName;
 
 	public IntervalTask() {
+	}
+
+	@Override
+	public void show_help() {
+		System.out.println("Work in progress...");
 	}
 
 	@Override

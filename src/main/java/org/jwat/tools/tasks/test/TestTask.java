@@ -1,9 +1,14 @@
 package org.jwat.tools.tasks.test;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,14 +23,15 @@ import org.jwat.common.Diagnosis;
 import org.jwat.common.DiagnosisType;
 import org.jwat.common.UriProfile;
 import org.jwat.tools.JWATTools;
+import org.jwat.tools.core.Cloner;
 import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.core.FileIdent;
 import org.jwat.tools.core.SynchronizedOutput;
-import org.jwat.tools.core.Task;
 import org.jwat.tools.core.ValidatorPlugin;
+import org.jwat.tools.tasks.ProcessTask;
 import org.jwat.tools.validators.XmlValidatorPlugin;
 
-public class TestTask extends Task {
+public class TestTask extends ProcessTask {
 
 	/*
 	 * Summary.
@@ -47,6 +53,12 @@ public class TestTask extends Task {
 
 	private boolean bShowErrors = false;
 
+	private boolean bValidateDigest = true;
+
+	private Long after = 0L;
+
+	private boolean bBad = false;
+
 	private List<ValidatorPlugin> validatorPlugins = new LinkedList<ValidatorPlugin>();
 
 	private UriProfile uriProfile = UriProfile.RFC3986;
@@ -54,11 +66,13 @@ public class TestTask extends Task {
 	private int recordHeaderMaxSize = 1024 * 1024;
     private int payloadHeaderMaxSize = 1024 * 1024;
 
-	/*
+    private Cloner cloner;
+
+    /*
 	 * State.
 	 */
 
-	/** Valid results output stream. */
+    /** Valid results output stream. */
 	private SynchronizedOutput validOutput;
 
 	/** Invalid results output stream. */
@@ -67,41 +81,96 @@ public class TestTask extends Task {
 	/** Exception output stream. */
 	private SynchronizedOutput exceptionsOutput;
 
-	/** Results ready resource semaphore. */
-	private Semaphore resultsReady = new Semaphore(0);
-
-	/** Completed validation results list. */
-	private ConcurrentLinkedQueue<TestFileResult> results = new ConcurrentLinkedQueue<TestFileResult>();
-
 	public TestTask() {
 	}
 
+	@Override
+	public void show_help() {
+		System.out.println("jwattools test [-elx] [-w THREADS] <paths>");
+		System.out.println("");
+		System.out.println("test one or more ARC/WARC/GZip files");
+		System.out.println("");
+		System.out.println("options:");
+		System.out.println("");
+		System.out.println(" -a                  after yyyyMMddHHmmss");
+		System.out.println(" -b                  tag bad files (*.bad)");
+		System.out.println(" -e                  show errors");
+		System.out.println(" -i --ignore-digest  skip digest calculation and validation");
+		System.out.println(" -l                  relaxed URL URI validation");
+		System.out.println(" -x                  to validate text/xml payload (eg. mets)");
+		System.out.println(" -w<x>               set the amount of worker thread(s) (defaults to 1)");
+	}
+
+	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+		// Thread workers.
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
 			try {
 				threads = Integer.parseInt(argument.value);
 			} catch (NumberFormatException e) {
+				System.out.println( "Invalid number of threads requested: " + argument.value );
+				System.exit( 1 );
 			}
 		}
+		if ( threads < 1 ) {
+			System.out.println( "Invalid number of threads requested: " + threads );
+			System.exit( 1 );
+		}
+
+		// Show errors.
 		if ( arguments.idMap.containsKey( JWATTools.A_SHOW_ERRORS ) ) {
 			bShowErrors = true;
-			System.out.println("Showing errors.");
 		}
+		System.out.println("Showing errors: " + bShowErrors);
+
+		// Ignore digest.
+		if ( arguments.idMap.containsKey( JWATTools.A_IGNORE_DIGEST ) ) {
+			bValidateDigest = false;
+		}
+		System.out.println("Validate digest: " + bValidateDigest);
+
+		// Relaxed URI validation.
 		if ( arguments.idMap.containsKey( JWATTools.A_LAX ) ) {
 			uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
 			System.out.println("Using relaxed URI validation for ARC URL and WARC Target-URI.");
 		}
+
+		// XML validation.
 		if ( arguments.idMap.containsKey( JWATTools.A_XML ) ) {
 			validatorPlugins.add(new XmlValidatorPlugin());
 		}
+
+		// Tag.
+		if ( arguments.idMap.containsKey( JWATTools.A_BAD ) ) {
+			bBad = true;
+			System.out.println("Tagging enabled for invalid files");
+		}
+
+		// After.
+		argument = arguments.idMap.get( JWATTools.A_AFTER );
+		if ( argument != null && argument.value != null ) {
+			try {
+				DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+		        dateFormat.setLenient(false);
+		        Date afterDate = dateFormat.parse(argument.value);
+		        after = afterDate.getTime();
+			} catch (ParseException e) {
+				System.out.println("Invalid date format - " + argument.value);
+			}
+		}
+
+        // Files.
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
 
 		validOutput = new SynchronizedOutput("v.out");
 		invalidOutput = new SynchronizedOutput("i.out");
 		exceptionsOutput = new SynchronizedOutput("e.out");
+
+		// TODO optional
+		//cloner = Cloner.getCloner();
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
@@ -116,6 +185,17 @@ public class TestTask extends Task {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+		}
+
+		calucate_runstats();
+
+		if (cloner != null) {
+			try {
+				cloner.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			cloner = null;
 		}
 
 		exceptionsOutput.close();
@@ -133,7 +213,9 @@ public class TestTask extends Task {
 		validOutput.out.println( "  Warnings: " + warnings );
 		validOutput.out.println( "RuntimeErr: " + runtimeErrors );
 		validOutput.out.println( "   Skipped: " + skipped );
-		validOutput.out.println( "Validation took " + (System.currentTimeMillis() - startCtm) + " ms." );
+		validOutput.out.println( "      Time: " + run_timestr + " (" + run_dtm + " ms.)" );
+		validOutput.out.println( "TotalBytes: " + toSizeString(current_size));
+		validOutput.out.println( "  AvgBytes: " + toSizePerSecondString(run_avgbpsec));
 		validOutput.release();
 		validOutput.close();
 
@@ -150,7 +232,9 @@ public class TestTask extends Task {
 		invalidOutput.out.println( "  Warnings: " + warnings );
 		invalidOutput.out.println( "RuntimeErr: " + runtimeErrors );
 		invalidOutput.out.println( "   Skipped: " + skipped );
-		invalidOutput.out.println( "Validation took " + (System.currentTimeMillis() - startCtm) + " ms." );
+		invalidOutput.out.println( "      Time: " + run_timestr + " (" + run_dtm + " ms.)" );
+		invalidOutput.out.println( "TotalBytes: " + toSizeString(current_size));
+		invalidOutput.out.println( "  AvgBytes: " + toSizePerSecondString(run_avgbpsec));
 		invalidOutput.release();
 		invalidOutput.close();
 
@@ -166,7 +250,9 @@ public class TestTask extends Task {
 		cout.println( "  Warnings: " + warnings );
 		cout.println( "RuntimeErr: " + runtimeErrors );
 		cout.println( "   Skipped: " + skipped );
-		cout.println( "Validation took " + (System.currentTimeMillis() - startCtm) + " ms." );
+		cout.println( "      Time: " + run_timestr + " (" + run_dtm + " ms.)" );
+		cout.println( "TotalBytes: " + toSizeString(current_size));
+		cout.println( "  AvgBytes: " + toSizePerSecondString(run_avgbpsec));
 
 		List<Entry<DiagnosisType, Integer>> typeNumbersList = new ArrayList<Entry<DiagnosisType, Integer>>(typeNumbers.entrySet());
 		//Collections.sort(typeNumbersList, new EntryDiagnosisTypeComparator());
@@ -215,32 +301,61 @@ public class TestTask extends Task {
 	*/
 
 	@Override
-	public void process(File srcFile) {
-		if (srcFile.length() > 0) {
-			int fileId = FileIdent.identFile(srcFile);
-			if (fileId > 0) {
-				executor.submit(new TestRunnable(srcFile));
-				++queued;
+	public synchronized void process(File srcFile) {
+		if (srcFile.lastModified() > after) {
+			FileIdent fileIdent = FileIdent.ident(srcFile);
+			if (srcFile.length() > 0) {
+				// debug
+				//System.out.println(fileIdent.filenameId + " " + fileIdent.streamId + " " + srcFile.getName());
+				if (fileIdent.filenameId != fileIdent.streamId) {
+					cout.println("Wrong extension: '" + srcFile.getPath() + "'");
+				}
+				switch (fileIdent.streamId) {
+				case FileIdent.FILEID_GZIP:
+				case FileIdent.FILEID_ARC:
+				case FileIdent.FILEID_ARC_GZ:
+				case FileIdent.FILEID_WARC:
+				case FileIdent.FILEID_WARC_GZ:
+					executor.submit(new TaskRunnable(srcFile));
+					queued_size += srcFile.length();
+					++queued;
+					break;
+				default:
+					break;
+				}
 			} else {
+				switch (fileIdent.filenameId) {
+				case FileIdent.FILEID_GZIP:
+				case FileIdent.FILEID_ARC:
+				case FileIdent.FILEID_ARC_GZ:
+				case FileIdent.FILEID_WARC:
+				case FileIdent.FILEID_WARC_GZ:
+					cout.println("Empty file: '" + srcFile.getPath() + "'");
+					break;
+				default:
+					break;
+				}
 			}
 		}
 	}
 
-	class TestRunnable implements Runnable {
+	class TaskRunnable implements Runnable {
 		File srcFile;
-		TestRunnable(File srcFile) {
+		TaskRunnable(File srcFile) {
 			this.srcFile = srcFile;
 		}
 		@Override
 		public void run() {
 			TestFile2 testFile = new TestFile2();
 			testFile.bShowErrors = bShowErrors;
+			testFile.bValidateDigest = bValidateDigest;
 			testFile.uriProfile = uriProfile;
 		    testFile.recordHeaderMaxSize = recordHeaderMaxSize;
 		    testFile.payloadHeaderMaxSize = payloadHeaderMaxSize;
 			testFile.validatorPlugins = validatorPlugins;
 			testFile.callback = null;
-			TestFileResult result = testFile.processFile(srcFile);
+			TestFileResult result = testFile.processFile(srcFile, cloner);
+			result.srcFile = srcFile;
 			results.add(result);
 			resultsReady.release();
 		}
@@ -262,6 +377,12 @@ public class TestTask extends Task {
 	}
 	*/
 
+	/** Results ready resource semaphore. */
+	private Semaphore resultsReady = new Semaphore(0);
+
+	/** Completed validation results list. */
+	private ConcurrentLinkedQueue<TestFileResult> results = new ConcurrentLinkedQueue<TestFileResult>();
+
 	class ResultThread implements Runnable {
 
 		boolean bExit = false;
@@ -271,6 +392,7 @@ public class TestTask extends Task {
 		@Override
 		public void run() {
 			TestFileResult result;
+			File newFile;
 			cout.println("Output Thread started.");
 			boolean bLoop = true;
 			while (bLoop) {
@@ -282,6 +404,16 @@ public class TestTask extends Task {
 						exceptionsOutput.acquire();
 						try {
 							result.printResult(bShowErrors, validOutput.out, invalidOutput.out, exceptionsOutput.out);
+							if (bBad) {
+								if (result.rdList.size() > 0 || result.throwableList.size() > 0) {
+									if (!result.srcFile.getName().endsWith(".bad")) {
+										newFile = new File(result.srcFile.getParent(), result.srcFile.getName() + ".bad");
+										if (!result.srcFile.renameTo(newFile)) {
+											cout.println(String.format("Could not renamed '%s' to '%s'", result.srcFile.getPath(), newFile.getPath()));
+										}
+									}
+								}
+							}
 						}
 						catch (Throwable t) {
 							++result.runtimeErrors;
@@ -291,9 +423,14 @@ public class TestTask extends Task {
 						invalidOutput.release();
 						validOutput.release();
 						update_summary(result);
+						current_size += result.srcFile.length();
 						++processed;
-						cout.print_progress("Queued: " + queued + " - Processed: " + processed + ".");
-					} else if (bExit) {
+
+						calculate_progress();
+
+						//cout.print_progress("Queued: " + queued + " - Processed: " + processed + " - Estimated: " + new Date(ctm + etm).toString() + ".");
+						cout.print_progress(String.format("Queued: %d - Processed: %d - %s - Estimated: %s (%.2f%%).", queued, processed, toSizePerSecondString(current_avgbpsec), current_timestr, current_progress));
+					} else if (bExit && processed == queued) {
 						bLoop = false;
 					}
 				} catch (InterruptedException e) {
