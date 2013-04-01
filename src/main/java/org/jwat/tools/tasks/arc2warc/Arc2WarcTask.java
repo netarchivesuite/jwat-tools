@@ -14,6 +14,10 @@ import org.jwat.tools.tasks.ProcessTask;
 
 public class Arc2WarcTask extends ProcessTask {
 
+	public static final String commandName = "arc2warc";
+
+	public static final String commandDescription = "convert ARC to WARC";
+
 	/*
 	 * Settings.
 	 */

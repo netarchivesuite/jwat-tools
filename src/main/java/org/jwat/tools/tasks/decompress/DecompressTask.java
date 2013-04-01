@@ -13,6 +13,10 @@ import org.jwat.tools.tasks.ProcessTask;
 
 public class DecompressTask extends ProcessTask {
 
+	public static final String commandName = "decompress";
+
+	public static final String commandDescription = "decompress ARC/WARC or normal GZip file(s)";
+
 	public DecompressTask() {
 	}
 

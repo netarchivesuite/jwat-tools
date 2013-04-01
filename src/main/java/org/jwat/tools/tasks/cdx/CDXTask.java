@@ -17,6 +17,10 @@ import org.jwat.tools.tasks.ProcessTask;
 
 public class CDXTask extends ProcessTask {
 
+	public static final String commandName = "cdx";
+
+	public static final String commandDescription = "create a CDX index (unsorted)";
+
 	/** Valid results output stream. */
 	private SynchronizedOutput cdxOutput;
 

@@ -149,7 +149,7 @@ public class TestFile2 implements ArchiveParserCallback {
 			}
 		}
 	    if (arcRecord.hasPayload() && !arcRecord.hasPseudoEmptyPayload()) {
-	    	validate_payload(arcRecord, arcRecord.header.contentType, arcRecord.getPayload(), itemDiagnosis);
+	    	validate_payload(arcRecord, arcRecord.header.contentType, itemDiagnosis);
 	    }
 		if ( bShowErrors ) {
 			//TestResult.showArcErrors( srcFile, arcRecord, System.out );
@@ -185,7 +185,7 @@ public class TestFile2 implements ArchiveParserCallback {
 			}
 		}
 	    if (warcRecord.hasPayload()) {
-	    	validate_payload(warcRecord, warcRecord.header.contentType, warcRecord.getPayload(), itemDiagnosis);
+	    	validate_payload(warcRecord, warcRecord.header.contentType, itemDiagnosis);
 	    }
 		if ( bShowErrors ) {
 			//TestResult.showWarcErrors( srcFile, warcRecord, System.out );
@@ -224,7 +224,7 @@ public class TestFile2 implements ArchiveParserCallback {
 	public void apcDone() {
 	}
 
-	protected void validate_payload(ArcRecordBase arcRecord, ContentType contentType, Payload payload, TestFileResultItemDiagnosis itemDiagnosis) throws IOException {
+	protected void validate_payload(ArcRecordBase arcRecord, ContentType contentType, TestFileResultItemDiagnosis itemDiagnosis) throws IOException {
     	if (contentType != null) {
     		if ("text".equalsIgnoreCase(contentType.contentType) && "xml".equalsIgnoreCase(contentType.mediaType)) {
         		ValidatorPlugin plugin;
@@ -246,7 +246,7 @@ public class TestFile2 implements ArchiveParserCallback {
         */
 	}
 
-	protected void validate_payload(WarcRecord warcRecord, ContentType contentType, Payload payload, TestFileResultItemDiagnosis itemDiagnosis) throws IOException {
+	protected void validate_payload(WarcRecord warcRecord, ContentType contentType, TestFileResultItemDiagnosis itemDiagnosis) throws IOException {
     	if (contentType != null) {
     		if ("text".equalsIgnoreCase(contentType.contentType) && "xml".equalsIgnoreCase(contentType.mediaType)) {
         		ValidatorPlugin plugin;

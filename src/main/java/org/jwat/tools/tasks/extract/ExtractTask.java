@@ -14,6 +14,10 @@ import org.jwat.tools.tasks.ProcessTask;
 
 public class ExtractTask extends ProcessTask {
 
+	public static final String commandName = "extract";
+
+	public static final String commandDescription = "extract ARC/WARC record(s)";
+
 	protected String targetUri;
 
 	public ExtractTask() {

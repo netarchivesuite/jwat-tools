@@ -8,6 +8,10 @@ import org.jwat.tools.tasks.Task;
 
 public class HelpTask extends Task {
 
+	public static final String commandName = "help";
+
+	public static final String commandDescription = "display help information";
+
 	public HelpTask() {
 	}
 
@@ -28,7 +32,7 @@ public class HelpTask extends Task {
 			command = files.get(0);
 		}
 		if (command != null) {
-			Class<? extends Task> clazz = JWATTools.commands.get(command);
+			Class<? extends Task> clazz = JWATTools.commandMap.get(command);
 			if (clazz != null) {
 				try {
 					Task task = clazz.newInstance();

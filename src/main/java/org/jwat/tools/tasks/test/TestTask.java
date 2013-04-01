@@ -33,6 +33,10 @@ import org.jwat.tools.validators.XmlValidatorPlugin;
 
 public class TestTask extends ProcessTask {
 
+	public static final String commandName = "test";
+
+	public static final String commandDescription = "test validity of ARC/WARC/GZip file(s)";
+
 	/*
 	 * Summary.
 	 */

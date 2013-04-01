@@ -1,6 +1,11 @@
 package org.jwat.tools;
 
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.jwat.tools.core.CommandLine;
@@ -44,21 +49,54 @@ public class JWATTools {
 		Class<? extends Task> task;
 	}
 
-	public static Map<String, Class<? extends Task>> commands = new HashMap<String, Class<? extends Task>>();
+	public static List<Class<? extends Task>> commandList = new ArrayList<Class<? extends Task>>();
+
+	public static Map<String, Class<? extends Task>> commandMap = new HashMap<String, Class<? extends Task>>();
 
 	public static CommandLine cmdLine = new CommandLine();
 
+	public static int maxCommandNameLength = 0;
+
+	public static void addCommands(Class<? extends Task>[] tasks) {
+		try {
+			for (int i=0; i<tasks.length; ++i) {
+				Field commandNameField = tasks[i].getField("commandName");
+				String commandName = (String)commandNameField.get(null);
+				commandList.add(tasks[i]);
+				commandMap.put(commandName, tasks[i]);
+				if (commandName.length() > maxCommandNameLength) {
+					maxCommandNameLength = commandName.length();
+				}
+			}
+		} catch (SecurityException e) {
+			e.printStackTrace();
+			System.exit(1);
+		} catch (NoSuchFieldException e) {
+			e.printStackTrace();
+			System.exit(1);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			System.exit(1);
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+	}
+
 	public void configure_cli() {
-		commands.put("help", HelpTask.class);
-		commands.put("arc2warc", Arc2WarcTask.class);
-		commands.put("cdx", CDXTask.class);
-		commands.put("compress", DecompressTask.class);
-		commands.put("decompress", CompressTask.class);
-		commands.put("extract", ExtractTask.class);
-		commands.put("interval", IntervalTask.class);
-		commands.put("pathindex", PathIndexTask.class);
-		commands.put("test", TestTask.class);
-		commands.put("unpack", UnpackTask.class);
+		Class<?>[] tasks = new Class<?>[] {
+				HelpTask.class,
+				Arc2WarcTask.class,
+				CDXTask.class,
+				CompressTask.class,
+				DecompressTask.class,
+				ExtractTask.class,
+				IntervalTask.class,
+				PathIndexTask.class,
+				TestTask.class,
+				UnpackTask.class,
+		};
+		addCommands((Class<? extends Task>[])tasks);
 
 		cmdLine.addListArgument( "command", A_COMMAND, 1, 1);
 		cmdLine.addOption("-1", A_COMPRESS, 1);
@@ -89,21 +127,46 @@ public class JWATTools {
 		cmdLine.addListArgument("files", A_FILES, 1, Integer.MAX_VALUE);
 	}
 
-	public void show_help() {
-		System.out.println("JWATTools v0.5.6");
-		System.out.println("usage: JWATTools <command> [<args>]");
-		System.out.println("");
+	public void show_commands() {
+		Collections.sort(commandList, new Comparator<Class<? extends Task>>() {
+			@Override
+			public int compare(Class<? extends Task> t1, Class<? extends Task> t2) {
+				Field commandNameField;
+				try {
+					commandNameField = t1.getField("commandName");
+					String n1 = (String)commandNameField.get(null);
+					commandNameField = t2.getField("commandName");
+					String n2 = (String)commandNameField.get(null);
+					return n1.compareTo(n2);
+				} catch (SecurityException e) {
+				} catch (NoSuchFieldException e) {
+				} catch (IllegalArgumentException e) {
+				} catch (IllegalAccessException e) {
+				}
+				return 0;
+			}
+		});
 		System.out.println("Commands:");
-		System.out.println("   arc2warc     convert ARC to WARC");
-		System.out.println("   cdx          create a CDX index (unsorted)");
-		System.out.println("   compress     compress");
-		System.out.println("   decompress   decompress");
-		System.out.println("   extract      extract ARC/WARC record(s)");
-		System.out.println("   interval     interval extract");
-		System.out.println("   pathindex    create a heritrix path index (unsorted)");
-		System.out.println("   test         test validity of ARC/WARC/GZip file(s)");
-		System.out.println("   unpack       unpack multifile GZip");
-		System.out.println("" );
+		Field commandNameField;
+		Field commandDescriptionField;
+		for (int i=0; i<commandList.size(); ++i) {
+			try {
+				commandNameField = commandList.get(i).getField("commandName");
+				commandDescriptionField = commandList.get(i).getField("commandDescription");
+				String commandName = (String)commandNameField.get(null) + "                        ";
+				String commandDescription = (String)commandDescriptionField.get(null);
+				System.out.println(String.format("   %s   %s", commandName.substring(0, maxCommandNameLength), commandDescription));
+			} catch (SecurityException e) {
+				e.printStackTrace();
+			} catch (NoSuchFieldException e) {
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+		System.out.println("");
 		/*
 		System.out.println("Options:");
 		System.out.println("   -r      recursive (currently has no effect)");
@@ -111,6 +174,13 @@ public class JWATTools {
 		System.out.println("");
 		*/
 		System.out.println("See 'jwattools help <command>' for more information on a specific command.");
+	}
+
+	public void show_help() {
+		System.out.println("JWATTools v0.5.6");
+		System.out.println("usage: JWATTools <command> [<args>]");
+		System.out.println("");
+		show_commands();
 	}
 
 	public void Main(String[] args) {
@@ -136,7 +206,7 @@ public class JWATTools {
 			Argument argument = arguments.idMap.get( JWATTools.A_COMMAND );
 			String commandStr = argument.value.toLowerCase();
 
-			Class<? extends Task> clazz = commands.get(commandStr);
+			Class<? extends Task> clazz = commandMap.get(commandStr);
 			if (clazz != null) {
 				try {
 					Task task = clazz.newInstance();

@@ -11,6 +11,10 @@ import org.jwat.tools.tasks.ProcessTask;
 
 public class PathIndexTask extends ProcessTask {
 
+	public static final String commandName = "pathindex";
+
+	public static final String commandDescription = "create a heritrix path index (unsorted)";
+
 	/** Output stream. */
 	private SynchronizedOutput pathIndexOutput;
 

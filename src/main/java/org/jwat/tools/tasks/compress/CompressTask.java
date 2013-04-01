@@ -14,6 +14,10 @@ import org.jwat.tools.tasks.ProcessTask;
 
 public class CompressTask extends ProcessTask {
 
+	public static final String commandName = "compress";
+
+	public static final String commandDescription = "compress ARC/WARC or plain file(s)";
+
 	public int compressionLevel = Deflater.DEFAULT_COMPRESSION;
 
 	public CompressTask() {

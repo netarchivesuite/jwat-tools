@@ -17,6 +17,10 @@ import org.jwat.tools.core.CommandLine;
 
 public class UnpackTask extends ProcessTask {
 
+	public static final String commandName = "unpack";
+
+	public static final String commandDescription = "unpack multifile GZip";
+
 	public UnpackTask() {
 	}
 

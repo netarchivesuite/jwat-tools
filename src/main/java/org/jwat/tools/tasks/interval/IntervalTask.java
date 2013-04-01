@@ -14,6 +14,10 @@ import org.jwat.tools.tasks.ProcessTask;
 
 public class IntervalTask extends ProcessTask {
 
+	public static final String commandName = "interval";
+
+	public static final String commandDescription = "interval extract";
+
 	protected long sIdx;
 
 	protected boolean bPlusEIdx;
