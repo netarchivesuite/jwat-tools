@@ -13,7 +13,7 @@ public class PathIndexTask extends ProcessTask {
 
 	public static final String commandName = "pathindex";
 
-	public static final String commandDescription = "create a heritrix path index (unsorted)";
+	public static final String commandDescription = "create a path index file for use in wayback (unsorted)";
 
 	/** Output stream. */
 	private SynchronizedOutput pathIndexOutput;
@@ -37,6 +37,7 @@ public class PathIndexTask extends ProcessTask {
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+		// Output file.
 		File outputFile = new File("path-index.unsorted.out");
 		argument = arguments.idMap.get( JWATTools.A_OUTPUT );
 		if ( argument != null && argument.value != null ) {

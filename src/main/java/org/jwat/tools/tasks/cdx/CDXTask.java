@@ -19,7 +19,7 @@ public class CDXTask extends ProcessTask {
 
 	public static final String commandName = "cdx";
 
-	public static final String commandDescription = "create a CDX index (unsorted)";
+	public static final String commandDescription = "create a CDX index for use in wayback (unsorted)";
 
 	/** Valid results output stream. */
 	private SynchronizedOutput cdxOutput;
@@ -59,6 +59,7 @@ public class CDXTask extends ProcessTask {
 			System.exit( 1 );
 		}
 
+		// Output file.
 		File outputFile = new File("cdx.unsorted.out");
 		argument = arguments.idMap.get( JWATTools.A_OUTPUT );
 		if ( argument != null && argument.value != null ) {
