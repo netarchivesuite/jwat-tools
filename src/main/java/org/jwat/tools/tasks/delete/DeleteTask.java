@@ -142,7 +142,6 @@ public class DeleteTask extends ProcessTask {
 				try {
 					if (resultsReady.tryAcquire(1, TimeUnit.SECONDS)) {
 						result = results.poll();
-						// TODO this size is now obviously 0!
 						current_size += result;
 						++processed;
 

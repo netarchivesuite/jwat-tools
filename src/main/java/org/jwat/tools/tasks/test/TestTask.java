@@ -90,14 +90,14 @@ public class TestTask extends ProcessTask {
 
 	@Override
 	public void show_help() {
-		System.out.println("jwattools test [-elx] [-w THREADS] <paths>");
+		System.out.println("jwattools test [-beilx] [-w THREADS] [-a<yyyyMMddHHmmss>] <paths>");
 		System.out.println("");
 		System.out.println("test one or more ARC/WARC/GZip files");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -a                  after yyyyMMddHHmmss");
-		System.out.println(" -b                  tag bad files (*.bad)");
+		System.out.println(" -a<yyyyMMddHHmmss>  only test files with last-modified after <yyyyMMddHHmmss>");
+		System.out.println(" -b                  tag/rename files with errors/warnings (*.bad)");
 		System.out.println(" -e                  show errors");
 		System.out.println(" -i --ignore-digest  skip digest calculation and validation");
 		System.out.println(" -l                  relaxed URL URI validation");

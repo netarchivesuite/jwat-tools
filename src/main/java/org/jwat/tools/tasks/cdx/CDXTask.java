@@ -34,6 +34,7 @@ public class CDXTask extends ProcessTask {
 		System.out.println("cdx one or more ARC/WARC files");
 		System.out.println("");
 		System.out.println("\tRead through ARC/WARC file(s) and create a CDX file.");
+		System.out.println("\tCDX files are primarily used with Wayback.");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");

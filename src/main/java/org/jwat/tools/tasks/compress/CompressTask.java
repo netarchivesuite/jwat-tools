@@ -34,8 +34,8 @@ public class CompressTask extends ProcessTask {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println( " -1, --fast  compress faster" );
-		System.out.println( " -9, --slow  compress better" );
+		System.out.println(" -1, --fast  compress faster");
+		System.out.println(" -9, --slow  compress better");
 		System.out.println(" -w<x>        set the amount of worker thread(s) (defaults to 1)");
 	}
 

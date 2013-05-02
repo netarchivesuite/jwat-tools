@@ -28,10 +28,11 @@ public class PathIndexTask extends ProcessTask {
 		System.out.println("create a pathindex from one or more ARC/WARC files");
 		System.out.println("");
 		System.out.println("\tRead through ARC/WARC file(s) and create a pathindex file.");
+		System.out.println("\tPathindex files are primarily used with Wayback.");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -o<file>  output cdx filename (unsorted)");
+		System.out.println(" -o<file>  output pathindex filename (unsorted)");
 	}
 
 	@Override
