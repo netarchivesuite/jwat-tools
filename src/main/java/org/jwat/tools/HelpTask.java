@@ -17,7 +17,12 @@ public class HelpTask extends Task {
 
 	@Override
 	public void show_help() {
-		System.out.println("Work in progress...");
+		System.out.println("jwattools help [<command>]");
+		System.out.println("");
+		System.out.println("display help information");
+		System.out.println("");
+		System.out.println("\tIf no command is supplied overall help information is shown.");
+		System.out.println("\tIf a command is supplied its help information is shown instead.");
 	}
 
 	@Override

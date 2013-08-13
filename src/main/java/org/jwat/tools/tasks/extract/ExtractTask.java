@@ -18,14 +18,12 @@ public class ExtractTask extends ProcessTask {
 
 	public static final String commandDescription = "extract ARC/WARC record(s)";
 
-	protected String targetUri;
-
 	public ExtractTask() {
 	}
 
 	@Override
 	public void show_help() {
-		System.out.println("jwattools extract [-u URI] [-w THREADS] <paths>");
+		System.out.println("jwattools extract [-u URI] [-w THREADS] <filepattern>...");
 		System.out.println("");
 		System.out.println("extract one or more entries/records from GZip/ARC/WARC files");
 		System.out.println("");
@@ -35,9 +33,12 @@ public class ExtractTask extends ProcessTask {
 		System.out.println(" -w<x>    set the amount of worker thread(s) (defaults to 1)");
 	}
 
+	protected String targetUri;
+
 	@Override
 	public void command(Arguments arguments) {
 		CommandLine.Argument argument;
+
 		// Thread workers.
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
@@ -139,7 +140,7 @@ public class ExtractTask extends ProcessTask {
 	/** Results ready resource semaphore. */
 	private Semaphore resultsReady = new Semaphore(0);
 
-	/** Completed validation results list. */
+	/** Completed ExtractFile results list. */
 	private ConcurrentLinkedQueue<ExtractFile> results = new ConcurrentLinkedQueue<ExtractFile>();
 
 	class ResultThread implements Runnable {

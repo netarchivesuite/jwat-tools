@@ -14,6 +14,7 @@ import org.jwat.tools.tasks.Task;
 import org.jwat.tools.tasks.UnpackTask;
 import org.jwat.tools.tasks.arc2warc.Arc2WarcTask;
 import org.jwat.tools.tasks.cdx.CDXTask;
+import org.jwat.tools.tasks.changed.ChangedTask;
 import org.jwat.tools.tasks.compress.CompressTask;
 import org.jwat.tools.tasks.decompress.DecompressTask;
 import org.jwat.tools.tasks.delete.DeleteTask;
@@ -90,6 +91,7 @@ public class JWATTools {
 				HelpTask.class,
 				Arc2WarcTask.class,
 				CDXTask.class,
+				ChangedTask.class,
 				CompressTask.class,
 				DecompressTask.class,
 				DeleteTask.class,

@@ -15,15 +15,12 @@ public class PathIndexTask extends ProcessTask {
 
 	public static final String commandDescription = "create a path index file for use in wayback (unsorted)";
 
-	/** Output stream. */
-	private SynchronizedOutput pathIndexOutput;
-
 	public PathIndexTask() {
 	}
 
 	@Override
 	public void show_help() {
-		System.out.println("jwattools pathindex [-o OUTPUT_FILE] <paths>");
+		System.out.println("jwattools pathindex [-o OUTPUT_FILE] <filepattern>...");
 		System.out.println("");
 		System.out.println("create a pathindex from one or more ARC/WARC files");
 		System.out.println("");
@@ -35,9 +32,13 @@ public class PathIndexTask extends ProcessTask {
 		System.out.println(" -o<file>  output pathindex filename (unsorted)");
 	}
 
+	/** Output stream. */
+	private SynchronizedOutput pathIndexOutput;
+
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+
 		// Output file.
 		File outputFile = new File("path-index.unsorted.out");
 		argument = arguments.idMap.get( JWATTools.A_OUTPUT );

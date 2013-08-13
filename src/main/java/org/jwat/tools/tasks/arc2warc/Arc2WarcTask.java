@@ -18,6 +18,23 @@ public class Arc2WarcTask extends ProcessTask {
 
 	public static final String commandDescription = "convert ARC to WARC";
 
+	public Arc2WarcTask() {
+	}
+
+	@Override
+	public void show_help() {
+		System.out.println("jwattools arc2warc [-d DIR] [--overwrite]... [-w THREADS] <filepattern>...");
+		System.out.println("");
+		System.out.println("arc2warc will convert one or more ARC file(s) to WARC file(s).");
+		System.out.println("");
+		System.out.println("options:");
+		System.out.println("");
+		System.out.println(" -d <dir>        destination directory (defaults to current dir)");
+		System.out.println("    --overwrite  overwrite destination file (default is to skip file)");
+		System.out.println("    --prefix     destination filename prefix (default is '" + prefix + "')");
+		System.out.println(" -w <x>          set the amount of worker thread(s) (defaults to 1)");
+	}
+
 	/*
 	 * Settings.
 	 */
@@ -35,26 +52,10 @@ public class Arc2WarcTask extends ProcessTask {
 	/** Exception output stream. */
 	private SynchronizedOutput exceptionsOutput;
 
-	public Arc2WarcTask() {
-	}
-
-	@Override
-	public void show_help() {
-		System.out.println("jwattools arc2warc [-d DIR] [--overwrite]... [-w THREADS] <paths>");
-		System.out.println("");
-		System.out.println("arc2warc will convert one or more ARC file(s) to WARC file(s).");
-		System.out.println("");
-		System.out.println("options:");
-		System.out.println("");
-		System.out.println(" -d <dir>        destination directory (defaults to current dir)");
-		System.out.println("    --overwrite  overwrite destination file (default is to skip file)");
-		System.out.println("    --prefix     destination filename prefix (default is '" + prefix + "')");
-		System.out.println(" -w <x>          set the amount of worker thread(s) (defaults to 1)");
-	}
-
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+
 		// Thread workers.
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
@@ -179,7 +180,7 @@ public class Arc2WarcTask extends ProcessTask {
 	/** Results ready resource semaphore. */
 	private Semaphore resultsReady = new Semaphore(0);
 
-	/** Completed validation results list. */
+	/** Completed Arc2Warc results list. */
 	private ConcurrentLinkedQueue<Arc2Warc> results = new ConcurrentLinkedQueue<Arc2Warc>();
 
 	class ResultThread implements Runnable {

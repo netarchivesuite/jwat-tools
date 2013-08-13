@@ -22,7 +22,7 @@ public class DecompressTask extends ProcessTask {
 
 	@Override
 	public void show_help() {
-		System.out.println("jwattools decompress [-w THREADS] <paths>");
+		System.out.println("jwattools decompress [-w THREADS] <filepattern>...");
 		System.out.println("");
 		System.out.println("decompress one or more GZip files");
 		System.out.println("");
@@ -37,6 +37,7 @@ public class DecompressTask extends ProcessTask {
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+
 		// Thread workers.
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
@@ -129,7 +130,7 @@ public class DecompressTask extends ProcessTask {
 	/** Results ready resource semaphore. */
 	private Semaphore resultsReady = new Semaphore(0);
 
-	/** Completed validation results list. */
+	/** Completed Decompressed results list. */
 	private ConcurrentLinkedQueue<DecompressFile> results = new ConcurrentLinkedQueue<DecompressFile>();
 
 	class ResultThread implements Runnable {

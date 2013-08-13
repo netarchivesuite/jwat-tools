@@ -37,6 +37,26 @@ public class TestTask extends ProcessTask {
 
 	public static final String commandDescription = "test validity of ARC/WARC/GZip file(s)";
 
+	public TestTask() {
+	}
+
+	@Override
+	public void show_help() {
+		System.out.println("jwattools test [-beilx] [-w THREADS] [-a<yyyyMMddHHmmss>] <filepattern>...");
+		System.out.println("");
+		System.out.println("test one or more ARC/WARC/GZip files");
+		System.out.println("");
+		System.out.println("options:");
+		System.out.println("");
+		System.out.println(" -a<yyyyMMddHHmmss>  only test files with last-modified after <yyyyMMddHHmmss>");
+		System.out.println(" -b                  tag/rename files with errors/warnings (*.bad)");
+		System.out.println(" -e                  show errors");
+		System.out.println(" -i --ignore-digest  skip digest calculation and validation");
+		System.out.println(" -l                  relaxed URL URI validation");
+		System.out.println(" -x                  to validate text/xml payload (eg. mets)");
+		System.out.println(" -w<x>               set the amount of worker thread(s) (defaults to 1)");
+	}
+
 	/*
 	 * Summary.
 	 */
@@ -85,29 +105,10 @@ public class TestTask extends ProcessTask {
 	/** Exception output stream. */
 	private SynchronizedOutput exceptionsOutput;
 
-	public TestTask() {
-	}
-
-	@Override
-	public void show_help() {
-		System.out.println("jwattools test [-beilx] [-w THREADS] [-a<yyyyMMddHHmmss>] <paths>");
-		System.out.println("");
-		System.out.println("test one or more ARC/WARC/GZip files");
-		System.out.println("");
-		System.out.println("options:");
-		System.out.println("");
-		System.out.println(" -a<yyyyMMddHHmmss>  only test files with last-modified after <yyyyMMddHHmmss>");
-		System.out.println(" -b                  tag/rename files with errors/warnings (*.bad)");
-		System.out.println(" -e                  show errors");
-		System.out.println(" -i --ignore-digest  skip digest calculation and validation");
-		System.out.println(" -l                  relaxed URL URI validation");
-		System.out.println(" -x                  to validate text/xml payload (eg. mets)");
-		System.out.println(" -w<x>               set the amount of worker thread(s) (defaults to 1)");
-	}
-
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+
 		// Thread workers.
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
@@ -165,6 +166,9 @@ public class TestTask extends ProcessTask {
 			}
 		}
 
+		// TODO optional
+		//cloner = Cloner.getCloner();
+
         // Files.
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
@@ -172,9 +176,6 @@ public class TestTask extends ProcessTask {
 		validOutput = new SynchronizedOutput("v.out");
 		invalidOutput = new SynchronizedOutput("i.out");
 		exceptionsOutput = new SynchronizedOutput("e.out");
-
-		// TODO optional
-		//cloner = Cloner.getCloner();
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);

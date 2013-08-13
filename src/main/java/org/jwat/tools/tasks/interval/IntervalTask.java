@@ -18,14 +18,6 @@ public class IntervalTask extends ProcessTask {
 
 	public static final String commandDescription = "interval extract";
 
-	protected long sIdx;
-
-	protected boolean bPlusEIdx;
-
-	protected long eIdx;
-
-	protected String dstName;
-
 	public IntervalTask() {
 	}
 
@@ -44,18 +36,29 @@ public class IntervalTask extends ProcessTask {
 		System.out.println(" -o<file>  output data filename");
 	}
 
+	protected long sIdx;
+
+	protected boolean bPlusEIdx;
+
+	protected long eIdx;
+
+	protected String dstName;
+
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
 		String tmpStr;
+
 		// Files
 		argument = arguments.idMap.get( JWATTools.A_FILES );
 		List<String> filesList = argument.values;
 
+		/*
 		System.out.println(filesList.size());
 		for (int i=0; i<filesList.size(); ++i) {
 			System.out.println(filesList.get(i));
 		}
+		*/
 
 		if (filesList.size() == 4) {
 			tmpStr = filesList.remove(0).toLowerCase();

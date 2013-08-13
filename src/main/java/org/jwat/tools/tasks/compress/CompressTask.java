@@ -18,14 +18,12 @@ public class CompressTask extends ProcessTask {
 
 	public static final String commandDescription = "compress ARC/WARC or plain file(s)";
 
-	public int compressionLevel = Deflater.DEFAULT_COMPRESSION;
-
 	public CompressTask() {
 	}
 
 	@Override
 	public void show_help() {
-		System.out.println("jwattools compress [-123456789] [--fast] [--slow] [-w THREADS] <paths>");
+		System.out.println("jwattools compress [-123456789] [--fast] [--slow] [-w THREADS] <filepattern>...");
 		System.out.println("");
 		System.out.println("compress one or more ARC/WARC/GZip files");
 		System.out.println("");
@@ -39,9 +37,12 @@ public class CompressTask extends ProcessTask {
 		System.out.println(" -w<x>        set the amount of worker thread(s) (defaults to 1)");
 	}
 
+	public int compressionLevel = Deflater.DEFAULT_COMPRESSION;
+
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+
 		// Thread workers.
 		argument = arguments.idMap.get( JWATTools.A_WORKERS );
 		if ( argument != null && argument.value != null ) {
@@ -143,7 +144,7 @@ public class CompressTask extends ProcessTask {
 	/** Results ready resource semaphore. */
 	private Semaphore resultsReady = new Semaphore(0);
 
-	/** Completed validation results list. */
+	/** Completed Compressed results list. */
 	private ConcurrentLinkedQueue<CompressFile> results = new ConcurrentLinkedQueue<CompressFile>();
 
 	class ResultThread implements Runnable {

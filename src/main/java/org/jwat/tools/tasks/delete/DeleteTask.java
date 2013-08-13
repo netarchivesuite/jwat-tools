@@ -17,17 +17,12 @@ public class DeleteTask extends ProcessTask {
 
 	public static final String commandDescription = "delete files";
 
-	/** Output stream. */
-	private SynchronizedOutput deletedFilesOutput;
-
-	private boolean bTestRun;
-
 	public DeleteTask() {
 	}
 
 	@Override
 	public void show_help() {
-		System.out.println("jwattools delete [-t] [-o OUTPUT_FILE] <paths>");
+		System.out.println("jwattools delete [-t] [-o OUTPUT_FILE] <filepattern>...");
 		System.out.println("");
 		System.out.println("delete one or more files");
 		System.out.println("");
@@ -40,9 +35,15 @@ public class DeleteTask extends ProcessTask {
 		System.out.println(" -t        test run, do not delete files");
 	}
 
+	/** Output stream. */
+	private SynchronizedOutput deletedFilesOutput;
+
+	private boolean bTestRun;
+
 	@Override
 	public void command(CommandLine.Arguments arguments) {
 		CommandLine.Argument argument;
+
 		// Output file.
 		File outputFile = new File("deleted_files.out");
 		argument = arguments.idMap.get( JWATTools.A_OUTPUT );
@@ -76,7 +77,6 @@ public class DeleteTask extends ProcessTask {
 		deletedFilesOutput = new SynchronizedOutput(outputFile);
 
 		threadpool_feeder_lifecycle( filesList, this );
-		//filelist_feeder(filesList, this);
 
 		deletedFilesOutput.out.flush();
 		deletedFilesOutput.out.close();
@@ -125,7 +125,7 @@ public class DeleteTask extends ProcessTask {
 	/** Results ready resource semaphore. */
 	private Semaphore resultsReady = new Semaphore(0);
 
-	/** Completed validation results list. */
+	/** Completed deleted results list. */
 	private ConcurrentLinkedQueue<Long> results = new ConcurrentLinkedQueue<Long>();
 
 	class ResultThread implements Runnable {
