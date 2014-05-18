@@ -176,7 +176,7 @@ public class ManagedPayload {
     	manageRecord(warcRecord.getPayload(), bDigest);
 	}
 
-	private void manageRecord(Payload payload, boolean bDigest) throws IOException {
+	public void manageRecord(Payload payload, boolean bDigest) throws IOException {
     	blockDigestObj.reset();
 		payloadDigestObj.reset();
         blockDigestBytes = null;
