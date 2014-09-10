@@ -16,6 +16,7 @@ import org.jwat.tools.tasks.arc2warc.Arc2WarcTask;
 import org.jwat.tools.tasks.cdx.CDXTask;
 import org.jwat.tools.tasks.changed.ChangedTask;
 import org.jwat.tools.tasks.compress.CompressTask;
+import org.jwat.tools.tasks.containermd.ContainerMDTask;
 import org.jwat.tools.tasks.decompress.DecompressTask;
 import org.jwat.tools.tasks.delete.DeleteTask;
 import org.jwat.tools.tasks.extract.ExtractTask;
@@ -42,6 +43,7 @@ public class JWATTools {
 	public static final int A_AFTER = 15;
 	public static final int A_TARGET_URI = 16;
 	public static final int A_TESTRUN = 17;
+	public static final int A_QUIET = 18;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -93,6 +95,7 @@ public class JWATTools {
 				CDXTask.class,
 				ChangedTask.class,
 				CompressTask.class,
+				ContainerMDTask.class,
 				DecompressTask.class,
 				DeleteTask.class,
 				ExtractTask.class,
@@ -130,6 +133,7 @@ public class JWATTools {
 		cmdLine.addOption("-a=", A_AFTER);
 		cmdLine.addOption("-u=", A_TARGET_URI);
 		cmdLine.addOption("-t", A_TESTRUN);
+		cmdLine.addOption("-q", A_QUIET);
 		cmdLine.addListArgument("files", A_FILES, 1, Integer.MAX_VALUE);
 	}
 

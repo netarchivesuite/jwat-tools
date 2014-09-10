@@ -58,7 +58,7 @@ public class ManagedPayloadContentTypeIdentifier {
 			int possibleStatusCode = 0;
         	if (contentType != null) {
         		if (!"text".equalsIgnoreCase(contentType.contentType)) {
-        			if (contentType.parameters.containsKey("charset")) {
+        			if (contentType.parameters != null && contentType.parameters.containsKey("charset")) {
         				contentType.parameters.remove("charset");
         			}
         		} else {
@@ -197,4 +197,36 @@ public class ManagedPayloadContentTypeIdentifier {
     	return managedPayloadContentType;
     }
 
+    public ManagedPayloadContentType estimateContentType(ManagedPayload managedPayload) throws IOException {
+    	ManagedPayloadContentType managedPayloadContentType = null;
+    	try {
+    		ContentType contentType = libmagicIdentifier.identify(managedPayload);
+			boolean bHtml = false;
+			int possibleStatusCode = 0;
+        	if (contentType != null) {
+        		if (!"text".equalsIgnoreCase(contentType.contentType)) {
+        			if (contentType.parameters != null && contentType.parameters.containsKey("charset")) {
+        				contentType.parameters.remove("charset");
+        			}
+        		} else {
+        			String charset = contentType.parameters.get("charset");
+        			if (charset.startsWith("unknown-")) {
+        				contentType.parameters.remove("charset");
+        			}
+        		}
+        	}
+        	if (contentType != null) {
+        		managedPayloadContentType = new ManagedPayloadContentType();
+        		managedPayloadContentType.contentType = contentType;
+        		managedPayloadContentType.bHtml = bHtml;
+        		managedPayloadContentType.possibleStatusCode = possibleStatusCode;
+        	}
+			// debug
+        	//System.out.println(contentType.toString());
+    	} catch (IOException e) {
+    		e.printStackTrace();
+    	}
+    	return managedPayloadContentType;
+    }
+    
 }

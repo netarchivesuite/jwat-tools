@@ -83,9 +83,9 @@ public class ManagedPayload {
             e.printStackTrace();
         }
     }
-
-    /*
-    public void close() {
+    
+    // THL
+    private void closeRaf() {
 		if (tmpfile_raf != null) {
 			try {
 				tmpfile_raf.close();
@@ -94,12 +94,17 @@ public class ManagedPayload {
 			catch (IOException e) {
 			}
 		}
+    }
+
+    
+    public void close() {
+    	closeRaf();
 		if (tmpfile != null && tmpfile.exists()) {
 			tmpfile.delete();
 			tmpfile = null;
 		}			
     }
-    */
+    
 
 	public void manageVersionBlock(ArcRecordBase arcRecord, boolean bDigest) throws IOException {
 		blockDigestObj.reset();
@@ -156,6 +161,7 @@ public class ManagedPayload {
     		}
 	        tmpfile_raf.seek(0L);
 	        payloadLength = tmpfile_raf.length();
+	        closeRaf();
 	    }
 		if (bDigest) {
 	        blockDigestBytes = blockDigestObj.digest();
@@ -176,7 +182,7 @@ public class ManagedPayload {
     	manageRecord(warcRecord.getPayload(), bDigest);
 	}
 
-	public void manageRecord(Payload payload, boolean bDigest) throws IOException {
+	private void manageRecord(Payload payload, boolean bDigest) throws IOException {
     	blockDigestObj.reset();
 		payloadDigestObj.reset();
         blockDigestBytes = null;
@@ -235,6 +241,7 @@ public class ManagedPayload {
     			}
 		        tmpfile_raf.seek(0L);
 		        payloadLength = tmpfile_raf.length();
+		        closeRaf();
 			}
 		}
 		if (bDigest) {
@@ -302,6 +309,7 @@ public class ManagedPayload {
 			}
 	        tmpfile_raf.seek(0L);
 	        payloadLength = tmpfile_raf.length();
+	        closeRaf();
 		}
 		if (bDigest) {
 	        blockDigestBytes = blockDigestObj.digest();
@@ -334,6 +342,9 @@ public class ManagedPayload {
 		case 1:
 		    return baios.getInputStream();
 		case 2:
+			if (tmpfile_raf == null) {
+				tmpfile_raf = new RandomAccessFile(tmpfile, "rw");
+			}
 	        tmpfile_raf.seek(0L);
 		    return new RandomAccessFileInputStream(tmpfile_raf);
 		default:
