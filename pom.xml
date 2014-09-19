@@ -58,6 +58,11 @@
     </developer>
   </developers>
 
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <jwat.core.version>1.0.2</jwat.core.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>org.jwat</groupId>
@@ -91,11 +96,6 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jwat.core.version>1.0.2</jwat.core.version>
-  </properties>
 
   <build>
     <plugins>
@@ -154,13 +154,4 @@
       </plugin>
     </plugins>
   </build>
-
-  <profiles>
-    <profile>
-      <id>alternative</id>
-      <properties>
-        <maven.test.failure.ignore>true</maven.test.failure.ignore>
-      </properties>
-    </profile>
-  </profiles>
 </project>
