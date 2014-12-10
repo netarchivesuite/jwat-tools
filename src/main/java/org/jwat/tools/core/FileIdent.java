@@ -29,12 +29,12 @@ public final class FileIdent {
 
 	public static FileIdent ident(File file) {
 		FileIdent fId = new FileIdent();
-		fId.filenameId = identFile(file);
+		fId.filenameId = identFileName(file);
 		fId.streamId = identFileStream(file);
 		return fId;
 	}
 
-	public static int identFile(File file) {
+	public static int identFileName(File file) {
 		int fileId = FILEID_UNKNOWN;
 		String fname = file.getName().toLowerCase();
 		if (fname.endsWith(".arc.gz")) {

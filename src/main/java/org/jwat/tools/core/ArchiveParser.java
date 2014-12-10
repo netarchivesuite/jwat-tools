@@ -33,7 +33,6 @@ public class ArchiveParser {
 
     public int payloadHeaderMaxSize = 32768;
 
-
 	/*
 	 * State.
 	 */
