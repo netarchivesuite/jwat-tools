@@ -22,16 +22,20 @@ import org.jwat.warc.WarcRecord;
 
 public class ManagedPayload {
 
-	private static Semaphore queueLock = new Semaphore(1);
+	private static final int DEFAULT_COPY_BUFFER_SIZE = 8192;
 
-	private static ConcurrentLinkedQueue<ManagedPayload> managedPayloadQueue = new ConcurrentLinkedQueue<ManagedPayload>();
+	private static final int DEFAULT_IN_MEMORY_BUFFER_SIZE = 10*1024*1024;
+
+	protected static Semaphore queueLock = new Semaphore(1);
+
+	protected static ConcurrentLinkedQueue<ManagedPayload> managedPayloadQueue = new ConcurrentLinkedQueue<ManagedPayload>();
 
 	public static ManagedPayload checkout() {
 		ManagedPayload managedPayload = null;
 		queueLock.acquireUninterruptibly();
 		managedPayload = managedPayloadQueue.poll();
 		if (managedPayload == null) {
-			managedPayload = new ManagedPayload();
+			managedPayload = new ManagedPayload(DEFAULT_COPY_BUFFER_SIZE, DEFAULT_IN_MEMORY_BUFFER_SIZE);
 		}
 		if (!managedPayload.lock.tryAcquire()) {
 			throw new IllegalStateException();
@@ -47,11 +51,11 @@ public class ManagedPayload {
 		queueLock.release();
 	}
 
-	private Semaphore lock = new Semaphore(1);
+	protected Semaphore lock = new Semaphore(1);
 
-	private MessageDigest blockDigestObj;
+	protected MessageDigest blockDigestObj;
 
-    private MessageDigest payloadDigestObj;
+	protected MessageDigest payloadDigestObj;
 
     public byte[] blockDigestBytes;
 
@@ -59,13 +63,13 @@ public class ManagedPayload {
 
     public int type = 0;
 
-    private byte[] copyBuf = new byte[8192];
+    protected byte[] copyBuf;
 
-    private File tmpfile = null;
+    protected File tmpfile;
 
-    private ByteArrayIOStream baios = new ByteArrayIOStream();
+    protected ByteArrayIOStream baios;
 
-    private RandomAccessFile tmpfile_raf = null; 
+    protected RandomAccessFile tmpfile_raf; 
 
 	public long payloadLength;
 
@@ -75,28 +79,28 @@ public class ManagedPayload {
 
 	public long httpHeaderLength;
 
-    private ManagedPayload() {
+    protected ManagedPayload(int copyBufferSize, int inMemorybufferSize) {
         try {
             blockDigestObj = MessageDigest.getInstance("SHA1");
             payloadDigestObj = MessageDigest.getInstance("SHA1");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
+        copyBuf = new byte[copyBufferSize];
+        baios = new ByteArrayIOStream(inMemorybufferSize);
     }
-    
+
     // THL
     private void closeRaf() {
 		if (tmpfile_raf != null) {
 			try {
 				tmpfile_raf.close();
 				tmpfile_raf = null;
-			}
-			catch (IOException e) {
+			} catch (IOException e) {
 			}
 		}
     }
 
-    
     public void close() {
     	closeRaf();
 		if (tmpfile != null && tmpfile.exists()) {
@@ -104,7 +108,6 @@ public class ManagedPayload {
 			tmpfile = null;
 		}			
     }
-    
 
 	public void manageVersionBlock(ArcRecordBase arcRecord, boolean bDigest) throws IOException {
 		blockDigestObj.reset();
@@ -229,7 +232,7 @@ public class ManagedPayload {
 					tmpfile = File.createTempFile("JWAT-", "-ARC2WARC");
 			        tmpfile_raf = new RandomAccessFile(tmpfile, "rw");
 				}
-		        tmpfile_raf.seek(0L);
+		        tmpfile_raf.seek(0L);			// NPE if raf is closed but tmpfile exists.
 		        tmpfile_raf.setLength(0L);
     			payload_in = payload.getInputStream();
     			while((read = payload_in.read(copyBuf)) != -1) {

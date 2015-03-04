@@ -8,13 +8,23 @@ import java.util.concurrent.Semaphore;
 
 public class ByteArrayIOStream {
 
-	private Semaphore lock = new Semaphore(1);
+	private static final int DEFAULT_BUFFER_SIZE = 10*1024*1024;
 
-	private byte[] bytes = new byte[10*1024*1024];
+	protected Semaphore lock = new Semaphore(1);
 
-    private ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+	protected byte[] bytes;
 
-    private int limit = 0;
+    protected ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+
+    protected int limit = 0;
+
+    public ByteArrayIOStream() {
+    	this(DEFAULT_BUFFER_SIZE);
+    }
+
+    public ByteArrayIOStream(int bufferSize) {
+    	bytes = new byte[bufferSize];
+    }
 
     public OutputStream getOutputStream() {
     	if (!lock.tryAcquire()) {
@@ -45,10 +55,15 @@ public class ByteArrayIOStream {
     	return new InputStreamImpl(this);
     }
 
-    /*
+    public void release() {
+    	byteBuffer = null;
+    	bytes = null;
+    	lock = null;
+    }
+
+    /**
      * OutputStream.
      */
-
     public static class OutputStreamImpl extends OutputStream {
 
 		protected ByteArrayIOStream baios;
@@ -90,10 +105,9 @@ public class ByteArrayIOStream {
 
     }
 
-    /*
+    /**
      * InputStream.
      */
-
     public static class InputStreamImpl extends InputStream {
 
     	protected ByteArrayIOStream baios;
