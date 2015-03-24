@@ -8,13 +8,13 @@ import java.util.concurrent.Semaphore;
 
 public class ByteArrayIOStream {
 
-	private static final int DEFAULT_BUFFER_SIZE = 10*1024*1024;
+	public static final int DEFAULT_BUFFER_SIZE = 10*1024*1024;
 
 	protected Semaphore lock = new Semaphore(1);
 
 	protected byte[] bytes;
 
-    protected ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+    protected ByteBuffer byteBuffer;
 
     protected int limit = 0;
 
@@ -24,6 +24,7 @@ public class ByteArrayIOStream {
 
     public ByteArrayIOStream(int bufferSize) {
     	bytes = new byte[bufferSize];
+    	byteBuffer = ByteBuffer.wrap(bytes);
     }
 
     public OutputStream getOutputStream() {
@@ -56,9 +57,10 @@ public class ByteArrayIOStream {
     }
 
     public void release() {
+    	lock = null;
     	byteBuffer = null;
     	bytes = null;
-    	lock = null;
+    	limit = 0;
     }
 
     /**
@@ -158,6 +160,9 @@ public class ByteArrayIOStream {
 
 		@Override
 		public int read(byte[] b, int off, int len) throws IOException {
+			if (len == 0) {
+				return 0;
+			}
 			int remaining = byteBuffer.remaining();
 			if (len > remaining) {
 				len = remaining;
@@ -173,6 +178,9 @@ public class ByteArrayIOStream {
 		@Override
 		public int read(byte[] b) throws IOException {
 			int len = b.length;
+			if (len == 0) {
+				return 0;
+			}
 			int remaining = byteBuffer.remaining();
 			if (len > remaining) {
 				len = remaining;

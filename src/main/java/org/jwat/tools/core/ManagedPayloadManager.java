@@ -5,9 +5,9 @@ import java.util.concurrent.Semaphore;
 
 public class ManagedPayloadManager {
 
-	private static final int DEFAULT_COPY_BUFFER_SIZE = 8192;
+	public static final int DEFAULT_COPY_BUFFER_SIZE = 8192;
 
-	private static final int DEFAULT_IN_MEMORY_BUFFER_SIZE = 10*1024*1024;
+	public static final int DEFAULT_IN_MEMORY_BUFFER_SIZE = 10*1024*1024;
 
 	public static ManagedPayloadManager getInstance() {
 		return getInstance(DEFAULT_COPY_BUFFER_SIZE, DEFAULT_IN_MEMORY_BUFFER_SIZE);

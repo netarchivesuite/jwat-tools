@@ -22,9 +22,13 @@ import org.jwat.warc.WarcRecord;
 
 public class ManagedPayload {
 
-	private static final int DEFAULT_COPY_BUFFER_SIZE = 8192;
+	public static final int T_NONE = 0;
+	public static final int T_MEMORY_BUFFERED = 1;
+	public static final int T_FILE_BUFFERED = 2;
 
-	private static final int DEFAULT_IN_MEMORY_BUFFER_SIZE = 10*1024*1024;
+	public static final int DEFAULT_COPY_BUFFER_SIZE = 8192;
+
+	public static final int DEFAULT_IN_MEMORY_BUFFER_SIZE = 10*1024*1024;
 
 	protected static Semaphore queueLock = new Semaphore(1);
 
@@ -61,7 +65,7 @@ public class ManagedPayload {
 
     public byte[] payloadDigestBytes;
 
-    public int type = 0;
+    public int type = T_NONE;
 
     protected byte[] copyBuf;
 
@@ -90,8 +94,7 @@ public class ManagedPayload {
         baios = new ByteArrayIOStream(inMemorybufferSize);
     }
 
-    // THL
-    private void closeRaf() {
+    public void close() {
 		if (tmpfile_raf != null) {
 			try {
 				tmpfile_raf.close();
@@ -99,10 +102,6 @@ public class ManagedPayload {
 			} catch (IOException e) {
 			}
 		}
-    }
-
-    public void close() {
-    	closeRaf();
 		if (tmpfile != null && tmpfile.exists()) {
 			tmpfile.delete();
 			tmpfile = null;
@@ -118,13 +117,13 @@ public class ManagedPayload {
     	payloadLength = 0;
 
     	OutputStream out;
-    	type = 0;
+    	type = T_NONE;
 
     	Payload payload = arcRecord.getPayload();
 		InputStream payload_in = null;
     	int read;
-		if ((arcRecord.header.headerBytes.length + arcRecord.getArchiveLength()) < 10*1024*1024L) {
-			type = 1;
+		if ((arcRecord.header.headerBytes.length + arcRecord.getArchiveLength()) <= baios.bytes.length) {
+			type = T_MEMORY_BUFFERED;
 			out = baios.getOutputStream();
 			if (bDigest) {
 	            blockDigestObj.update(arcRecord.header.headerBytes);
@@ -142,9 +141,11 @@ public class ManagedPayload {
             out.close();
             payloadLength = (long)baios.getLimit();
 		} else {
-			type = 2;
+			type = T_FILE_BUFFERED;
 			if (tmpfile == null) {
 				tmpfile = File.createTempFile("JWAT-", "-ARC2WARC");
+			}
+			if (tmpfile_raf == null) {
 		        tmpfile_raf = new RandomAccessFile(tmpfile, "rw");
 			}
 	        tmpfile_raf.seek(0L);
@@ -164,7 +165,8 @@ public class ManagedPayload {
     		}
 	        tmpfile_raf.seek(0L);
 	        payloadLength = tmpfile_raf.length();
-	        closeRaf();
+	        tmpfile_raf.close();
+	        tmpfile_raf = null;
 	    }
 		if (bDigest) {
 	        blockDigestBytes = blockDigestObj.digest();
@@ -196,7 +198,7 @@ public class ManagedPayload {
     	payloadLength = 0;
 
     	OutputStream out;
-    	type = 0;
+    	type = T_NONE;
 
 		PayloadWithHeaderAbstract payloadHeaderWrapped;
 		InputStream payload_in = null;
@@ -213,8 +215,8 @@ public class ManagedPayload {
 				}
 				httpHeaderLength = httpHeaderBytes.length;
 			}
-			if (payload.getRemaining() < 10*1024*1024L) {
-				type = 1;
+			if (payload.getRemaining() <= baios.bytes.length) {
+				type = T_MEMORY_BUFFERED;
 				out = baios.getOutputStream();
     			payload_in = payload.getInputStream();
     			while((read = payload_in.read(copyBuf)) != -1) {
@@ -227,9 +229,11 @@ public class ManagedPayload {
 	            out.close();
 	            payloadLength = (long)baios.getLimit();
 			} else {
-				type = 2;
+				type = T_FILE_BUFFERED;
 				if (tmpfile == null) {
 					tmpfile = File.createTempFile("JWAT-", "-ARC2WARC");
+				}
+				if (tmpfile_raf == null) {
 			        tmpfile_raf = new RandomAccessFile(tmpfile, "rw");
 				}
 		        tmpfile_raf.seek(0L);			// NPE if raf is closed but tmpfile exists.
@@ -244,7 +248,8 @@ public class ManagedPayload {
     			}
 		        tmpfile_raf.seek(0L);
 		        payloadLength = tmpfile_raf.length();
-		        closeRaf();
+		        tmpfile_raf.close();
+		        tmpfile_raf = null;
 			}
 		}
 		if (bDigest) {
@@ -276,15 +281,22 @@ public class ManagedPayload {
 		httpHeaderLength = httpHeaderBytes.length;
 	}
 
+	/**
+	 * Closes the input stream after usage.
+	 * @param in
+	 * @param len
+	 * @param bDigest
+	 * @throws IOException
+	 */
 	public void managePayloadInputStream(InputStream in, long len, boolean bDigest) throws IOException {
     	payloadLength = 0;
 
     	OutputStream out;
-    	type = 0;
+    	type = T_NONE;
 
         int read;
-		if (len < 10*1024*1024L) {
-			type = 1;
+		if (len <= baios.bytes.length) {
+			type = T_MEMORY_BUFFERED;
 			out = baios.getOutputStream();
 			while((read = in.read(copyBuf)) != -1) {
 				if (bDigest) {
@@ -296,9 +308,11 @@ public class ManagedPayload {
             out.close();
             payloadLength = (long)baios.getLimit();
 		} else {
-			type = 2;
+			type = T_FILE_BUFFERED;
 			if (tmpfile == null) {
 				tmpfile = File.createTempFile("JWAT-", "-ARC2WARC");
+			}
+			if (tmpfile_raf == null) {
 		        tmpfile_raf = new RandomAccessFile(tmpfile, "rw");
 			}
 	        tmpfile_raf.seek(0L);
@@ -312,7 +326,8 @@ public class ManagedPayload {
 			}
 	        tmpfile_raf.seek(0L);
 	        payloadLength = tmpfile_raf.length();
-	        closeRaf();
+	        tmpfile_raf.close();
+	        tmpfile_raf = null;
 		}
 		if (bDigest) {
 	        blockDigestBytes = blockDigestObj.digest();
@@ -342,9 +357,9 @@ public class ManagedPayload {
 
 	public InputStream getPayloadStream() throws IOException {
 		switch (type) {
-		case 1:
+		case T_MEMORY_BUFFERED:
 		    return baios.getInputStream();
-		case 2:
+		case T_FILE_BUFFERED:
 			if (tmpfile_raf == null) {
 				tmpfile_raf = new RandomAccessFile(tmpfile, "rw");
 			}
