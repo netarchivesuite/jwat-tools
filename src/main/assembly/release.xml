@@ -38,16 +38,16 @@
 		</fileSet>
 -->
 		<!-- Move src dir, config dir and pom.xml into assembly -->
+<!--
 		<fileSet>
-			<!-- Move src dir and all top level files into assembly -->
 			<directory>${project.basedir}</directory>
 			<includes>
 				<include>${project.basedir}/src/**</include>
 				<include>pom.xml</include>
 			</includes>
-			<!-- exclude usual suspects -->
 			<useDefaultExcludes>true</useDefaultExcludes>
 		</fileSet>
+-->
 		<!-- Add the javadoc -->
 <!--
 		<fileSet>

@@ -23,12 +23,17 @@ This project currently includes a commandline tool with various gzip/arc/warc/xm
 
 ###### V0.6.0 ######
 
-It is tedious not having deployed this artifact to maven central. So this and future versions will be deployed.
+* It is tedious not having deployed this artifact to maven central. So this and future versions will be deployed.
+* Fixed serious NPE in PayloadManager for large files.
+* Moved some common classes from JWAT-Tools to JWAT. (They will disappear in the new snapshot version)
+* Changed to used JWAT-1.0.3
+
+### Maven ###
 
 <dependency>
   <groupId>org.jwat</groupId>
   <artifactId>jwat-tools</artifactId>
-  <version>0.6.0-SNAPSHOT</version>
+  <version>0.6.0</version>
 </dependency>
 
 The following 2 artifacts should be executable and with all required dependencies included, when unpacked.
@@ -36,13 +41,13 @@ The following 2 artifacts should be executable and with all required dependencie
 <dependency>
   <groupId>org.jwat</groupId>
   <artifactId>jwat-tools</artifactId>
-  <version>0.6.0-SNAPSHOT</version>
+  <version>0.6.0</version>
   <type>tar.gz</type>
 </dependency>
 
 <dependency>
   <groupId>org.jwat</groupId>
   <artifactId>jwat-tools</artifactId>
-  <version>0.6.0-SNAPSHOT</version>
+  <version>0.6.0</version>
   <type>zip</type>
 </dependency>

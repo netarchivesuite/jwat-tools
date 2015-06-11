@@ -11,7 +11,7 @@
 
   <groupId>org.jwat</groupId>
   <artifactId>jwat-tools</artifactId>
-  <version>0.6.0-SNAPSHOT</version>
+  <version>0.6.0</version>
 
   <packaging>jar</packaging>
 
@@ -60,7 +60,13 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jwat.core.version>1.0.2</jwat.core.version>
+    <jwat.core.version>1.0.3</jwat.core.version>
+    <maven.assembly.plugin>2.2.2</maven.assembly.plugin>
+    <maven.compiler.plugin>3.3</maven.compiler.plugin>
+    <maven.jar.plugin>2.3</maven.jar.plugin>
+    <maven.javadoc.plugin>2.10.3</maven.javadoc.plugin>
+    <maven.source.plugin>2.4</maven.source.plugin>
+    <license.maven.plugin>1.8</license.maven.plugin>
   </properties>
 
   <dependencies>
@@ -84,15 +90,17 @@
       <artifactId>jwat-warc</artifactId>
       <version>${jwat.core.version}</version>
     </dependency>
+
     <dependency>
       <groupId>net.java.dev.jna</groupId>
       <artifactId>jna</artifactId>
       <version>3.2.7</version>
     </dependency>
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.11</version>
+      <version>4.12</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -101,18 +109,70 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
+        <version>${maven.compiler.plugin}</version>
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
         </configuration>
       </plugin>
 
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>${license.maven.plugin}</version>
+        <configuration>
+          <generateBundle>true</generateBundle>
+          <licenseName>apache_v2</licenseName>
+          <failIfWarning>true</failIfWarning>
+          <useMissingFile>true</useMissingFile>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <!-- install source jars to maven repo
+             http://maven.apache.org/plugins/maven-source-plugin/usage.html -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>${maven.source.plugin}</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Generate javadoc jar. Note: Java 8 (doclint) check has been disabled. -->
+      <plugin> 
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId> 
+        <version>${maven.javadoc.plugin}</version>
+        <configuration>
+          <aggregate>true</aggregate>
+          <linksource>true</linksource>
+          <quiet>true</quiet>
+          <!-- Note: This fails with a JVM older than Java 8 -->
+          <additionalparam>-Xdoclint:none</additionalparam>
+        </configuration>
+        <executions> 
+          <execution> 
+            <id>attach-javadocs</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>jar</goal>
+            </goals> 
+          </execution> 
+        </executions> 
+      </plugin>
+
       <!-- generate the JWAT-Tools Command Line jar executable -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>2.3</version>
+        <version>${maven.jar.plugin}</version>
         <configuration>
           <archive>
             <addMavenDescriptor>false</addMavenDescriptor>
@@ -128,13 +188,14 @@
           <finalName>${project.build.finalName}</finalName>
         </configuration>
       </plugin>
+
       <!--
         package the jar, artifacts,and bin scripts into zip and tar files
         for JWAT-Tools release
       -->
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.2.2</version>
+        <version>${maven.assembly.plugin}</version>
         <executions>
           <execution>
             <id>distro-assembly</id>
