@@ -90,6 +90,11 @@
       <artifactId>jwat-warc</artifactId>
       <version>${jwat.core.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.jwat</groupId>
+      <artifactId>jwat-archive</artifactId>
+      <version>${jwat.core.version}</version>
+    </dependency>
 
     <dependency>
       <groupId>net.java.dev.jna</groupId>

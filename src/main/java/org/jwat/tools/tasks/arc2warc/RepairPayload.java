@@ -11,11 +11,11 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.jwat.arc.ArcConstants;
+import org.jwat.archive.ManagedPayload;
+import org.jwat.common.ArrayUtils;
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.ContentType;
 import org.jwat.common.HttpHeader;
-import org.jwat.tools.core.ArrayUtils;
-import org.jwat.tools.core.ManagedPayload;
 import org.jwat.tools.core.ManagedPayloadContentType;
 import org.jwat.tools.core.ManagedPayloadContentTypeIdentifier;
 

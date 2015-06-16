@@ -3,9 +3,9 @@ package org.jwat.tools.tasks.pathindex;
 import java.io.File;
 import java.util.List;
 
+import org.jwat.archive.FileIdent;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
-import org.jwat.tools.core.FileIdent;
 import org.jwat.tools.core.SynchronizedOutput;
 import org.jwat.tools.tasks.ProcessTask;
 

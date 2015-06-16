@@ -19,13 +19,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.jwat.archive.Cloner;
+import org.jwat.archive.FileIdent;
 import org.jwat.common.Diagnosis;
 import org.jwat.common.DiagnosisType;
 import org.jwat.common.UriProfile;
 import org.jwat.tools.JWATTools;
-import org.jwat.tools.core.Cloner;
 import org.jwat.tools.core.CommandLine;
-import org.jwat.tools.core.FileIdent;
 import org.jwat.tools.core.SynchronizedOutput;
 import org.jwat.tools.core.ValidatorPlugin;
 import org.jwat.tools.tasks.ProcessTask;

@@ -6,12 +6,12 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.jwat.arc.ArcRecordBase;
+import org.jwat.archive.ArchiveParser;
+import org.jwat.archive.ArchiveParserCallback;
 import org.jwat.common.HttpHeader;
 import org.jwat.common.Payload;
 import org.jwat.common.UriProfile;
 import org.jwat.gzip.GzipEntry;
-import org.jwat.tools.core.ArchiveParser;
-import org.jwat.tools.core.ArchiveParserCallback;
 import org.jwat.warc.WarcRecord;
 
 public class ExtractFile implements ArchiveParserCallback {

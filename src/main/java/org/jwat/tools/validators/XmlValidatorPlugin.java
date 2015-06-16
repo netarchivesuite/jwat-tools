@@ -11,7 +11,7 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 
-import org.jwat.tools.core.ManagedPayload;
+import org.jwat.archive.ManagedPayload;
 import org.jwat.tools.core.Validator;
 import org.jwat.tools.core.ValidatorPlugin;
 import org.jwat.tools.tasks.test.TestFileResultItemDiagnosis;

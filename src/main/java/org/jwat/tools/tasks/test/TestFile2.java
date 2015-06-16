@@ -5,16 +5,15 @@ import java.io.IOException;
 import java.util.List;
 
 import org.jwat.arc.ArcRecordBase;
+import org.jwat.archive.ArchiveParser;
+import org.jwat.archive.ArchiveParserCallback;
+import org.jwat.archive.Cloner;
+import org.jwat.archive.FileIdent;
+import org.jwat.archive.ManagedPayload;
 import org.jwat.common.ContentType;
-import org.jwat.common.Payload;
 import org.jwat.common.UriProfile;
 import org.jwat.gzip.GzipEntry;
-import org.jwat.tools.core.ArchiveParser;
-import org.jwat.tools.core.ArchiveParserCallback;
-import org.jwat.tools.core.Cloner;
-import org.jwat.tools.core.FileIdent;
 import org.jwat.tools.core.ManagedPayloadContentTypeIdentifier;
-import org.jwat.tools.core.ManagedPayload;
 import org.jwat.tools.core.ValidatorPlugin;
 import org.jwat.warc.WarcRecord;
 

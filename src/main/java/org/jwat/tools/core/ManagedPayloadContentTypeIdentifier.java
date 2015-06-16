@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import org.jwat.archive.ManagedPayload;
 import org.jwat.common.ContentType;
 
 public class ManagedPayloadContentTypeIdentifier {
