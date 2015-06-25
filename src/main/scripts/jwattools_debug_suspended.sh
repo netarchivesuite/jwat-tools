@@ -7,7 +7,8 @@ if [ -z "${JAVA_DEBUG_OPTS}" ]; then
 fi
 
 if [ -z "${JAVA_OPTS}" ]; then
-  JAVA_OPTS="-Xms256m -Xmx1024m -XX:PermSize=64M -XX:MaxPermSize=256M"
+  # -XX:PermSize=64M -XX:MaxPermSize=256M
+  JAVA_OPTS="-Xms256m -Xmx1024m"
 fi
 
 "${JAVA}" ${JAVA_DEBUG_OPTS} ${JAVA_OPTS} -cp "$CP" org.jwat.tools.JWATTools "$@"

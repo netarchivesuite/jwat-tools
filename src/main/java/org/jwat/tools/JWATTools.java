@@ -187,7 +187,15 @@ public class JWATTools {
 	}
 
 	public void show_help() {
-		System.out.println("JWATTools v0.5.6");
+		Package pkg = Package.getPackage("org.jwat.tools");
+		String version = null;
+		if (pkg != null) {
+			version = pkg.getSpecificationVersion();
+		}
+		if (version == null) {
+			version = "N/A";
+		}
+		System.out.println("JWATTools v" + version);
 		System.out.println("usage: JWATTools <command> [<args>]");
 		System.out.println("");
 		show_commands();
