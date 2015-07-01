@@ -50,14 +50,43 @@ public class ExtractFile implements ArchiveParserCallback {
 	}
 
 	@Override
-	public void apcArcRecordStart(ArcRecordBase arcRecord, long startOffset,
-			boolean compressed) throws IOException {
+	public void apcArcRecordStart(ArcRecordBase arcRecord, long startOffset, boolean compressed) throws IOException {
+		if (targetUri == null || targetUri.equalsIgnoreCase(arcRecord.header.urlStr)) {
+			Payload payload = arcRecord.getPayload();
+			HttpHeader httpHeader = null;
+			InputStream payloadStream = null;
+			if (payload != null) {
+				httpHeader = arcRecord.getHttpHeader();
+				if (httpHeader != null ) {
+					payloadStream = httpHeader.getPayloadInputStream();
+				} else {
+					payloadStream = payload.getInputStreamComplete();
+				}
+			}
+			if (payloadStream != null) {
+				FileOutputStream out = new FileOutputStream(new File("extracted." + recordNr), false);
+				int read;
+				while ((read = payloadStream.read(tmpBuf)) != -1) {
+					out.write(tmpBuf, 0, read);
+				}
+				out.flush();
+				out.close();
+				payloadStream.close();
+			}
+			if (httpHeader != null) {
+				httpHeader.close();
+			}
+			if (payload != null) {
+				payload.close();
+			}
+			arcRecord.close();
+			++recordNr;
+		}
 	}
 
 	@Override
-	public void apcWarcRecordStart(WarcRecord warcRecord, long startOffset,
-			boolean compressed) throws IOException {
-		if (targetUri == null || targetUri.equalsIgnoreCase(warcRecord.header.warcTargetUriStr)) {
+	public void apcWarcRecordStart(WarcRecord warcRecord, long startOffset, boolean compressed) throws IOException {
+		if (targetUri == null || (warcRecord.header.warcTargetUriStr != null && targetUri.equalsIgnoreCase(warcRecord.header.warcTargetUriStr))) {
 			Payload payload = warcRecord.getPayload();
 			HttpHeader httpHeader = null;
 			InputStream payloadStream = null;
