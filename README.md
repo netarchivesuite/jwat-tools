@@ -30,24 +30,28 @@ This project currently includes a commandline tool with various gzip/arc/warc/xm
 
 ### Maven ###
 
-<dependency>
-  <groupId>org.jwat</groupId>
-  <artifactId>jwat-tools</artifactId>
-  <version>0.6.0</version>
-</dependency>
+jar dependency.
+
+        <dependency>
+            <groupId>org.jwat</groupId>
+            <artifactId>jwat-tools</artifactId>
+            <version>0.6.0</version>
+         </dependency>
 
 The following 2 artifacts should be executable and with all required dependencies included, when unpacked.
 
-<dependency>
-  <groupId>org.jwat</groupId>
-  <artifactId>jwat-tools</artifactId>
-  <version>0.6.0</version>
-  <type>tar.gz</type>
-</dependency>
+        <dependency>
+            <groupId>org.jwat</groupId>
+            <artifactId>jwat-tools</artifactId>
+            <version>0.6.0</version>
+            <type>tar.gz</type>
+        </dependency>
 
-<dependency>
-  <groupId>org.jwat</groupId>
-  <artifactId>jwat-tools</artifactId>
-  <version>0.6.0</version>
-  <type>zip</type>
-</dependency>
+or
+
+        <dependency>
+            <groupId>org.jwat</groupId>
+            <artifactId>jwat-tools</artifactId>
+            <version>0.6.0</version>
+            <type>zip</type>
+        </dependency>
