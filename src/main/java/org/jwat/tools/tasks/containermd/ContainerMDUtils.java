@@ -3,10 +3,12 @@ package org.jwat.tools.tasks.containermd;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringReader;
+import java.text.CharacterIterator;
 import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.text.StringCharacterIterator;
 import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -136,26 +138,32 @@ public class ContainerMDUtils {
 		if (!isSet(content)) {
 			return "";
 		}
-
-		StringBuilder buffer = new StringBuilder(content);
-
-		int n = 0;
-		while ((n = buffer.indexOf("&", n)) > -1) {
-			buffer.insert(n + 1, "amp;");
-			n += 5;
+		final StringBuilder result = new StringBuilder(content.length() * 2);
+		final StringCharacterIterator it = new StringCharacterIterator(content);
+		char ch = it.current();
+		while (ch != CharacterIterator.DONE) {
+			if (ch == '&') {
+				result.append("&amp;");
+			} else if (ch == '<') {
+				result.append("&lt;");
+			} else if (ch == '>') {
+				result.append("&gt;");
+			} else if (ch == '\'') {
+				result.append("&apos;");
+			} else if (ch == '"') {
+				result.append("&quot;");
+			} else if (Character.isISOControl(ch)) {
+				if (Character.isWhitespace(ch)) {
+					result.append(String.format("&#%03d;", (int)ch));
+				} else {
+					result.append(String.format("0x%x", (int)ch));
+				}
+			} else {
+				result.append(ch);
+			}
+			ch = it.next();
 		}
-		n = 0;
-		while ((n = buffer.indexOf("<", n)) > -1) {
-			buffer.replace(n, n + 1, "&lt;");
-			n += 4;
-		}
-		n = 0;
-		while ((n = buffer.indexOf(">", n)) > -1) {
-			buffer.replace(n, n + 1, "&gt;");
-			n += 4;
-		}
-
-		return buffer.toString();
+		return result.toString();
 	}
 
 	public static void prettyPrintXml(String unformattedXml, PrintStream output) {
