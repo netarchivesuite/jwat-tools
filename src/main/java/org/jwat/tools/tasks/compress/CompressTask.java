@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.Deflater;
 
 import org.jwat.archive.FileIdent;
+import org.jwat.common.Base16;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.tasks.ProcessTask;
@@ -32,12 +33,14 @@ public class CompressTask extends ProcessTask {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -1, --fast  compress faster");
-		System.out.println(" -9, --slow  compress better");
-		System.out.println(" -w<x>        set the amount of worker thread(s) (defaults to 1)");
+		System.out.println(" -1, --fast    fast compression time, lowest compression rate");
+		System.out.println(" -9, --slow    slow compression time, highest compression rate");
+		System.out.println(" #-d, --delete  delete input file after compression (only on success)");
+		System.out.println(" #-v, --verify  decompress output file and compare against input file");
+		System.out.println(" -w<x>         set the amount of worker thread(s) (defaults to 1)");
 	}
 
-	public int compressionLevel = Deflater.DEFAULT_COMPRESSION;
+	protected int compressionLevel = Deflater.DEFAULT_COMPRESSION;
 
 	@Override
 	public void command(CommandLine.Arguments arguments) {
@@ -134,8 +137,8 @@ public class CompressTask extends ProcessTask {
 		@Override
 		public void run() {
 			CompressFile compressFile = new CompressFile();
+			compressFile.compressionLevel = compressionLevel;
 			compressFile.compressFile(srcFile);
-			compressFile.srcFile = srcFile;
 			results.add(compressFile);
 			resultsReady.release();
 		}
@@ -163,6 +166,10 @@ public class CompressTask extends ProcessTask {
 						result = results.poll();
 						current_size += result.srcFile.length();
 						++processed;
+
+				        if (result.bVerified) {
+				        	cout.println(result.srcFile.getName() + "," + result.srcFile.length() + "," + Base16.encodeArray(result.md5DigestBytesOrg) + "," + result.dstFile.getName() + "," + result.dstFile.length() + "," + Base16.encodeArray(result.md5compDigestBytesVerify));
+				        }
 
 						calculate_progress();
 
