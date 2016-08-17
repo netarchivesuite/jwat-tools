@@ -1,16 +1,19 @@
 package org.jwat.tools.tasks.compress;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.Deflater;
 
 import org.jwat.archive.FileIdent;
 import org.jwat.common.Base16;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.core.CommandLine;
+import org.jwat.tools.core.SynchronizedOutput;
 import org.jwat.tools.tasks.ProcessTask;
 
 public class CompressTask extends ProcessTask {
@@ -35,12 +38,22 @@ public class CompressTask extends ProcessTask {
 		System.out.println("");
 		System.out.println(" -1, --fast    fast compression time, lowest compression rate");
 		System.out.println(" -9, --slow    slow compression time, highest compression rate");
-		System.out.println(" #-d, --delete  delete input file after compression (only on success)");
-		System.out.println(" #-v, --verify  decompress output file and compare against input file");
+		System.out.println(" #    --dryrun  remove output file leaving the orignal in place");
+		System.out.println(" #    --verify  decompress output file and compare against input file");
+		System.out.println(" #    --remove  remove input file after compression (only on success)");
 		System.out.println(" -w<x>         set the amount of worker thread(s) (defaults to 1)");
 	}
 
-	protected int compressionLevel = Deflater.DEFAULT_COMPRESSION;
+	CompressionOptions options;
+
+	/** Valid results output stream. */
+	private SynchronizedOutput validOutput;
+
+	/** Invalid results output stream. */
+	private SynchronizedOutput invalidOutput;
+
+	/** Exception output stream. */
+	private SynchronizedOutput exceptionsOutput;
 
 	@Override
 	public void command(CommandLine.Arguments arguments) {
@@ -61,12 +74,50 @@ public class CompressTask extends ProcessTask {
 			System.exit( 1 );
 		}
 
+		options = new CompressionOptions();
+
+		// FIXME
+		options.compressionLevel = 9;
+		options.bBatch = false;
+		options.bDryrun = true;
+		options.bVerify = true;
+		options.bRemove = false;
+		options.dstPath = new File("k:\\tmp_bitarchive_1\\");
+		options.lstFile = new File("k:\\tmp_bitarchive_1\\files.lst");
+
 		// Compression level.
 		argument = arguments.idMap.get( JWATTools.A_COMPRESS );
 		if (argument != null) {
-			compressionLevel = argument.argDef.subId;
-			System.out.println( "Compression level: " + compressionLevel );
+			options.compressionLevel = argument.argDef.subId;
 		}
+		System.out.println( "Compression level: " + options.compressionLevel );
+
+		argument = arguments.idMap.get( JWATTools.A_BATCHMODE );
+		if (argument != null) {
+			options.bBatch = true;
+		}
+		System.out.println( "Batch mode: " + options.bBatch );
+
+		argument = arguments.idMap.get( JWATTools.A_DRYRUN );
+		if (argument != null) {
+			options.bDryrun = true;
+		}
+		System.out.println( "Dry run: " + options.bDryrun );
+
+		argument = arguments.idMap.get( JWATTools.A_VERIFY );
+		if (argument != null) {
+			options.bVerify = true;
+		}
+		System.out.println( "Verify output: " + options.bVerify );
+
+		argument = arguments.idMap.get( JWATTools.A_REMOVE );
+		if (argument != null) {
+			options.bRemove = true;
+		}
+		System.out.println( "Remove input: " + options.bRemove );
+
+		System.out.println( "Dest path: " + options.dstPath );
+		System.out.println( "List file: " + options.lstFile );
 
 		// Files.
 		argument = arguments.idMap.get( JWATTools.A_FILES );
@@ -82,7 +133,8 @@ public class CompressTask extends ProcessTask {
 		while (!resultThread.bClosed) {
 			try {
 				Thread.sleep( 100 );
-			} catch (InterruptedException e) {
+			}
+			catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
@@ -92,6 +144,7 @@ public class CompressTask extends ProcessTask {
 		cout.println( "      Time: " + run_timestr + " (" + run_dtm + " ms.)" );
 		cout.println( "TotalBytes: " + toSizeString(current_size));
 		cout.println( "  AvgBytes: " + toSizePerSecondString(run_avgbpsec));
+		cout.println(String.format("    Gained: %s (%.2f%%).", toSizeString(uncompressed - compressed), current_gain));
 	}
 
 	@Override
@@ -137,9 +190,8 @@ public class CompressTask extends ProcessTask {
 		@Override
 		public void run() {
 			CompressFile compressFile = new CompressFile();
-			compressFile.compressionLevel = compressionLevel;
-			compressFile.compressFile(srcFile);
-			results.add(compressFile);
+			CompressionResult compressionResult = compressFile.compressFile(srcFile, options);
+			results.add(compressionResult);
 			resultsReady.release();
 		}
 	}
@@ -148,7 +200,13 @@ public class CompressTask extends ProcessTask {
 	private Semaphore resultsReady = new Semaphore(0);
 
 	/** Completed Compressed results list. */
-	private ConcurrentLinkedQueue<CompressFile> results = new ConcurrentLinkedQueue<CompressFile>();
+	private ConcurrentLinkedQueue<CompressionResult> results = new ConcurrentLinkedQueue<CompressionResult>();
+
+	private long uncompressed = 0;
+
+	private long compressed = 0;
+
+	private double current_gain = 0.0;
 
 	class ResultThread implements Runnable {
 
@@ -158,29 +216,80 @@ public class CompressTask extends ProcessTask {
 
 		@Override
 		public void run() {
-			CompressFile result;
+			StringBuilder sb = new StringBuilder();
+			CompressionResult result;
 			boolean bLoop = true;
-			while (bLoop) {
-				try {
-					if (resultsReady.tryAcquire(1, TimeUnit.SECONDS)) {
-						result = results.poll();
-						current_size += result.srcFile.length();
-						++processed;
+			PrintWriter lstWriter = null;
+			try {
+				if (options.lstFile != null) {
+					lstWriter = new PrintWriter(new BufferedWriter(new FileWriter(options.lstFile)));
+				}
+				while (bLoop) {
+					try {
+						if (resultsReady.tryAcquire(1, TimeUnit.SECONDS)) {
+							result = results.poll();
+							current_size += result.srcFile.length();
+							++processed;
 
-				        if (result.bVerified) {
-				        	cout.println(result.srcFile.getName() + "," + result.srcFile.length() + "," + Base16.encodeArray(result.md5DigestBytesOrg) + "," + result.dstFile.getName() + "," + result.dstFile.length() + "," + Base16.encodeArray(result.md5compDigestBytesVerify));
-				        }
+							if (result.bCompleted) {
+					        	if (result.bVerified) {
+					        		if (lstWriter != null) {
+						        		sb.setLength(0);
+							        	sb.append(result.srcFile.getName());
+							        	sb.append(",");
+							        	sb.append(result.srcFile.length());
+							        	sb.append(",");
+							        	sb.append(Base16.encodeArray(result.md5DigestBytesOrg));
+							        	sb.append(",");
+							        	sb.append(result.dstFile.getName());
+							        	sb.append(",");
+							        	sb.append(result.dstFile.length());
+							        	sb.append(",");
+							        	sb.append(Base16.encodeArray(result.md5compDigestBytesVerify));
+							        	//cout.println(sb.toString());
+							        	lstWriter.println(sb.toString());
+					        		}
+						        }
+								if (!options.bVerify || result.bVerified) {
+									uncompressed += result.srcFile.length();
+						        	compressed += result.dstFile.length();
+						        	if (uncompressed > 0) {
+										current_gain = (double)(uncompressed - compressed) / (double)uncompressed * 100.0;
+						        	}
+								}
+							}
 
-						calculate_progress();
+							result.dstFile.setLastModified(result.srcFile.lastModified());
 
-						//cout.print_progress("Queued: " + queued + " - Processed: " + processed + " - Estimated: " + new Date(ctm + etm).toString() + ".");
-						cout.print_progress(String.format("Queued: %d - Processed: %d - %s - Estimated: %s (%.2f%%).", queued, processed, toSizePerSecondString(current_avgbpsec), current_timestr, current_progress));
-					} else if (bExit && processed == queued) {
+							if (options.bDryrun) {
+								result.dstFile.delete();
+							}
+							else if (options.bRemove) {
+								if (result.bCompleted && result.bVerified) {
+									result.srcFile.delete();
+								}
+							}
+
+							calculate_progress();
+
+					        //cout.print_progress("Queued: " + queued + " - Processed: " + processed + " - Estimated: " + new Date(ctm + etm).toString() + ".");
+							cout.print_progress(String.format("Queued: %d - Processed: %d - %s - Estimated: %s (%.2f%%) - Saved: %s (%.2f%%).", queued, processed, toSizePerSecondString(current_avgbpsec), current_timestr, current_progress, toSizeString(uncompressed - compressed), current_gain));
+						}
+						else if (bExit && processed == queued) {
+							bLoop = false;
+						}
+					}
+					catch (InterruptedException e) {
 						bLoop = false;
 					}
-				} catch (InterruptedException e) {
-					bLoop = false;
 				}
+			}
+			catch (Throwable t) {
+				t.printStackTrace();
+				System.err.println("Fatality!");
+			}
+			if (lstWriter != null) {
+				lstWriter.close();
 			}
 			bClosed = true;
 		}

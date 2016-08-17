@@ -21,6 +21,23 @@ This project currently includes a commandline tool with various gzip/arc/warc/xm
 
 ### History ###
 
+###### V0.6.3-SNAPSHOT ######
+
+* Added verify code to ARC/WARC compress task.
+* Compress file writes old/new filename/length/md5 to system.out for now.
+
+###### V0.6.2 ######
+
+* Updated dependency to JWAT-1.0.4.
+
+###### V0.6.1 ######
+
+* Thomas LEDOUX: ContainerMDUtils class - function encodeContent() replaced by new function which is faster (about 10 times) and takes care of all the protected characters (even the control ones).
+* Added extract code for WARC and GZip. Unit tests to follow soon.
+* Added version to manifest. Show version in manifest instead of a constant string.
+* Removed some JVM options in the start scripts.
+* Moved common classes from JWAT-Tools to JWAT.
+
 ###### V0.6.0 ######
 
 * It is tedious not having deployed this artifact to maven central. So this and future versions will be deployed.

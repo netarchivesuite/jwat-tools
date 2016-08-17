@@ -39,51 +39,44 @@ public class CompressFile {
 	//private static final int BUFFER_SIZE = 65 * 1024;
 	private static final int BUFFER_SIZE = 8192;
 
-	/** Source <code>File</code> object. */
-	protected File srcFile;
-
-	protected int compressionLevel = 9;
-
-	protected boolean bVerify = true;
-
-	protected File dstFile;
-
-    protected boolean bVerified = false;
-
-    protected byte[] md5DigestBytesOrg;
-
-    protected byte[] md5DigestBytesVerify;
-
-    protected byte[] md5compDigestBytesVerify;
-
 	/**
 	 * Compress input file according to its type.
 	 * ARC/WARC files are compressed one record at a time and concatenated into on multi-entry GZip file.
 	 * Other files are compressed as one entry.
 	 * @param srcFile
 	 */
-	protected void compressFile(File srcFile) {
-		this.srcFile = srcFile;
+	protected CompressionResult compressFile(File srcFile, CompressionOptions options) {
+		CompressionResult result = null;
 		String srcFname = srcFile.getName();
+		String dstFname = srcFname + ".gz";
 		RandomAccessFile raf = null;
-		RandomAccessFileInputStream rafin;
+		RandomAccessFileInputStream rafin = null;
 		ByteCountingPushBackInputStream pbin = null;
+		File dstFile;
 		try {
 			raf = new RandomAccessFile( srcFile, "r" );
 			rafin = new RandomAccessFileInputStream( raf );
 			pbin = new ByteCountingPushBackInputStream( new BufferedInputStream( rafin, INPUT_BUFFER_SIZE ), 32 );
 			if (!GzipReader.isGzipped(pbin)) {
-				String dstFname = srcFname + ".gz";
-				dstFile = new File( srcFile.getParentFile(), dstFname );
+				if (options.dstPath == null) {
+					dstFile = new File( srcFile.getParentFile(), dstFname );
+				}
+				else {
+					dstFile = new File( options.dstPath, dstFname );
+				}
 				if ( !dstFile.exists() ) {
-					System.out.println( srcFname + " -> " + dstFname );
+					//System.out.println( srcFname + " -> " + dstFname );
 					if ( ArcReaderFactory.isArcFile( pbin ) ) {
-						compressArcFile( pbin );
+						result = compressArcFile( pbin, dstFile, options );
+						result.srcFile = srcFile;
 					}
 					else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
-						compressWarcFile( pbin );
-					} else {
-						compressNormalFile( pbin );
+						result = compressWarcFile( pbin, dstFile, options );
+						result.srcFile = srcFile;
+					}
+					else {
+						result = compressNormalFile( pbin, dstFile, options );
+						result.srcFile = srcFile;
 					}
 				}
 				else {
@@ -101,35 +94,34 @@ public class CompressFile {
 			e.printStackTrace();
 		}
 		finally {
-			if (pbin != null) {
-				try {
-					pbin.close();
-				}
-				catch (IOException e) {
-				}
-			}
-			if (raf != null) {
-				try {
-					raf.close();
-					raf = null;
-				}
-				catch (IOException e) {
-				}
-			}
+			closeIOQuietly(pbin);
+			closeIOQuietly(rafin);
+			closeIOQuietly(raf);
 		}
+		return result;
 	}
 
-	protected void compressNormalFile(InputStream in) {
+	// TODO
+	protected CompressionResult compressNormalFile(InputStream in, File dstFile, CompressionOptions options) {
+        byte[] buffer = new byte[BUFFER_SIZE];
 		FileOutputStream out = null;
         GzipWriter writer = null;
         GzipEntry entry = null;
         OutputStream cout = null;
-        byte[] buffer = new byte[BUFFER_SIZE];
         int read;
+        MessageDigest md5 = null;
+        MessageDigest md5comp = null;
+        CompressionResult result = new CompressionResult();
+        result.dstFile = dstFile;
 		try {
 			out = new FileOutputStream(dstFile, false);
 	        writer = new GzipWriter(out, GZIP_OUTPUT_BUFFER_SIZE );
-	        writer.setCompressionLevel(compressionLevel);
+	        writer.setCompressionLevel(options.compressionLevel);
+
+	        if (options.bVerify) {
+		        md5 = MessageDigest.getInstance("MD5");
+		        md5comp = MessageDigest.getInstance("MD5");
+	        }
 
 	        entry = new GzipEntry();
 	        entry.magic = GzipConstants.GZIP_MAGIC;
@@ -144,41 +136,38 @@ public class CompressFile {
 
 	        while ((read = in.read(buffer, 0, BUFFER_SIZE)) != -1) {
 	        	cout.write(buffer, 0, read);
+	        	if (options.bVerify) {
+		        	md5.update(buffer, 0, read);
+	        	}
 	        }
 
 	        cout.close();
-		} catch (Throwable t) {
-			t.printStackTrace();
-		} finally {
-			if (cout != null) {
-				try {
-					cout.close();
-				} catch (IOException e) {
-				}
-			}
-			if (writer != null) {
-		        try {
-					writer.close();
-				} catch (IOException e) {
-				}
-			}
-			if (out != null) {
-		        try {
-					out.close();
-				} catch (IOException e) {
-				}
-			}
-			if (in != null) {
-		        try {
-					in.close();
-				} catch (IOException e) {
-				}
-			}
+	        cout = null;
+	        entry.close();
+	        entry = null;
+	        writer.close();
+	        writer = null;
+	        in.close();
+	        in = null;
+	        result.bCompleted = true;
 		}
+		catch (Throwable t) {
+			result.bCompleted = false;
+			result.t = t;
+			t.printStackTrace();
+		}
+		finally {
+	        closeIOQuietly(in);
+			closeIOQuietly(entry);
+			closeIOQuietly(cout);
+			closeIOQuietly(writer);
+			closeIOQuietly(out);
+		}
+		return result;
 	}
 
 	// TODO
-	protected void compressArcFile(InputStream in) {
+	protected CompressionResult compressArcFile(InputStream in, File dstFile, CompressionOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
 		FileOutputStream out = null;
         GzipWriter writer = null;
@@ -194,14 +183,14 @@ public class CompressFile {
         InputStream uncompressedFileIn = null;
         GzipReader reader = null;
         InputStream uncompressedEntryIn = null;
-        bVerified = false;
+        CompressionResult result = new CompressionResult();
+        result.dstFile = dstFile;
 		try {
 			out = new FileOutputStream(dstFile, false);
 	        writer = new GzipWriter(out, GZIP_OUTPUT_BUFFER_SIZE);
-	        writer.setCompressionLevel(compressionLevel);
-	        entry = null;
+	        writer.setCompressionLevel(options.compressionLevel);
 
-	        if (bVerify) {
+	        if (options.bVerify) {
 		        md5 = MessageDigest.getInstance("MD5");
 		        md5comp = MessageDigest.getInstance("MD5");
 	        }
@@ -221,7 +210,7 @@ public class CompressFile {
 
 		        cout = entry.getOutputStream();
 		        cout.write(arcRecord.header.headerBytes);
-		        if (bVerify) {
+		        if (options.bVerify) {
 		        	md5.update(arcRecord.header.headerBytes);
 		        }
 
@@ -230,7 +219,7 @@ public class CompressFile {
 					pin = payload.getInputStreamComplete();
 			        while ((read = pin.read(buffer, 0, BUFFER_SIZE)) != -1) {
 			        	cout.write(buffer, 0, read);
-			        	if (bVerify) {
+			        	if (options.bVerify) {
 				        	md5.update(buffer, 0, read);
 			        	}
 			        }
@@ -238,16 +227,20 @@ public class CompressFile {
 
 				cout.close();
 				cout = null;
-
+				entry.close();
+				entry = null;
 		        arcRecord.close();
 		        arcRecord = null;
-
 			}
 			writer.close();
 			writer = null;
+			arcReader.close();
+			arcReader = null;
+			in.close();
+			in = null;
 
-			if (bVerify) {
-		        md5DigestBytesOrg = md5.digest();
+			if (options.bVerify) {
+				result.md5DigestBytesOrg = md5.digest();
 
 		        md5.reset();
 
@@ -267,9 +260,9 @@ public class CompressFile {
 		        reader.close();
 		        reader = null;
 
-		        md5DigestBytesVerify = md5.digest();
-		        md5compDigestBytesVerify = md5comp.digest();
-		        bVerified = ArrayUtils.equalsAt(md5DigestBytesVerify, md5DigestBytesOrg, 0);
+		        result.md5DigestBytesVerify = md5.digest();
+		        result.md5compDigestBytesVerify = md5comp.digest();
+		        result.bVerified = ArrayUtils.equalsAt(result.md5DigestBytesVerify, result.md5DigestBytesOrg, 0);
 
 	        	// debug
 		        //System.out.println("    original md5:     " + Base16.encodeArray(md5DigestBytesOrg));
@@ -277,9 +270,14 @@ public class CompressFile {
 		        //System.out.println("  compressed md5:     " + Base16.encodeArray(md5compDigestBytesVerify));
 		        //System.out.println(bVerified);
 			}
-		} catch (Throwable t) {
+	        result.bCompleted = true;
+		}
+		catch (Throwable t) {
+			result.bCompleted = false;
+			result.t = t;
 			t.printStackTrace();
-		} finally {
+		}
+		finally {
 			closeIOQuietly(pin);
 			closeIOQuietly(arcRecord);
 			closeIOQuietly(arcReader);
@@ -291,12 +289,14 @@ public class CompressFile {
 			closeIOQuietly(entry);
 			closeIOQuietly(reader);
 		}
+		return result;
 	}
 
-	// TODO
-	protected void compressWarcFile(InputStream in) {
+    protected byte[] endMark = "\r\n\r\n".getBytes();
+
+    // TODO
+	protected CompressionResult compressWarcFile(InputStream in, File dstFile, CompressionOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
-        byte[] endMark = "\r\n\r\n".getBytes();
 		FileOutputStream out = null;
         GzipWriter writer = null;
         GzipEntry entry = null;
@@ -311,14 +311,14 @@ public class CompressFile {
         InputStream uncompressedFileIn = null;
         GzipReader reader = null;
         InputStream uncompressedEntryIn = null;
-        bVerified = false;
+        CompressionResult result = new CompressionResult();
+        result.dstFile = dstFile;
 		try {
 			out = new FileOutputStream(dstFile, false);
 	        writer = new GzipWriter(out, GZIP_OUTPUT_BUFFER_SIZE);
-	        writer.setCompressionLevel(compressionLevel);
-	        entry = null;
+	        writer.setCompressionLevel(options.compressionLevel);
 
-	        if (bVerify) {
+	        if (options.bVerify) {
 		        md5 = MessageDigest.getInstance("MD5");
 		        md5comp = MessageDigest.getInstance("MD5");
 	        }
@@ -338,16 +338,20 @@ public class CompressFile {
 
 		        cout = entry.getOutputStream();
 		        cout.write(warcRecord.header.headerBytes);
-		        if (bVerify) {
+		        if (options.bVerify) {
 		        	md5.update(warcRecord.header.headerBytes);
 		        }
 
-				payload = warcRecord.getPayload();
+		        // debug
+		        //System.out.println(warcRecord.getStartOffset());
+		        //System.out.println(warcRecord.getConsumed());
+
+		        payload = warcRecord.getPayload();
 				if (payload != null) {
 					pin = payload.getInputStreamComplete();
 			        while ((read = pin.read(buffer, 0, BUFFER_SIZE)) != -1) {
 			        	cout.write(buffer, 0, read);
-			        	if (bVerify) {
+			        	if (options.bVerify) {
 				        	md5.update(buffer, 0, read);
 			        	}
 			        }
@@ -356,20 +360,26 @@ public class CompressFile {
 				}
 
 				cout.write(endMark);
-				if (bVerify) {
+				if (options.bVerify) {
 		        	md5.update(endMark);
 				}
+
 				cout.close();
 				cout = null;
-
+				entry.close();
+				entry = null;
 				warcRecord.close();
 				warcRecord = null;
 			}
 			writer.close();
 			writer = null;
+			warcReader.close();
+			warcReader = null;
+			in.close();
+			in = null;
 
-			if (bVerify) {
-		        md5DigestBytesOrg = md5.digest();
+			if (options.bVerify) {
+				result.md5DigestBytesOrg = md5.digest();
 
 		        md5.reset();
 
@@ -389,9 +399,9 @@ public class CompressFile {
 		        reader.close();
 		        reader = null;
 
-		        md5DigestBytesVerify = md5.digest();
-		        md5compDigestBytesVerify = md5comp.digest();
-		        bVerified = ArrayUtils.equalsAt(md5DigestBytesVerify, md5DigestBytesOrg, 0);
+		        result.md5DigestBytesVerify = md5.digest();
+		        result.md5compDigestBytesVerify = md5comp.digest();
+		        result.bVerified = ArrayUtils.equalsAt(result.md5DigestBytesVerify, result.md5DigestBytesOrg, 0);
 
 	        	// debug
 		        //System.out.println("    original md5:     " + Base16.encodeArray(md5DigestBytesOrg));
@@ -399,9 +409,14 @@ public class CompressFile {
 		        //System.out.println("  compressed md5:     " + Base16.encodeArray(md5compDigestBytesVerify));
 		        //System.out.println(bVerified);
 			}
-		} catch (Throwable t) {
+	        result.bCompleted = true;
+		}
+		catch (Throwable t) {
+			result.bCompleted = false;
+			result.t = t;
 			t.printStackTrace();
-		} finally {
+		}
+		finally {
 			closeIOQuietly(pin);
 			closeIOQuietly(warcRecord);
 			closeIOQuietly(warcReader);
@@ -413,13 +428,15 @@ public class CompressFile {
 			closeIOQuietly(entry);
 			closeIOQuietly(reader);
 		}
+		return result;
 	}
 
 	public static void closeIOQuietly(Closeable closable) {
 		if (closable != null) {
 	        try {
 	        	closable.close();
-			} catch (IOException e) {
+			}
+	        catch (IOException e) {
 			}
 		}
 	}

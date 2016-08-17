@@ -44,6 +44,10 @@ public class JWATTools {
 	public static final int A_TARGET_URI = 16;
 	public static final int A_TESTRUN = 17;
 	public static final int A_QUIET = 18;
+	public static final int A_BATCHMODE = 19;
+	public static final int A_REMOVE = 20;
+	public static final int A_VERIFY = 21;
+	public static final int A_DRYRUN = 22;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -134,6 +138,10 @@ public class JWATTools {
 		cmdLine.addOption("-u=", A_TARGET_URI);
 		cmdLine.addOption("-t", A_TESTRUN);
 		cmdLine.addOption("-q", A_QUIET);
+		cmdLine.addOption("--batch", A_BATCHMODE);
+		cmdLine.addOption("--remove", A_REMOVE);
+		cmdLine.addOption("--verify", A_VERIFY);
+		cmdLine.addOption("--dryrun", A_DRYRUN);
 		cmdLine.addListArgument("files", A_FILES, 1, Integer.MAX_VALUE);
 	}
 
