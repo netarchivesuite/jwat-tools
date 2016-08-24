@@ -1,8 +1,10 @@
 package org.jwat.tools.core;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 import org.jwat.archive.ManagedPayload;
 import org.jwat.common.ContentType;
@@ -33,14 +35,14 @@ public class LibmagicIdentifier {
      * @throws JHOVE2Exception if an error occurs during initialization
      */
     public void checkIfInitialized() throws IOException {
-    	if (libmagicWrapper == null) {
-        	// Initialize libmagic wrapper.
+       if (libmagicWrapper == null) {
+            // Initialize libmagic wrapper.
             libmagicWrapper = new LibmagicJnaWrapper();
 
             String compiledMagicPath = null;
             if (this.magicFileDir != null) {
                 // Magic source directory set. => Compile magic files.
-            	if (libmagicWrapper.compile(magicFileDir.getAbsolutePath()) != 0) {
+                if (libmagicWrapper.compile(magicFileDir.getAbsolutePath()) != 0) {
                     throw new IOException("Magic file compile error: " + libmagicWrapper.getError());
                 }
                 // Look for compiled magic file. Its location varies according to
@@ -62,7 +64,7 @@ public class LibmagicIdentifier {
                 String fileRef = (compiledMagicPath != null) ? "Magic database \"" + compiledMagicPath + '"' : "Default magic database";
                 throw new IOException(fileRef + " load error: " + libmagicWrapper.getError());
             }
-    	}
+        }
     }
 
     /**
@@ -81,10 +83,10 @@ public class LibmagicIdentifier {
      * Shuts down this instance, releasing used resources.
      */
     public void shutdown() {
-    	if (libmagicWrapper != null) {
+        if (libmagicWrapper != null) {
             libmagicWrapper.close();
             libmagicWrapper = null;
-    	}
+        }
         if (compiledMagic != null) {
             // Delete compiled magic file.
             compiledMagic.delete();
@@ -93,24 +95,35 @@ public class LibmagicIdentifier {
     }
 
     public ContentType identify(ManagedPayload managedPayload) throws IOException {
-    	checkIfInitialized();
+        checkIfInitialized();
         // Extract MIME type and encoding using libmagic.
         String mimeType = null;
         ContentType contentType = null;
         if (managedPayload.payloadLength > 0) {
-        	switch (managedPayload.type) {
-        	case 1:
-        		ByteBuffer buffer = managedPayload.getBuffer();
-                mimeType = libmagicWrapper.getMimeType(buffer, buffer.limit());
-        		break;
-        	case 2:
-        		File file = managedPayload.getFile();
+            switch (managedPayload.type) {
+            case 1:
+                // In JDK 7 use a temp file, since using java Buffers hangs 
+                // the processing by mixing the C arrays in multithread context
+                File fTemp = File.createTempFile("JWAT-", "-MEMORY");
+                try {
+                    FileChannel wc = new FileOutputStream(fTemp, false).getChannel();
+                    wc.write(managedPayload.getBuffer());
+                    wc.close();
+                    mimeType = libmagicWrapper.getMimeType(fTemp.getAbsolutePath());
+                } finally {
+                    fTemp.delete();
+                }
+                // ByteBuffer buffer = managedPayload.getBuffer();
+                // mimeType = libmagicWrapper.getMimeType(buffer, buffer.limit());
+                break;
+            case 2:
+                File file = managedPayload.getFile();
                 mimeType = libmagicWrapper.getMimeType(file.getAbsolutePath());
-        		break;
-        	}
+                break;
+            }
             if (mimeType != null) {
-            	contentType = ContentType.parseContentType(mimeType);
-            	/*
+                contentType = ContentType.parseContentType(mimeType);
+                /*
                 if ("text/plain".equals(mimeType)) {
                     typeWithEncoding += "; charset=\"" + charset.toUpperCase() + '"';
                 }

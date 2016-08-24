@@ -153,11 +153,8 @@ public class ContainerMDUtils {
 			} else if (ch == '"') {
 				result.append("&quot;");
 			} else if (Character.isISOControl(ch)) {
-				if (Character.isWhitespace(ch)) {
-					result.append(String.format("&#%03d;", (int)ch));
-				} else {
-					result.append(String.format("0x%x", (int)ch));
-				}
+				// Always output a hex representation to avoid XML bad encoding
+				result.append(String.format("0x%x", (int)ch));
 			} else {
 				result.append(ch);
 			}

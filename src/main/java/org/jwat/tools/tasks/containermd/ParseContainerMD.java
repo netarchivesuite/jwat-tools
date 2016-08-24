@@ -146,7 +146,8 @@ public class ParseContainerMD implements ArchiveParserCallback {
 			--result.arcRecords; // Don't count the version block as a record 
 			break;
 		case ArcRecordBase.RT_ARC_RECORD:
-			managedPayload.manageVersionBlock(arcRecord, false);
+			// better look inside the ARC record
+			managedPayload.manageArcRecord(arcRecord, false);
 			break;
 		default:
 			throw new IllegalStateException();
