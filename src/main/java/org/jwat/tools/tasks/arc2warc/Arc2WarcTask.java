@@ -1,109 +1,31 @@
 package org.jwat.tools.tasks.arc2warc;
 
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.jwat.archive.FileIdent;
-import org.jwat.tools.JWATTools;
-import org.jwat.tools.core.CommandLine;
-import org.jwat.tools.core.SynchronizedOutput;
 import org.jwat.tools.tasks.ProcessTask;
+
+import com.antiaction.common.cli.SynchronizedOutput;
 
 public class Arc2WarcTask extends ProcessTask {
 
-	public static final String commandName = "arc2warc";
+	private Arc2WarcOptions options;
 
-	public static final String commandDescription = "convert ARC to WARC";
+	/** Exception output stream. */
+	private SynchronizedOutput exceptionsOutput;
 
 	public Arc2WarcTask() {
-	}
-
-	@Override
-	public void show_help() {
-		System.out.println("jwattools arc2warc [-d DIR] [--overwrite]... [-w THREADS] <filepattern>...");
-		System.out.println("");
-		System.out.println("arc2warc will convert one or more ARC file(s) to WARC file(s).");
-		System.out.println("");
-		System.out.println("options:");
-		System.out.println("");
-		System.out.println(" -d <dir>        destination directory (defaults to current dir)");
-		System.out.println("    --overwrite  overwrite destination file (default is to skip file)");
-		System.out.println("    --prefix     destination filename prefix (default is '" + prefix + "')");
-		System.out.println(" -w <x>          set the amount of worker thread(s) (defaults to 1)");
 	}
 
 	/*
 	 * Settings.
 	 */
 
-	protected File destDir;
-
-	protected boolean bOverwrite = false;
-
-	protected String prefix = "converted-";
-
-    /*
-	 * State.
-	 */
-
-	/** Exception output stream. */
-	private SynchronizedOutput exceptionsOutput;
-
-	@Override
-	public void command(CommandLine.Arguments arguments) {
-		CommandLine.Argument argument;
-
-		// Thread workers.
-		argument = arguments.idMap.get( JWATTools.A_WORKERS );
-		if ( argument != null && argument.value != null ) {
-			try {
-				threads = Integer.parseInt(argument.value);
-			} catch (NumberFormatException e) {
-				System.out.println( "Invalid number of threads requested: " + argument.value );
-				System.exit( 1 );
-			}
-		}
-		if ( threads < 1 ) {
-			System.out.println( "Invalid number of threads requested: " + threads );
-			System.exit( 1 );
-		}
-
-		// Destination directory.
-		String dest = System.getProperty("user.dir");
-		argument = arguments.idMap.get( JWATTools.A_DEST );
-		if ( argument != null && argument.value != null ) {
-			dest = argument.value;
-		}
-		System.out.println( "Using '" + dest + "' as destination directory." );
-		destDir = new File( dest );
-		if ( !destDir.exists() ) {
-			if ( !destDir.mkdirs() ) {
-				System.out.println( "Could not create destination directory: '" + dest + "'!" );
-				System.exit( 1 );
-			}
-		} else if ( !destDir.isDirectory() ) {
-			System.out.println( "'" + dest + "' is not a directory!" );
-			System.exit( 1 );
-		}
-
-		// Overwrite.
-		argument = arguments.idMap.get( JWATTools.A_OVERWRITE );
-		if ( argument != null && argument.value != null ) {
-			bOverwrite = true;
-		}
-
-		// Prefix.
-		argument = arguments.idMap.get( JWATTools.A_PREFIX );
-		if ( argument != null && argument.value != null ) {
-			prefix = argument.value;
-		}
-
-		// Files.
-		argument = arguments.idMap.get( JWATTools.A_FILES );
-		List<String> filesList = argument.values;
+	public void runtask(Arc2WarcOptions options) {
+		this.options = options;
 
 		exceptionsOutput = new SynchronizedOutput("e.out");
 
@@ -111,7 +33,7 @@ public class Arc2WarcTask extends ProcessTask {
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle(filesList, this);
+		threadpool_feeder_lifecycle(options.filesList, this, options.threads);
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -170,7 +92,8 @@ public class Arc2WarcTask extends ProcessTask {
 		@Override
 		public void run() {
 			Arc2Warc arc2warc = new Arc2Warc();
-			arc2warc.arc2warc(srcFile, destDir, prefix, bOverwrite);
+			arc2warc.arc2warc(srcFile, options);
+			// FIXME
 			arc2warc.srcFile = srcFile;
 			results.add(arc2warc);
 			resultsReady.release();

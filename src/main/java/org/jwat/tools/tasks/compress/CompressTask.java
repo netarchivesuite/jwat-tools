@@ -4,47 +4,22 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.jwat.archive.FileIdent;
 import org.jwat.common.Base16;
-import org.jwat.tools.JWATTools;
-import org.jwat.tools.core.CommandLine;
-import org.jwat.tools.core.SynchronizedOutput;
 import org.jwat.tools.tasks.ProcessTask;
 
+import com.antiaction.common.cli.SynchronizedOutput;
+
 public class CompressTask extends ProcessTask {
-
-	public static final String commandName = "compress";
-
-	public static final String commandDescription = "compress ARC/WARC or plain file(s)";
 
 	public CompressTask() {
 	}
 
-	@Override
-	public void show_help() {
-		System.out.println("jwattools compress [-123456789] [--fast] [--slow] [-w THREADS] <filepattern>...");
-		System.out.println("");
-		System.out.println("compress one or more ARC/WARC/GZip files");
-		System.out.println("");
-		System.out.println("\tNormal files are compressed as a single GZip file.");
-		System.out.println("\tARC/WARC files are compressed on a record level.");
-		System.out.println("");
-		System.out.println("options:");
-		System.out.println("");
-		System.out.println(" -1, --fast    fast compression time, lowest compression rate");
-		System.out.println(" -9, --slow    slow compression time, highest compression rate");
-		System.out.println(" #    --dryrun  remove output file leaving the orignal in place");
-		System.out.println(" #    --verify  decompress output file and compare against input file");
-		System.out.println(" #    --remove  remove input file after compression (only on success)");
-		System.out.println(" -w<x>         set the amount of worker thread(s) (defaults to 1)");
-	}
-
-	CompressionOptions options;
+	private CompressOptions options;
 
 	/** Valid results output stream. */
 	private SynchronizedOutput validOutput;
@@ -55,79 +30,13 @@ public class CompressTask extends ProcessTask {
 	/** Exception output stream. */
 	private SynchronizedOutput exceptionsOutput;
 
-	@Override
-	public void command(CommandLine.Arguments arguments) {
-		CommandLine.Argument argument;
-
-		// Thread workers.
-		argument = arguments.idMap.get( JWATTools.A_WORKERS );
-		if ( argument != null && argument.value != null ) {
-			try {
-				threads = Integer.parseInt(argument.value);
-			} catch (NumberFormatException e) {
-				System.out.println( "Invalid number of threads requested: " + argument.value );
-				System.exit( 1 );
-			}
-		}
-		if ( threads < 1 ) {
-			System.out.println( "Invalid number of threads requested: " + threads );
-			System.exit( 1 );
-		}
-
-		options = new CompressionOptions();
-
-		// FIXME
-		options.compressionLevel = 9;
-		options.bBatch = false;
-		options.bDryrun = true;
-		options.bVerify = true;
-		options.bRemove = false;
-		options.dstPath = new File("k:\\tmp_bitarchive_1\\");
-		options.lstFile = new File("k:\\tmp_bitarchive_1\\files.lst");
-
-		// Compression level.
-		argument = arguments.idMap.get( JWATTools.A_COMPRESS );
-		if (argument != null) {
-			options.compressionLevel = argument.argDef.subId;
-		}
-		System.out.println( "Compression level: " + options.compressionLevel );
-
-		argument = arguments.idMap.get( JWATTools.A_BATCHMODE );
-		if (argument != null) {
-			options.bBatch = true;
-		}
-		System.out.println( "Batch mode: " + options.bBatch );
-
-		argument = arguments.idMap.get( JWATTools.A_DRYRUN );
-		if (argument != null) {
-			options.bDryrun = true;
-		}
-		System.out.println( "Dry run: " + options.bDryrun );
-
-		argument = arguments.idMap.get( JWATTools.A_VERIFY );
-		if (argument != null) {
-			options.bVerify = true;
-		}
-		System.out.println( "Verify output: " + options.bVerify );
-
-		argument = arguments.idMap.get( JWATTools.A_REMOVE );
-		if (argument != null) {
-			options.bRemove = true;
-		}
-		System.out.println( "Remove input: " + options.bRemove );
-
-		System.out.println( "Dest path: " + options.dstPath );
-		System.out.println( "List file: " + options.lstFile );
-
-		// Files.
-		argument = arguments.idMap.get( JWATTools.A_FILES );
-		List<String> filesList = argument.values;
+	public void runtask(CompressOptions options) {
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle( filesList, this );
+		threadpool_feeder_lifecycle( options.filesList, this, options.threads );
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -190,7 +99,7 @@ public class CompressTask extends ProcessTask {
 		@Override
 		public void run() {
 			CompressFile compressFile = new CompressFile();
-			CompressionResult compressionResult = compressFile.compressFile(srcFile, options);
+			CompressiResult compressionResult = compressFile.compressFile(srcFile, options);
 			results.add(compressionResult);
 			resultsReady.release();
 		}
@@ -200,7 +109,7 @@ public class CompressTask extends ProcessTask {
 	private Semaphore resultsReady = new Semaphore(0);
 
 	/** Completed Compressed results list. */
-	private ConcurrentLinkedQueue<CompressionResult> results = new ConcurrentLinkedQueue<CompressionResult>();
+	private ConcurrentLinkedQueue<CompressiResult> results = new ConcurrentLinkedQueue<CompressiResult>();
 
 	private long uncompressed = 0;
 
@@ -217,7 +126,7 @@ public class CompressTask extends ProcessTask {
 		@Override
 		public void run() {
 			StringBuilder sb = new StringBuilder();
-			CompressionResult result;
+			CompressiResult result;
 			boolean bLoop = true;
 			PrintWriter lstWriter = null;
 			try {

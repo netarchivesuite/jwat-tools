@@ -10,7 +10,6 @@ import org.jwat.archive.FileIdent;
 import org.jwat.archive.ManagedPayload;
 import org.jwat.common.ContentType;
 import org.jwat.common.HttpHeader;
-import org.jwat.common.UriProfile;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.tools.core.ManagedPayloadContentType;
 import org.jwat.tools.core.ManagedPayloadContentTypeIdentifier;
@@ -22,13 +21,7 @@ public class ParseContainerMD implements ArchiveParserCallback {
 
 	private static final String EMPTY_MIME_TYPE = "application/x-empty";
 
-	public boolean bQuiet = false;
-
-	public UriProfile uriProfile;
-
-	public int recordHeaderMaxSize = 8192;
-
-	public int payloadHeaderMaxSize = 32768;
+	private ContainerMDOptions options;
 
 	protected ManagedPayload managedPayload;
 
@@ -36,18 +29,20 @@ public class ParseContainerMD implements ArchiveParserCallback {
 
 	protected ContainerMDResult result;
 
-	public ContainerMDResult processFile(File file) {
-		if (!bQuiet) System.out.println("processFile " + file.getAbsolutePath());
+	public ContainerMDResult processFile(File file, ContainerMDOptions options) {
+		this.options = options;
+
+		if (!options.bQuiet) System.out.println("processFile " + file.getAbsolutePath());
 
 		result = new ContainerMDResult();
 		result.file = file.getPath();
 
 		ArchiveParser archiveParser = new ArchiveParser();
-		archiveParser.uriProfile = uriProfile;
+		archiveParser.uriProfile = options.uriProfile;
 		archiveParser.bBlockDigestEnabled = false;
 		archiveParser.bPayloadDigestEnabled = false;
-		archiveParser.recordHeaderMaxSize = recordHeaderMaxSize;
-		archiveParser.payloadHeaderMaxSize = payloadHeaderMaxSize;
+		archiveParser.recordHeaderMaxSize = options.recordHeaderMaxSize;
+		archiveParser.payloadHeaderMaxSize = options.payloadHeaderMaxSize;
 
 		managedPayload = ManagedPayload.checkout();
 
@@ -125,7 +120,7 @@ public class ParseContainerMD implements ArchiveParserCallback {
 	public void apcArcRecordStart(ArcRecordBase arcRecord, long startOffset,
 			boolean compressed) throws IOException {
 		++result.arcRecords;
-		if (!bQuiet && (result.arcRecords % 10 == 0)) {
+		if (!options.bQuiet && (result.arcRecords % 10 == 0)) {
 			System.out.println("apcArcRecordStart " + result.arcRecords + " - "
 					+ arcRecord.getStartOffset() + " (0x"
 					+ (Long.toHexString(arcRecord.getStartOffset())) + ") " 
@@ -224,7 +219,7 @@ public class ParseContainerMD implements ArchiveParserCallback {
 	public void apcWarcRecordStart(WarcRecord warcRecord, long startOffset,
 			boolean compressed) throws IOException {
 		++result.warcRecords;
-		if (!bQuiet && (result.warcRecords % 10 == 0)) {
+		if (!options.bQuiet && (result.warcRecords % 10 == 0)) {
 			System.out.println("apcWarcRecordStart " + result.warcRecords + " - "
 					+ warcRecord.getStartOffset() + " (0x"
 					+ (Long.toHexString(warcRecord.getStartOffset())) + ")");
@@ -285,7 +280,7 @@ public class ParseContainerMD implements ArchiveParserCallback {
 		}
 		
 		if (EMPTY_MIME_TYPE.equals(recordContentTypeStr) && warcRecord.hasPayload()) {
-			if (!bQuiet) System.err.println("BAD IDENTIFICATION for " + recordUrl + " l=" + recordLength);
+			if (!options.bQuiet) System.err.println("BAD IDENTIFICATION for " + recordUrl + " l=" + recordLength);
 			recordContentTypeStr = "text/plain";
 		}
 		

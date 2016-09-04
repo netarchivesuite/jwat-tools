@@ -1,82 +1,35 @@
 package org.jwat.tools.tasks.delete;
 
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.jwat.tools.JWATTools;
-import org.jwat.tools.core.CommandLine;
-import org.jwat.tools.core.SynchronizedOutput;
 import org.jwat.tools.tasks.ProcessTask;
+
+import com.antiaction.common.cli.SynchronizedOutput;
 
 public class DeleteTask extends ProcessTask {
 
-	public static final String commandName = "delete";
-
-	public static final String commandDescription = "delete files";
-
-	public DeleteTask() {
-	}
-
-	@Override
-	public void show_help() {
-		System.out.println("jwattools delete [-t] [-o OUTPUT_FILE] <filepattern>...");
-		System.out.println("");
-		System.out.println("delete one or more files");
-		System.out.println("");
-		System.out.println("\tDelete one or more files.");
-		System.out.println("\tLinux has this nasty habit of making it hard to delete many files at the same time.");
-		System.out.println("");
-		System.out.println("options:");
-		System.out.println("");
-		System.out.println(" -o<file>  output filenames deleted");
-		System.out.println(" -t        test run, do not delete files");
-	}
+	private DeleteOptions options;
 
 	/** Output stream. */
 	private SynchronizedOutput deletedFilesOutput;
 
-	private boolean bTestRun;
+	public DeleteTask() {
+	}
 
-	@Override
-	public void command(CommandLine.Arguments arguments) {
-		CommandLine.Argument argument;
-
-		// Output file.
-		File outputFile = new File("deleted_files.out");
-		argument = arguments.idMap.get( JWATTools.A_OUTPUT );
-		if ( argument != null && argument.value != null ) {
-			outputFile = new File(argument.value);
-			if (outputFile.isDirectory()) {
-				System.out.println("Can not output to a directory!");
-				System.exit(1);
-			} else if (outputFile.getParentFile() != null && !outputFile.getParentFile().exists()) {
-				if (!outputFile.getParentFile().mkdirs()) {
-					System.out.println("Could not create parent directories!");
-					System.exit(1);
-				}
-			}
-		}
-
-		// Test run.
-		if ( arguments.idMap.containsKey( JWATTools.A_TESTRUN ) ) {
-			bTestRun = true;
-		}
-		System.out.println("Test run: " + bTestRun);
-
-		// Files.
-		argument = arguments.idMap.get( JWATTools.A_FILES );
-		List<String> filesList = argument.values;
+	public void runtask(DeleteOptions options) {
+		this.options = options;
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		deletedFilesOutput = new SynchronizedOutput(outputFile);
+		deletedFilesOutput = new SynchronizedOutput(options.outputFile);
 
-		threadpool_feeder_lifecycle( filesList, this );
+		// FIXME Use other feeder.
+		threadpool_feeder_lifecycle( options.filesList, this, 1 );
 
 		deletedFilesOutput.out.flush();
 		deletedFilesOutput.out.close();
@@ -111,7 +64,7 @@ public class DeleteTask extends ProcessTask {
 		}
 		@Override
 		public void run() {
-			if (!bTestRun) {
+			if (!options.bTestRun) {
 				if (!srcFile.delete()) {
 					System.out.println("Could not delete file - " + srcFile.getPath());
 				}

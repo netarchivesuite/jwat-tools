@@ -28,6 +28,7 @@ import org.jwat.warc.WarcRecord;
 import org.jwat.warc.WarcWriter;
 import org.jwat.warc.WarcWriterFactory;
 
+// TODO Check status and complete.
 public class Arc2Warc {
 
 	public File srcFile;
@@ -40,7 +41,7 @@ public class Arc2Warc {
 	 * 
 	 * @param srcFile a valid arc(.gz) file
 	 */
-	public void arc2warc(File srcFile, File destDir, String prefix, boolean bOverwrite) {
+	public void arc2warc(File srcFile, Arc2WarcOptions options) {
 		repairPayload = RepairPayload.getRepairPayload();
 		try {
 			String srcFname = srcFile.getName();
@@ -85,7 +86,7 @@ public class Arc2Warc {
 				// TODO select converted compression on/off/same.
 				bDestCompressed = false;
 
-				String dstFname = prefix + srcFname;
+				String dstFname = options.prefix + srcFname;
 				if (dstFname.toLowerCase().endsWith(".gz")) {
 					dstFname = dstFname.substring( 0, dstFname.length() - ".gz".length() );
 				}
@@ -98,14 +99,14 @@ public class Arc2Warc {
 				}
 				String tmpFname = dstFname + ".open";
 
-				File tmpDstFile = new File(destDir, tmpFname);
-				File dstFile = new File(destDir, dstFname);
+				File tmpDstFile = new File(options.destDir, tmpFname);
+				File dstFile = new File(options.destDir, dstFname);
 
 				if (dstFile.exists()) {
 					if (!dstFile.isFile()) {
 						throw new IOException("Destination file is a directory: '" + dstFile.getPath() + "'");
 					}
-					if (bOverwrite && !dstFile.delete()) {
+					if (options.bOverwrite && !dstFile.delete()) {
 						throw new IOException("Could not delete file: '" + dstFile.getPath() + "'");
 					}
 				}

@@ -16,11 +16,11 @@ import org.jwat.warc.WarcRecord;
 
 public class ExtractFile implements ArchiveParserCallback {
 
+	protected ExtractOptions options;
+
 	protected File srcFile;
 
 	protected String fileName;
-
-	protected String targetUri;
 
 	protected int recordNr = 1;
 
@@ -31,9 +31,8 @@ public class ExtractFile implements ArchiveParserCallback {
 	public ExtractFile() {
 	}
 
-	public void processFile(File file, String targetUri) {
+	public void processFile(File file, ExtractOptions options) {
 		fileName = file.getName();
-		this.targetUri = targetUri;
 		ArchiveParser archiveParser = new ArchiveParser();
 		archiveParser.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
 		archiveParser.bBlockDigestEnabled = true;
@@ -51,7 +50,7 @@ public class ExtractFile implements ArchiveParserCallback {
 
 	@Override
 	public void apcArcRecordStart(ArcRecordBase arcRecord, long startOffset, boolean compressed) throws IOException {
-		if (targetUri == null || targetUri.equalsIgnoreCase(arcRecord.header.urlStr)) {
+		if (options.targetUri == null || options.targetUri.equalsIgnoreCase(arcRecord.header.urlStr)) {
 			Payload payload = arcRecord.getPayload();
 			HttpHeader httpHeader = null;
 			InputStream payloadStream = null;
@@ -86,7 +85,7 @@ public class ExtractFile implements ArchiveParserCallback {
 
 	@Override
 	public void apcWarcRecordStart(WarcRecord warcRecord, long startOffset, boolean compressed) throws IOException {
-		if (targetUri == null || (warcRecord.header.warcTargetUriStr != null && targetUri.equalsIgnoreCase(warcRecord.header.warcTargetUriStr))) {
+		if (options.targetUri == null || (warcRecord.header.warcTargetUriStr != null && options.targetUri.equalsIgnoreCase(warcRecord.header.warcTargetUriStr))) {
 			Payload payload = warcRecord.getPayload();
 			HttpHeader httpHeader = null;
 			InputStream payloadStream = null;

@@ -2,17 +2,18 @@ package org.jwat.tools;
 
 import java.util.List;
 
-import org.jwat.tools.core.CommandLine.Argument;
-import org.jwat.tools.core.CommandLine.Arguments;
-import org.jwat.tools.tasks.Task;
+import org.jwat.tools.tasks.TaskCLI;
 
-public class HelpTask extends Task {
+import com.antiaction.common.cli.Argument;
+import com.antiaction.common.cli.CommandLine;
+
+public class HelpTaskCLI extends TaskCLI {
 
 	public static final String commandName = "help";
 
 	public static final String commandDescription = "display help information";
 
-	public HelpTask() {
+	public HelpTaskCLI() {
 	}
 
 	@Override
@@ -26,8 +27,8 @@ public class HelpTask extends Task {
 	}
 
 	@Override
-	public void command(Arguments arguments) {
-		Argument argument = arguments.idMap.get( JWATTools.A_FILES );
+	public void runtask(CommandLine cmdLine) {
+		Argument argument = cmdLine.idMap.get( JWATTools.A_FILES );
 		List<String> files = null;
 		String command = null;
 		if (argument != null) {
@@ -37,11 +38,11 @@ public class HelpTask extends Task {
 			command = files.get(0);
 		}
 		if (command != null) {
-			Class<? extends Task> clazz = JWATTools.commandMap.get(command);
+			Class<? extends TaskCLI> clazz = JWATTools.commandMap.get(command);
 			if (clazz != null) {
 				try {
-					Task task = clazz.newInstance();
-					task.show_help();
+					TaskCLI taskcli = clazz.newInstance();
+					taskcli.show_help();
 				}
 				catch (InstantiationException e) {
 					e.printStackTrace();

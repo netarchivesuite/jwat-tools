@@ -2,15 +2,10 @@ package org.jwat.tools.tasks.test;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -23,38 +18,15 @@ import org.jwat.archive.Cloner;
 import org.jwat.archive.FileIdent;
 import org.jwat.common.Diagnosis;
 import org.jwat.common.DiagnosisType;
-import org.jwat.common.UriProfile;
-import org.jwat.tools.JWATTools;
-import org.jwat.tools.core.CommandLine;
-import org.jwat.tools.core.SynchronizedOutput;
-import org.jwat.tools.core.ValidatorPlugin;
 import org.jwat.tools.tasks.ProcessTask;
-import org.jwat.tools.validators.XmlValidatorPlugin;
+
+import com.antiaction.common.cli.SynchronizedOutput;
 
 public class TestTask extends ProcessTask {
 
-	public static final String commandName = "test";
-
-	public static final String commandDescription = "test validity of ARC/WARC/GZip file(s)";
+	private TestOptions options;
 
 	public TestTask() {
-	}
-
-	@Override
-	public void show_help() {
-		System.out.println("jwattools test [-beilx] [-w THREADS] [-a<yyyyMMddHHmmss>] <filepattern>...");
-		System.out.println("");
-		System.out.println("test one or more ARC/WARC/GZip files");
-		System.out.println("");
-		System.out.println("options:");
-		System.out.println("");
-		System.out.println(" -a<yyyyMMddHHmmss>  only test files with last-modified after <yyyyMMddHHmmss>");
-		System.out.println(" -b                  tag/rename files with errors/warnings (*.bad)");
-		System.out.println(" -e                  show errors");
-		System.out.println(" -i --ignore-digest  skip digest calculation and validation");
-		System.out.println(" -l                  relaxed URL URI validation");
-		System.out.println(" -x                  to validate text/xml payload (eg. mets)");
-		System.out.println(" -w<x>               set the amount of worker thread(s) (defaults to 1)");
 	}
 
 	/*
@@ -75,18 +47,6 @@ public class TestTask extends ProcessTask {
 	 * Settings.
 	 */
 
-	private boolean bShowErrors = false;
-
-	private boolean bValidateDigest = true;
-
-	private Long after = 0L;
-
-	private boolean bBad = false;
-
-	private List<ValidatorPlugin> validatorPlugins = new LinkedList<ValidatorPlugin>();
-
-	private UriProfile uriProfile = UriProfile.RFC3986;
-
 	private int recordHeaderMaxSize = 1024 * 1024;
     private int payloadHeaderMaxSize = 1024 * 1024;
 
@@ -105,73 +65,11 @@ public class TestTask extends ProcessTask {
 	/** Exception output stream. */
 	private SynchronizedOutput exceptionsOutput;
 
-	@Override
-	public void command(CommandLine.Arguments arguments) {
-		CommandLine.Argument argument;
-
-		// Thread workers.
-		argument = arguments.idMap.get( JWATTools.A_WORKERS );
-		if ( argument != null && argument.value != null ) {
-			try {
-				threads = Integer.parseInt(argument.value);
-			} catch (NumberFormatException e) {
-				System.out.println( "Invalid number of threads requested: " + argument.value );
-				System.exit( 1 );
-			}
-		}
-		if ( threads < 1 ) {
-			System.out.println( "Invalid number of threads requested: " + threads );
-			System.exit( 1 );
-		}
-
-		// Show errors.
-		if ( arguments.idMap.containsKey( JWATTools.A_SHOW_ERRORS ) ) {
-			bShowErrors = true;
-		}
-		System.out.println("Showing errors: " + bShowErrors);
-
-		// Ignore digest.
-		if ( arguments.idMap.containsKey( JWATTools.A_IGNORE_DIGEST ) ) {
-			bValidateDigest = false;
-		}
-		System.out.println("Validate digest: " + bValidateDigest);
-
-		// Relaxed URI validation.
-		if ( arguments.idMap.containsKey( JWATTools.A_LAX ) ) {
-			uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
-			System.out.println("Using relaxed URI validation for ARC URL and WARC Target-URI.");
-		}
-
-		// XML validation.
-		if ( arguments.idMap.containsKey( JWATTools.A_XML ) ) {
-			validatorPlugins.add(new XmlValidatorPlugin());
-		}
-
-		// Tag.
-		if ( arguments.idMap.containsKey( JWATTools.A_BAD ) ) {
-			bBad = true;
-			System.out.println("Tagging enabled for invalid files");
-		}
-
-		// After.
-		argument = arguments.idMap.get( JWATTools.A_AFTER );
-		if ( argument != null && argument.value != null ) {
-			try {
-				DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-		        dateFormat.setLenient(false);
-		        Date afterDate = dateFormat.parse(argument.value);
-		        after = afterDate.getTime();
-			} catch (ParseException e) {
-				System.out.println("Invalid date format - " + argument.value);
-			}
-		}
+	public void runtask(TestOptions options) {
+		this.options = options;
 
 		// TODO optional
 		//cloner = Cloner.getCloner();
-
-        // Files.
-		argument = arguments.idMap.get( JWATTools.A_FILES );
-		List<String> filesList = argument.values;
 
 		validOutput = new SynchronizedOutput("v.out");
 		invalidOutput = new SynchronizedOutput("i.out");
@@ -181,7 +79,7 @@ public class TestTask extends ProcessTask {
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle(filesList, this);
+		threadpool_feeder_lifecycle(options.filesList, this, options.threads);
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -307,7 +205,7 @@ public class TestTask extends ProcessTask {
 
 	@Override
 	public synchronized void process(File srcFile) {
-		if (srcFile.lastModified() > after) {
+		if (srcFile.lastModified() > options.after) {
 			FileIdent fileIdent = FileIdent.ident(srcFile);
 			if (srcFile.length() > 0) {
 				// debug
@@ -352,14 +250,11 @@ public class TestTask extends ProcessTask {
 		@Override
 		public void run() {
 			TestFile2 testFile = new TestFile2();
-			testFile.bShowErrors = bShowErrors;
-			testFile.bValidateDigest = bValidateDigest;
-			testFile.uriProfile = uriProfile;
+			// FIXME
 		    testFile.recordHeaderMaxSize = recordHeaderMaxSize;
 		    testFile.payloadHeaderMaxSize = payloadHeaderMaxSize;
-			testFile.validatorPlugins = validatorPlugins;
 			testFile.callback = null;
-			TestFileResult result = testFile.processFile(srcFile, cloner);
+			TestFileResult result = testFile.processFile(srcFile, options, cloner);
 			result.srcFile = srcFile;
 			results.add(result);
 			resultsReady.release();
@@ -408,8 +303,8 @@ public class TestTask extends ProcessTask {
 						invalidOutput.acquire();
 						exceptionsOutput.acquire();
 						try {
-							result.printResult(bShowErrors, validOutput.out, invalidOutput.out, exceptionsOutput.out);
-							if (bBad) {
+							result.printResult(options.bShowErrors, validOutput.out, invalidOutput.out, exceptionsOutput.out);
+							if (options.bBad) {
 								if (result.rdList.size() > 0 || result.throwableList.size() > 0) {
 									if (!result.srcFile.getName().endsWith(".bad")) {
 										newFile = new File(result.srcFile.getParent(), result.srcFile.getName() + ".bad");

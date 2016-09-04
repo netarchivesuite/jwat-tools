@@ -10,86 +10,28 @@ import org.jwat.arc.ArcDateParser;
 import org.jwat.archive.FileIdent;
 import org.jwat.common.Uri;
 import org.jwat.common.UriProfile;
-import org.jwat.tools.JWATTools;
-import org.jwat.tools.core.CommandLine;
-import org.jwat.tools.core.SynchronizedOutput;
 import org.jwat.tools.tasks.ProcessTask;
 
+import com.antiaction.common.cli.SynchronizedOutput;
+
 public class CDXTask extends ProcessTask {
-
-	public static final String commandName = "cdx";
-
-	public static final String commandDescription = "create a CDX index for use in wayback (unsorted)";
-
-	public CDXTask() {
-	}
-
-	@Override
-	public void show_help() {
-		System.out.println("jwattools cdx [-o OUTPUT_FILE] [-w THREADS] <filepattern>...");
-		System.out.println("");
-		System.out.println("cdx one or more ARC/WARC files");
-		System.out.println("");
-		System.out.println("\tRead through ARC/WARC file(s) and create a CDX file.");
-		System.out.println("\tCDX files are primarily used with Wayback.");
-		System.out.println("");
-		System.out.println("options:");
-		System.out.println("");
-		System.out.println(" -o<file>  output cdx filename (unsorted)");
-		System.out.println(" -w<x>     set the amount of worker thread(s) (defaults to 1)");
-	}
 
 	/** Valid results output stream. */
 	private SynchronizedOutput cdxOutput;
 
-	@Override
-	public void command(CommandLine.Arguments arguments) {
-		CommandLine.Argument argument;
+	public CDXTask() {
+	}
 
-		// Thread workers.
-		argument = arguments.idMap.get( JWATTools.A_WORKERS );
-		if ( argument != null && argument.value != null ) {
-			try {
-				threads = Integer.parseInt(argument.value);
-			} catch (NumberFormatException e) {
-				System.out.println( "Invalid number of threads requested: " + argument.value );
-				System.exit( 1 );
-			}
-		}
-		if ( threads < 1 ) {
-			System.out.println( "Invalid number of threads requested: " + threads );
-			System.exit( 1 );
-		}
-
-		// Output file.
-		File outputFile = new File("cdx.unsorted.out");
-		argument = arguments.idMap.get( JWATTools.A_OUTPUT );
-		if ( argument != null && argument.value != null ) {
-			outputFile = new File(argument.value);
-			if (outputFile.isDirectory()) {
-				System.out.println("Can not output to a directory!");
-				System.exit(1);
-			} else if (outputFile.getParentFile() != null && !outputFile.getParentFile().exists()) {
-				if (!outputFile.getParentFile().mkdirs()) {
-					System.out.println("Could not create parent directories!");
-					System.exit(1);
-				}
-			}
-		}
-
-		// Files.
-		argument = arguments.idMap.get( JWATTools.A_FILES );
-		List<String> filesList = argument.values;
-
-		System.out.println("Using output: " + outputFile.getPath());
-		cdxOutput = new SynchronizedOutput(outputFile);
+	public void runtask(CDXOptions options) {
+		System.out.println("Using output: " + options.outputFile.getPath());
+		cdxOutput = new SynchronizedOutput(options.outputFile);
 		//cdxOutput.out.println("CDX b e a m s c v n g");
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle(filesList, this);
+		threadpool_feeder_lifecycle(options.filesList, this, options.threads);
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -152,6 +94,7 @@ public class CDXTask extends ProcessTask {
 		public void run() {
 			CDXFile cdxFile = new CDXFile();
 			cdxFile.processFile(srcFile);
+			// FIXME
 			cdxFile.srcFile = srcFile;
 			results.add(cdxFile);
 			resultsReady.release();

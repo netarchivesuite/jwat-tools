@@ -8,21 +8,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jwat.tools.core.CommandLine;
-import org.jwat.tools.core.CommandLine.Argument;
+import org.jwat.tools.tasks.TaskCLI;
 import org.jwat.tools.tasks.Task;
-import org.jwat.tools.tasks.UnpackTask;
-import org.jwat.tools.tasks.arc2warc.Arc2WarcTask;
-import org.jwat.tools.tasks.cdx.CDXTask;
-import org.jwat.tools.tasks.changed.ChangedTask;
-import org.jwat.tools.tasks.compress.CompressTask;
-import org.jwat.tools.tasks.containermd.ContainerMDTask;
-import org.jwat.tools.tasks.decompress.DecompressTask;
-import org.jwat.tools.tasks.delete.DeleteTask;
-import org.jwat.tools.tasks.extract.ExtractTask;
-import org.jwat.tools.tasks.interval.IntervalTask;
-import org.jwat.tools.tasks.pathindex.PathIndexTask;
-import org.jwat.tools.tasks.test.TestTask;
+import org.jwat.tools.tasks.UnpackTaskCLI;
+import org.jwat.tools.tasks.arc2warc.Arc2WarcTaskCLI;
+import org.jwat.tools.tasks.cdx.CDXTaskCLI;
+import org.jwat.tools.tasks.changed.ChangedTaskCLI;
+import org.jwat.tools.tasks.compress.CompressTaskCLI;
+import org.jwat.tools.tasks.containermd.ContainerMDTaskCLI;
+import org.jwat.tools.tasks.decompress.DecompressTaskCLI;
+import org.jwat.tools.tasks.delete.DeleteTaskCLI;
+import org.jwat.tools.tasks.extract.ExtractTaskCLI;
+import org.jwat.tools.tasks.interval.IntervalTaskCLI;
+import org.jwat.tools.tasks.pathindex.PathIndexTaskCLI;
+import org.jwat.tools.tasks.test.TestTaskCLI;
+
+import com.antiaction.common.cli.Argument;
+import com.antiaction.common.cli.ArgumentParser;
+import com.antiaction.common.cli.CommandLine;
+import com.antiaction.common.cli.Options;
+import com.antiaction.common.cli.ParseException;
 
 public class JWATTools {
 
@@ -58,15 +63,15 @@ public class JWATTools {
 		Class<? extends Task> task;
 	}
 
-	public static List<Class<? extends Task>> commandList = new ArrayList<Class<? extends Task>>();
+	public static List<Class<? extends TaskCLI>> commandList = new ArrayList<Class<? extends TaskCLI>>();
 
-	public static Map<String, Class<? extends Task>> commandMap = new HashMap<String, Class<? extends Task>>();
+	public static Map<String, Class<? extends TaskCLI>> commandMap = new HashMap<String, Class<? extends TaskCLI>>();
 
-	public static CommandLine cmdLine = new CommandLine();
+	public static Options options = new Options();
 
 	public static int maxCommandNameLength = 0;
 
-	public static void addCommands(Class<? extends Task>[] tasks) {
+	public static void addCommands(Class<? extends TaskCLI>[] tasks) {
 		try {
 			for (int i=0; i<tasks.length; ++i) {
 				Field commandNameField = tasks[i].getField("commandName");
@@ -92,63 +97,61 @@ public class JWATTools {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public void configure_cli() {
 		Class<?>[] tasks = new Class<?>[] {
-				HelpTask.class,
-				Arc2WarcTask.class,
-				CDXTask.class,
-				ChangedTask.class,
-				CompressTask.class,
-				ContainerMDTask.class,
-				DecompressTask.class,
-				DeleteTask.class,
-				ExtractTask.class,
-				IntervalTask.class,
-				PathIndexTask.class,
-				TestTask.class,
-				UnpackTask.class,
+				HelpTaskCLI.class,
+				Arc2WarcTaskCLI.class,
+				CDXTaskCLI.class,
+				ChangedTaskCLI.class,
+				CompressTaskCLI.class,
+				ContainerMDTaskCLI.class,
+				DecompressTaskCLI.class,
+				DeleteTaskCLI.class,
+				ExtractTaskCLI.class,
+				IntervalTaskCLI.class,
+				PathIndexTaskCLI.class,
+				TestTaskCLI.class,
+				UnpackTaskCLI.class,
 		};
-		addCommands((Class<? extends Task>[])tasks);
+		addCommands((Class<? extends TaskCLI>[])tasks);
 
-		cmdLine.addListArgument( "command", A_COMMAND, 1, 1);
-		cmdLine.addOption("-1", A_COMPRESS, 1);
-		cmdLine.addOption("-2", A_COMPRESS, 2);
-		cmdLine.addOption("-3", A_COMPRESS, 3);
-		cmdLine.addOption("-4", A_COMPRESS, 4);
-		cmdLine.addOption("-5", A_COMPRESS, 5);
-		cmdLine.addOption("-6", A_COMPRESS, 6);
-		cmdLine.addOption("-7", A_COMPRESS, 7);
-		cmdLine.addOption("-8", A_COMPRESS, 8);
-		cmdLine.addOption("-9", A_COMPRESS, 9);
-		cmdLine.addOption("--fast", A_COMPRESS, 1);
-		cmdLine.addOption("--best", A_COMPRESS, 9);
-		cmdLine.addOption("-e", A_SHOW_ERRORS);
-		cmdLine.addOption("-l", A_LAX);
-		cmdLine.addOption("-r", A_RECURSIVE);
-		cmdLine.addOption("-w=", A_WORKERS);
-		cmdLine.addOption("-x", A_XML);
-		cmdLine.addOption("-o=", A_OUTPUT);
-		cmdLine.addOption("-d=", A_DEST);
-		cmdLine.addOption("--overwrite", A_OVERWRITE);
-		cmdLine.addOption("--prefix=", A_PREFIX);
-		cmdLine.addOption("-i", A_IGNORE_DIGEST);
-		cmdLine.addOption("--ignore-digest", A_IGNORE_DIGEST);
-		cmdLine.addOption("-b", A_BAD);
-		cmdLine.addOption("-a=", A_AFTER);
-		cmdLine.addOption("-u=", A_TARGET_URI);
-		cmdLine.addOption("-t", A_TESTRUN);
-		cmdLine.addOption("-q", A_QUIET);
-		cmdLine.addOption("--batch", A_BATCHMODE);
-		cmdLine.addOption("--remove", A_REMOVE);
-		cmdLine.addOption("--verify", A_VERIFY);
-		cmdLine.addOption("--dryrun", A_DRYRUN);
-		cmdLine.addListArgument("files", A_FILES, 1, Integer.MAX_VALUE);
+		options.addOption("-1", "--fast", A_COMPRESS, 1, null);
+		options.addOption("-2", null, A_COMPRESS, 2, null);
+		options.addOption("-3", null, A_COMPRESS, 3, null);
+		options.addOption("-4", null, A_COMPRESS, 4, null);
+		options.addOption("-5", null, A_COMPRESS, 5, null);
+		options.addOption("-6", null, A_COMPRESS, 6, null);
+		options.addOption("-7", null, A_COMPRESS, 7, null);
+		options.addOption("-8", null, A_COMPRESS, 8, null);
+		options.addOption("-9", "--best", A_COMPRESS, 9, null);
+		options.addOption("-e", null, A_SHOW_ERRORS, 0, null);
+		options.addOption("-l", null, A_LAX, 0, null);
+		options.addOption("-r", null, A_RECURSIVE, 0, null);
+		options.addOption("-w", "--workers", A_WORKERS, 0, null).setValueRequired();
+		options.addOption("-x", null, A_XML, 0, null);
+		options.addOption("-o", null, A_OUTPUT, 0, null).setValueRequired();
+		options.addOption("-d", null, A_DEST, 0, null).setValueRequired();
+		options.addOption(null, "--overwrite", A_OVERWRITE, 0, null);
+		options.addOption(null, "--prefix=", A_PREFIX, 0, null);
+		options.addOption("-i", "--ignore-digest", A_IGNORE_DIGEST, 0, null);
+		options.addOption("-b", null, A_BAD, 0, null);
+		options.addOption("-a", null, A_AFTER, 0, null).setValueRequired();
+		options.addOption("-u", null, A_TARGET_URI, 0, null).setValueRequired();
+		options.addOption("-t", null, A_TESTRUN, 0, null);
+		options.addOption("-q", null, A_QUIET, 0, null);
+		options.addOption(null, "--batch", A_BATCHMODE, 0, null);
+		options.addOption(null, "--remove", A_REMOVE, 0, null);
+		options.addOption(null, "--verify", A_VERIFY, 0, null);
+		options.addOption(null, "--dryrun", A_DRYRUN, 0, null);
+		options.addNamedArgument( "command", A_COMMAND, 1, 1);
+		options.addNamedArgument("files", A_FILES, 1, Integer.MAX_VALUE);
 	}
 
 	public void show_commands() {
-		Collections.sort(commandList, new Comparator<Class<? extends Task>>() {
+		Collections.sort(commandList, new Comparator<Class<? extends TaskCLI>>() {
 			@Override
-			public int compare(Class<? extends Task> t1, Class<? extends Task> t2) {
+			public int compare(Class<? extends TaskCLI> t1, Class<? extends TaskCLI> t2) {
 				Field commandNameField;
 				try {
 					commandNameField = t1.getField("commandName");
@@ -211,9 +214,9 @@ public class JWATTools {
 
 	public void Main(String[] args) {
 		configure_cli();
-		CommandLine.Arguments arguments = null;
+		CommandLine cmdLine = null;
 		try {
-			arguments = cmdLine.parse( args );
+			cmdLine = ArgumentParser.parse(options, args);
 			/*
 			for ( int i=0; i<arguments.switchArgsList.size(); ++i) {
 				argument = arguments.switchArgsList.get( i );
@@ -221,22 +224,22 @@ public class JWATTools {
 			}
 			*/
 		}
-		catch (CommandLine.ParseException e) {
+		catch (ParseException e) {
 			System.out.println( getClass().getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}
-		if ( arguments == null ) {
+		if ( cmdLine == null ) {
 			show_help();
 		}
 		else {
-			Argument argument = arguments.idMap.get( JWATTools.A_COMMAND );
+			Argument argument = cmdLine.idMap.get( JWATTools.A_COMMAND );
 			String commandStr = argument.value.toLowerCase();
 
-			Class<? extends Task> clazz = commandMap.get(commandStr);
+			Class<? extends TaskCLI> clazz = commandMap.get(commandStr);
 			if (clazz != null) {
 				try {
-					Task task = clazz.newInstance();
-					task.command(arguments);
+					TaskCLI taskcli = clazz.newInstance();
+					taskcli.runtask(cmdLine);
 				}
 				catch (InstantiationException e) {
 					e.printStackTrace();

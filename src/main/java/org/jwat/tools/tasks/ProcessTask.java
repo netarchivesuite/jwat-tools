@@ -9,13 +9,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.jwat.tools.core.ProgressableOutput;
-import org.jwat.tools.core.WildcardMatcher;
+import com.antiaction.common.cli.ProgressableOutput;
+import com.antiaction.common.cli.WildcardMatcher;
 
 public abstract class ProcessTask extends Task {
-
-	/** Threads to use in thread pool. */
-	public int threads = 1;
 
 	/** ThreadPool executor. */
 	public ExecutorService executor; 
@@ -46,7 +43,7 @@ public abstract class ProcessTask extends Task {
 	futures.add(future);
 	 */
 
-	public void threadpool_feeder_lifecycle(List<String> filesList, ProcessTask task) {
+	public void threadpool_feeder_lifecycle(List<String> filesList, ProcessTask task, int threads) {
 		cout.println( "Using " + threads + " thread(s)." );
 		//executor = Executors.newFixedThreadPool(16);
 		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());

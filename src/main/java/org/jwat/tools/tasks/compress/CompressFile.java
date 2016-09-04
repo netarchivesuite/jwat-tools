@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
+import java.util.Date;
 
 import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcReaderFactory;
@@ -45,8 +46,8 @@ public class CompressFile {
 	 * Other files are compressed as one entry.
 	 * @param srcFile
 	 */
-	protected CompressionResult compressFile(File srcFile, CompressionOptions options) {
-		CompressionResult result = null;
+	protected CompressiResult compressFile(File srcFile, CompressOptions options) {
+		CompressiResult result = null;
 		String srcFname = srcFile.getName();
 		String dstFname = srcFname + ".gz";
 		RandomAccessFile raf = null;
@@ -102,7 +103,7 @@ public class CompressFile {
 	}
 
 	// TODO
-	protected CompressionResult compressNormalFile(InputStream in, File dstFile, CompressionOptions options) {
+	protected CompressiResult compressNormalFile(InputStream in, File dstFile, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
 		FileOutputStream out = null;
         GzipWriter writer = null;
@@ -111,7 +112,7 @@ public class CompressFile {
         int read;
         MessageDigest md5 = null;
         MessageDigest md5comp = null;
-        CompressionResult result = new CompressionResult();
+        CompressiResult result = new CompressiResult();
         result.dstFile = dstFile;
 		try {
 			out = new FileOutputStream(dstFile, false);
@@ -167,7 +168,7 @@ public class CompressFile {
 	}
 
 	// TODO
-	protected CompressionResult compressArcFile(InputStream in, File dstFile, CompressionOptions options) {
+	protected CompressiResult compressArcFile(InputStream in, File dstFile, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
 		FileOutputStream out = null;
         GzipWriter writer = null;
@@ -183,7 +184,7 @@ public class CompressFile {
         InputStream uncompressedFileIn = null;
         GzipReader reader = null;
         InputStream uncompressedEntryIn = null;
-        CompressionResult result = new CompressionResult();
+        CompressiResult result = new CompressiResult();
         result.dstFile = dstFile;
 		try {
 			out = new FileOutputStream(dstFile, false);
@@ -199,11 +200,15 @@ public class CompressFile {
 			arcReader.setBlockDigestEnabled( false );
 			arcReader.setPayloadDigestEnabled( false );
 			while ((arcRecord = arcReader.getNextRecord()) != null) {
+				Date date = arcRecord.header.archiveDate;
+				if (date == null) {
+					date = new Date(0L);
+				}
 		        entry = new GzipEntry();
 		        entry.magic = GzipConstants.GZIP_MAGIC;
 		        entry.cm = GzipConstants.CM_DEFLATE;
 		        entry.flg = 0;
-		        entry.mtime = System.currentTimeMillis() / 1000;
+		        entry.mtime = date.getTime() / 1000;
 		        entry.xfl = 0;
 		        entry.os = GzipConstants.OS_UNKNOWN;
 		        writer.writeEntryHeader(entry);
@@ -295,7 +300,7 @@ public class CompressFile {
     protected byte[] endMark = "\r\n\r\n".getBytes();
 
     // TODO
-	protected CompressionResult compressWarcFile(InputStream in, File dstFile, CompressionOptions options) {
+	protected CompressiResult compressWarcFile(InputStream in, File dstFile, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
 		FileOutputStream out = null;
         GzipWriter writer = null;
@@ -311,7 +316,7 @@ public class CompressFile {
         InputStream uncompressedFileIn = null;
         GzipReader reader = null;
         InputStream uncompressedEntryIn = null;
-        CompressionResult result = new CompressionResult();
+        CompressiResult result = new CompressiResult();
         result.dstFile = dstFile;
 		try {
 			out = new FileOutputStream(dstFile, false);
@@ -327,11 +332,15 @@ public class CompressFile {
 			warcReader.setBlockDigestEnabled( true );
 			warcReader.setPayloadDigestEnabled( true );
 			while ( (warcRecord = warcReader.getNextRecord()) != null ) {
+				Date date = warcRecord.header.warcDate;
+				if (date == null) {
+					date = new Date(0L);
+				}
 		        entry = new GzipEntry();
 		        entry.magic = GzipConstants.GZIP_MAGIC;
 		        entry.cm = GzipConstants.CM_DEFLATE;
 		        entry.flg = 0;
-		        entry.mtime = System.currentTimeMillis() / 1000;
+		        entry.mtime = date.getTime() / 1000;
 		        entry.xfl = 0;
 		        entry.os = GzipConstants.OS_UNKNOWN;
 		        writer.writeEntryHeader(entry);

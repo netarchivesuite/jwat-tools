@@ -1,67 +1,24 @@
 package org.jwat.tools.tasks.decompress;
 
 import java.io.File;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.jwat.archive.FileIdent;
-import org.jwat.tools.JWATTools;
-import org.jwat.tools.core.CommandLine;
 import org.jwat.tools.tasks.ProcessTask;
 
 public class DecompressTask extends ProcessTask {
 
-	public static final String commandName = "decompress";
-
-	public static final String commandDescription = "decompress ARC/WARC or normal GZip file(s)";
-
 	public DecompressTask() {
 	}
 
-	@Override
-	public void show_help() {
-		System.out.println("jwattools decompress [-w THREADS] <filepattern>...");
-		System.out.println("");
-		System.out.println("decompress one or more GZip files");
-		System.out.println("");
-		System.out.println("\tNormal files are decompressed into one or more files.");
-		System.out.println("\tARC/WARC files are compressed on a record level.");
-		System.out.println("");
-		System.out.println("options:");
-		System.out.println("");
-		System.out.println(" -w<x>  set the amount of worker thread(s) (defaults to 1)");
-	}
-
-	@Override
-	public void command(CommandLine.Arguments arguments) {
-		CommandLine.Argument argument;
-
-		// Thread workers.
-		argument = arguments.idMap.get( JWATTools.A_WORKERS );
-		if ( argument != null && argument.value != null ) {
-			try {
-				threads = Integer.parseInt(argument.value);
-			} catch (NumberFormatException e) {
-				System.out.println( "Invalid number of threads requested: " + argument.value );
-				System.exit( 1 );
-			}
-		}
-		if ( threads < 1 ) {
-			System.out.println( "Invalid number of threads requested: " + threads );
-			System.exit( 1 );
-		}
-
-		// Files.
-		argument = arguments.idMap.get( JWATTools.A_FILES );
-		List<String> filesList = argument.values;
-
+	public void runtask(DecompressOptions options) {
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle(filesList, this);
+		threadpool_feeder_lifecycle(options.filesList, this, options.threads);
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -121,6 +78,7 @@ public class DecompressTask extends ProcessTask {
 		public void run() {
 			DecompressFile decompressFile = new DecompressFile();
 			decompressFile.decompressFile(srcFile);
+			// FIXME
 			decompressFile.srcFile = srcFile;
 			results.add(decompressFile);
 			resultsReady.release();

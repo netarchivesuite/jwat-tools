@@ -6,34 +6,20 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.util.List;
 
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.RandomAccessFileInputStream;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
-import org.jwat.tools.JWATTools;
-import org.jwat.tools.core.CommandLine;
 
+// TODO
 public class UnpackTask extends ProcessTask {
-
-	public static final String commandName = "unpack";
-
-	public static final String commandDescription = "unpack multifile GZip";
 
 	public UnpackTask() {
 	}
 
-	@Override
-	public void show_help() {
-		System.out.println("Work in progress...");
-	}
-
-	@Override
-	public void command(CommandLine.Arguments arguments) {
-		CommandLine.Argument argument = arguments.idMap.get( JWATTools.A_FILES );
-		List<String> filesList = argument.values;
-		filelist_feeder( filesList, this );
+	public void runtask(UnpackOptions options) {
+		filelist_feeder( options.filesList, this );
 	}
 
 	@Override

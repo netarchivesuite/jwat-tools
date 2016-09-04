@@ -15,23 +15,18 @@ import java.util.concurrent.TimeUnit;
 
 import org.jwat.archive.FileIdent;
 import org.jwat.common.DiagnosisType;
-import org.jwat.common.UriProfile;
-import org.jwat.tools.JWATTools;
-import org.jwat.tools.core.CommandLine;
-import org.jwat.tools.core.SynchronizedOutput;
 import org.jwat.tools.tasks.ProcessTask;
+
+import com.antiaction.common.cli.SynchronizedOutput;
 
 public class ContainerMDTask extends ProcessTask {
 
-	public static final String commandName = "containermd";
-
-	public static final String commandDescription = "generation of containerMD for (W)ARC file(s)";
+	private ContainerMDOptions options;
 
 	/*
 	 * Summary.
 	 */
-	private boolean bQuiet = false;
-	
+
 	private int arcGzFiles = 0;
 	private int warcGzFiles = 0;
 	private int arcFiles = 0;
@@ -44,81 +39,18 @@ public class ContainerMDTask extends ProcessTask {
 	/*
 	 * Settings.
 	 */
-	private UriProfile uriProfile = UriProfile.RFC3986; // UriProfile.RFC3986_ABS_16BIT_LAX; // UriProfile.RFC3986;
-	private File outputDir = new File( System.getProperty("user.dir"));
-	private int recordHeaderMaxSize = 1024 * 1024;
-    private int payloadHeaderMaxSize = 1024 * 1024;
 
 	public ContainerMDTask() {
 	}
 
-	@Override
-	public void show_help() {
-		System.out.println("jwattools containermd [-d outputDir] [-l] [-q] [-w THREADS] <paths>");
-		System.out.println("");
-		System.out.println("generate containerMD for (W)ARC files");
-		System.out.println("");
-		System.out.println("options:");
-		System.out.println("");
-		System.out.println(" -d <dir>        destination directory (defaults to current dir)");
-		System.out.println(" -l                  relaxed URL URI validation");
-		System.out.println(" -q                  quiet, no output to console");
-		System.out.println(" -w<x>               set the amount of worker thread(s) (defaults to 1)");
-	}
-
-	@Override
-	public void command(CommandLine.Arguments arguments) {
-		CommandLine.Argument argument;
-		bQuiet = arguments.idMap.containsKey( JWATTools.A_QUIET );
-		// Thread workers.
-		argument = arguments.idMap.get( JWATTools.A_WORKERS );
-		if ( argument != null && argument.value != null ) {
-			try {
-				threads = Integer.parseInt(argument.value);
-			} catch (NumberFormatException e) {
-				System.err.println( "Invalid number of threads requested: " + argument.value );
-				System.exit( 1 );
-			}
-		}
-		if ( threads < 1 ) {
-			System.err.println( "Invalid number of threads requested: " + threads );
-			System.exit( 1 );
-		}
-
-		// Output directory
-		argument = arguments.idMap.get( JWATTools.A_DEST );
-		if ( argument != null && argument.value != null ) {
-			File dir = new File(argument.value);
-			if (dir.exists()) {
-				if (dir.isDirectory()) {
-					outputDir = dir;
-				} else {
-					if (!bQuiet) System.err.println("Output '" + argument.value + "' invalid, defaulting to '" + outputDir + "'");
-				}
-			} else {
-				if (dir.mkdirs()) {
-					outputDir = dir;
-				} else {
-					if (!bQuiet) System.err.println("Output '" + argument.value + "' invalid, defaulting to '" + outputDir + "'");
-				}
-			}
-		}
-		
-		// Relaxed URI validation.
-		if ( arguments.idMap.containsKey( JWATTools.A_LAX ) ) {
-			uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
-			if (!bQuiet) System.out.println("Using relaxed URI validation for ARC URL and WARC Target-URI.");
-		}
-
-        // Files.
-		argument = arguments.idMap.get( JWATTools.A_FILES );
-		List<String> filesList = argument.values;
+	public void runtask(ContainerMDOptions options) {
+		this.options = options;
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle(filesList, this);
+		threadpool_feeder_lifecycle(options.filesList, this, options.threads);
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -131,7 +63,7 @@ public class ContainerMDTask extends ProcessTask {
 
 		calucate_runstats();
 
-		if (!bQuiet) {
+		if (!options.bQuiet) {
     		cout.println( "#" );
     		cout.println( "# Job summary" );
     		cout.println( "#" );
@@ -179,7 +111,7 @@ public class ContainerMDTask extends ProcessTask {
       // debug
       //System.out.println(fileIdent.filenameId + " " + fileIdent.streamId + " " + srcFile.getName());
       if (fileIdent.filenameId != fileIdent.streamId) {
-    	  if (!bQuiet) cout.println("Wrong extension: '" + srcFile.getPath() + "'");
+    	  if (!options.bQuiet) cout.println("Wrong extension: '" + srcFile.getPath() + "'");
       }
       switch (fileIdent.streamId) {
       case FileIdent.FILEID_ARC:
@@ -199,7 +131,7 @@ public class ContainerMDTask extends ProcessTask {
       case FileIdent.FILEID_ARC_GZ:
       case FileIdent.FILEID_WARC:
       case FileIdent.FILEID_WARC_GZ:
-    	  if (!bQuiet) cout.println("Empty file: '" + srcFile.getPath() + "'");
+    	  if (!options.bQuiet) cout.println("Empty file: '" + srcFile.getPath() + "'");
         break;
       default:
         break;
@@ -214,13 +146,9 @@ public class ContainerMDTask extends ProcessTask {
 		}
 		@Override
 		public void run() {
-			ParseContainerMD testFile = new ParseContainerMD();
-			testFile.uriProfile = uriProfile;
-			testFile.bQuiet = bQuiet;
-		    testFile.recordHeaderMaxSize = recordHeaderMaxSize;
-		    testFile.payloadHeaderMaxSize = payloadHeaderMaxSize;
-			//testFile.callback = null;
-			ContainerMDResult result = testFile.processFile(srcFile);
+			ParseContainerMD parseContainerMD = new ParseContainerMD();
+			ContainerMDResult result = parseContainerMD.processFile(srcFile, options);
+			// FIXME
 			result.srcFile = srcFile;
 			result.srcFileSize = srcFile.length();
 			
@@ -244,13 +172,13 @@ public class ContainerMDTask extends ProcessTask {
 		@Override
 		public void run() {
 			ContainerMDResult result;
-			if (!bQuiet) cout.println("Output Thread started.");
+			if (!options.bQuiet) cout.println("Output Thread started.");
 			boolean bLoop = true;
 			while (bLoop) {
 				try {
 					if (resultsReady.tryAcquire(1, TimeUnit.SECONDS)) {
 						result = results.poll();
-						File outputFile = new File(outputDir, 
+						File outputFile = new File(options.outputDir, 
 								result.srcFile.getName().replaceFirst("\\.w?arc(\\.gz)?", ".containerMD.xml"));
 						SynchronizedOutput validOutput = 
 								new SynchronizedOutput(outputFile);
@@ -270,7 +198,9 @@ public class ContainerMDTask extends ProcessTask {
 
 						calculate_progress();
 
-						if (!bQuiet) cout.print_progress(String.format("Queued: %d - Processed: %d - %s - Estimated: %s (%.2f%%).", queued, processed, toSizePerSecondString(current_avgbpsec), current_timestr, current_progress));
+						if (!options.bQuiet) {
+							cout.print_progress(String.format("Queued: %d - Processed: %d - %s - Estimated: %s (%.2f%%).", queued, processed, toSizePerSecondString(current_avgbpsec), current_timestr, current_progress));
+						}
 					} else if (bExit && processed == queued) {
 						bLoop = false;
 					}
@@ -278,7 +208,7 @@ public class ContainerMDTask extends ProcessTask {
 					bLoop = false;
 				}
 			}
-			if (!bQuiet) cout.println("Output Thread stopped.");
+			if (!options.bQuiet) cout.println("Output Thread stopped.");
 
 			bClosed = true;
 		}

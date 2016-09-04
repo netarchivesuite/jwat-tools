@@ -2,7 +2,6 @@ package org.jwat.tools.tasks.test;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 
 import org.jwat.arc.ArcRecordBase;
 import org.jwat.archive.ArchiveParser;
@@ -11,7 +10,6 @@ import org.jwat.archive.Cloner;
 import org.jwat.archive.FileIdent;
 import org.jwat.archive.ManagedPayload;
 import org.jwat.common.ContentType;
-import org.jwat.common.UriProfile;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.tools.core.ManagedPayloadContentTypeIdentifier;
 import org.jwat.tools.core.ValidatorPlugin;
@@ -19,13 +17,9 @@ import org.jwat.warc.WarcRecord;
 
 public class TestFile2 implements ArchiveParserCallback {
 
-	public boolean bShowErrors;
+	public TestOptions options;
 
-	public boolean bValidateDigest;
-
-	public UriProfile uriProfile;
-
-    public int recordHeaderMaxSize = 8192;
+	public int recordHeaderMaxSize = 8192;
 
     public int payloadHeaderMaxSize = 32768;
 
@@ -35,13 +29,12 @@ public class TestFile2 implements ArchiveParserCallback {
 
 	protected Cloner cloner;
 
-	public List<ValidatorPlugin> validatorPlugins;
-
 	public TestFileUpdateCallback callback;
 
 	protected TestFileResult result;
 
-	public TestFileResult processFile(File file, Cloner cloner) {
+	public TestFileResult processFile(File file, TestOptions options, Cloner cloner) {
+		this.options = options;
 		result = new TestFileResult();
 		result.file = file.getPath();
 
@@ -50,9 +43,9 @@ public class TestFile2 implements ArchiveParserCallback {
 		//this.cloner = cloner;
 
 		ArchiveParser archiveParser = new ArchiveParser();
-		archiveParser.uriProfile = uriProfile;
-		archiveParser.bBlockDigestEnabled = bValidateDigest;
-		archiveParser.bPayloadDigestEnabled = bValidateDigest;
+		archiveParser.uriProfile = options.uriProfile;
+		archiveParser.bBlockDigestEnabled = options.bValidateDigest;
+		archiveParser.bPayloadDigestEnabled = options.bValidateDigest;
 	    archiveParser.recordHeaderMaxSize = recordHeaderMaxSize;
 	    archiveParser.payloadHeaderMaxSize = payloadHeaderMaxSize;
 
@@ -110,7 +103,7 @@ public class TestFile2 implements ArchiveParserCallback {
 		++result.gzipEntries;
 		result.gzipErrors = gzipEntry.diagnostics.getErrors().size();
 		result.gzipWarnings = gzipEntry.diagnostics.getWarnings().size();
-		if ( bShowErrors ) {
+		if ( options.bShowErrors ) {
 			//TestResult.showGzipErrors(srcFile, gzipEntry, System.out);
 			if (gzipEntry.diagnostics.hasErrors() || gzipEntry.diagnostics.hasWarnings()) {
 				TestFileResultItemDiagnosis itemDiagnosis = new TestFileResultItemDiagnosis();
@@ -150,7 +143,7 @@ public class TestFile2 implements ArchiveParserCallback {
 	    if (arcRecord.hasPayload() && !arcRecord.hasPseudoEmptyPayload()) {
 	    	validate_payload(arcRecord, arcRecord.header.contentType, itemDiagnosis);
 	    }
-		if ( bShowErrors ) {
+		if ( options.bShowErrors ) {
 			//TestResult.showArcErrors( srcFile, arcRecord, System.out );
 			if (itemDiagnosis.errors.size() > 0 || itemDiagnosis.warnings.size() > 0) {
 				result.rdList.add(itemDiagnosis);
@@ -186,7 +179,7 @@ public class TestFile2 implements ArchiveParserCallback {
 	    if (warcRecord.hasPayload()) {
 	    	validate_payload(warcRecord, warcRecord.header.contentType, itemDiagnosis);
 	    }
-		if ( bShowErrors ) {
+		if ( options.bShowErrors ) {
 			//TestResult.showWarcErrors( srcFile, warcRecord, System.out );
 			if (itemDiagnosis.errors.size() > 0 || itemDiagnosis.warnings.size() > 0) {
 				result.rdList.add(itemDiagnosis);
@@ -227,8 +220,8 @@ public class TestFile2 implements ArchiveParserCallback {
     	if (contentType != null) {
     		if ("text".equalsIgnoreCase(contentType.contentType) && "xml".equalsIgnoreCase(contentType.mediaType)) {
         		ValidatorPlugin plugin;
-        		for (int i=0; i<validatorPlugins.size(); ++i) {
-        			plugin = validatorPlugins.get(i);
+        		for (int i=0; i<options.validatorPlugins.size(); ++i) {
+        			plugin = options.validatorPlugins.get(i);
         			plugin.getValidator().validate(managedPayload, itemDiagnosis);
         		}
     		}
@@ -249,8 +242,8 @@ public class TestFile2 implements ArchiveParserCallback {
     	if (contentType != null) {
     		if ("text".equalsIgnoreCase(contentType.contentType) && "xml".equalsIgnoreCase(contentType.mediaType)) {
         		ValidatorPlugin plugin;
-        		for (int i=0; i<validatorPlugins.size(); ++i) {
-        			plugin = validatorPlugins.get(i);
+        		for (int i=0; i<options.validatorPlugins.size(); ++i) {
+        			plugin = options.validatorPlugins.get(i);
         			plugin.getValidator().validate(managedPayload, itemDiagnosis);
         		}
     		}
