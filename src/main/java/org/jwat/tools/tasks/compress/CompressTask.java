@@ -31,6 +31,7 @@ public class CompressTask extends ProcessTask {
 	private SynchronizedOutput exceptionsOutput;
 
 	public void runtask(CompressOptions options) {
+		this.options = options;
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
@@ -99,7 +100,7 @@ public class CompressTask extends ProcessTask {
 		@Override
 		public void run() {
 			CompressFile compressFile = new CompressFile();
-			CompressiResult compressionResult = compressFile.compressFile(srcFile, options);
+			CompressResult compressionResult = compressFile.compressFile(srcFile, options);
 			results.add(compressionResult);
 			resultsReady.release();
 		}
@@ -109,7 +110,7 @@ public class CompressTask extends ProcessTask {
 	private Semaphore resultsReady = new Semaphore(0);
 
 	/** Completed Compressed results list. */
-	private ConcurrentLinkedQueue<CompressiResult> results = new ConcurrentLinkedQueue<CompressiResult>();
+	private ConcurrentLinkedQueue<CompressResult> results = new ConcurrentLinkedQueue<CompressResult>();
 
 	private long uncompressed = 0;
 
@@ -126,7 +127,7 @@ public class CompressTask extends ProcessTask {
 		@Override
 		public void run() {
 			StringBuilder sb = new StringBuilder();
-			CompressiResult result;
+			CompressResult result;
 			boolean bLoop = true;
 			PrintWriter lstWriter = null;
 			try {

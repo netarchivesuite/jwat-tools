@@ -19,6 +19,8 @@ public class CompressOptions {
 
 	public boolean bRemove = false;
 
+	public boolean bTwopass = false;
+
 	public File dstPath;
 
 	public File lstFile;

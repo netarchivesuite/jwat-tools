@@ -16,7 +16,7 @@ public class CompressTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
-		System.out.println("jwattools compress [-123456789] [--fast] [--slow] [-w THREADS] <filepattern>...");
+		System.out.println("jwattools compress [-123456789] [--fast] [--best] [-w THREADS] <filepattern>...");
 		System.out.println("");
 		System.out.println("compress one or more ARC/WARC/GZip files");
 		System.out.println("");
@@ -25,12 +25,15 @@ public class CompressTaskCLI extends TaskCLI {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -1, --fast    fast compression time, lowest compression rate");
-		System.out.println(" -9, --slow    slow compression time, highest compression rate");
-		System.out.println("     --dryrun  remove output file leaving the orignal in place");
-		System.out.println("     --verify  decompress output file and compare against input file");
-		System.out.println("     --remove  remove input file after compression (only on success)");
-		System.out.println(" -w<x>         set the amount of worker thread(s) (defaults to 1)");
+		System.out.println(" -1, --fast      compress faster, low compression ratio");
+		System.out.println(" -9, --best      compesss better, high compression ratio");
+		System.out.println(" -d, --destdir   destination directory of compressed files");
+		System.out.println("     --dryrun    remove output file leaving the orignal in place");
+		System.out.println("     --verify    decompress output file and compare against input file");
+		System.out.println("     --remove    remove input file after compression (only on success)");
+		System.out.println("     --listfile  list file of old/new filename, length and checksum");
+		System.out.println("     --twopass   index file and then bitstream compress based on index");
+		System.out.println(" -w<x>           set the amount of worker thread(s) (defaults to 1)");
 	}
 
 	@Override
@@ -53,9 +56,6 @@ public class CompressTaskCLI extends TaskCLI {
 			System.out.println( "Invalid number of threads requested: " + options.threads );
 			System.exit( 1 );
 		}
-
-		// FIXME
-		options.lstFile = new File("k:\\tmp_bitarchive_1\\files.lst");
 
 		// Compression level.
 		argument = cmdLine.idMap.get( JWATTools.A_COMPRESS );
@@ -94,7 +94,17 @@ public class CompressTaskCLI extends TaskCLI {
 		}
 		System.out.println( "Dest path: " + options.dstPath );
 
+		argument = cmdLine.idMap.get( JWATTools.A_FILELIST );
+		if (argument != null) {
+			options.lstFile = new File( argument.value );
+		}
 		System.out.println( "List file: " + options.lstFile );
+
+		argument = cmdLine.idMap.get( JWATTools.A_TWOPASS );
+		if (argument != null) {
+			options.bTwopass = true;
+		}
+		System.out.println( "Twopass: " + options.bTwopass );
 
 		// Files.
 		argument = cmdLine.idMap.get( JWATTools.A_FILES );

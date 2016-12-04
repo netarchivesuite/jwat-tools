@@ -53,6 +53,8 @@ public class JWATTools {
 	public static final int A_REMOVE = 20;
 	public static final int A_VERIFY = 21;
 	public static final int A_DRYRUN = 22;
+	public static final int A_FILELIST = 23;
+	public static final int A_TWOPASS = 24;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -131,7 +133,7 @@ public class JWATTools {
 		options.addOption("-w", "--workers", A_WORKERS, 0, null).setValueRequired();
 		options.addOption("-x", null, A_XML, 0, null);
 		options.addOption("-o", null, A_OUTPUT, 0, null).setValueRequired();
-		options.addOption("-d", null, A_DEST, 0, null).setValueRequired();
+		options.addOption("-d", "--destdir", A_DEST, 0, null).setValueRequired();
 		options.addOption(null, "--overwrite", A_OVERWRITE, 0, null);
 		options.addOption(null, "--prefix=", A_PREFIX, 0, null);
 		options.addOption("-i", "--ignore-digest", A_IGNORE_DIGEST, 0, null);
@@ -144,6 +146,8 @@ public class JWATTools {
 		options.addOption(null, "--remove", A_REMOVE, 0, null);
 		options.addOption(null, "--verify", A_VERIFY, 0, null);
 		options.addOption(null, "--dryrun", A_DRYRUN, 0, null);
+		options.addOption(null, "--twopass", A_TWOPASS, 0, null);
+		options.addOption(null, "--listfile", A_FILELIST, 0, null).setValueRequired();
 		options.addNamedArgument( "command", A_COMMAND, 1, 1);
 		options.addNamedArgument("files", A_FILES, 1, Integer.MAX_VALUE);
 	}

@@ -2,7 +2,7 @@ package org.jwat.tools.tasks.compress;
 
 import java.io.File;
 
-public class CompressiResult {
+public class CompressResult {
 
 	protected File srcFile;
 
