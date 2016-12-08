@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jwat.tools.tasks.TaskCLI;
 import org.jwat.tools.tasks.Task;
+import org.jwat.tools.tasks.TaskCLI;
 import org.jwat.tools.tasks.UnpackTaskCLI;
 import org.jwat.tools.tasks.arc2warc.Arc2WarcTaskCLI;
 import org.jwat.tools.tasks.cdx.CDXTaskCLI;
@@ -27,34 +27,14 @@ import com.antiaction.common.cli.Argument;
 import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
-import com.antiaction.common.cli.ParseException;
+import com.antiaction.common.cli.ArgumentParseException;
 
 public class JWATTools {
 
-	public static final int A_COMMAND = 1;
-	public static final int A_FILES = 2;
-	public static final int A_WORKERS = 3;
-	public static final int A_COMPRESS = 4;
-	public static final int A_SHOW_ERRORS = 5;
-	public static final int A_RECURSIVE = 6;
-	public static final int A_XML = 7;
-	public static final int A_LAX = 8;
-	public static final int A_OUTPUT = 9;
-	public static final int A_DEST = 10;
-	public static final int A_OVERWRITE = 11;
-	public static final int A_PREFIX = 12;
-	public static final int A_IGNORE_DIGEST = 13;
-	public static final int A_BAD = 14;
-	public static final int A_AFTER = 15;
-	public static final int A_TARGET_URI = 16;
-	public static final int A_TESTRUN = 17;
-	public static final int A_QUIET = 18;
-	public static final int A_BATCHMODE = 19;
-	public static final int A_REMOVE = 20;
-	public static final int A_VERIFY = 21;
-	public static final int A_DRYRUN = 22;
-	public static final int A_FILELIST = 23;
-	public static final int A_TWOPASS = 24;
+	public static final int A_WORKERS = 1;
+	public static final int A_COMMAND = 2;
+	public static final int A_FILES = 3;
+	public static final int A_QUIET = 4;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -118,38 +98,8 @@ public class JWATTools {
 		};
 		addCommands((Class<? extends TaskCLI>[])tasks);
 
-		options.addOption("-1", "--fast", A_COMPRESS, 1, null);
-		options.addOption("-2", null, A_COMPRESS, 2, null);
-		options.addOption("-3", null, A_COMPRESS, 3, null);
-		options.addOption("-4", null, A_COMPRESS, 4, null);
-		options.addOption("-5", null, A_COMPRESS, 5, null);
-		options.addOption("-6", null, A_COMPRESS, 6, null);
-		options.addOption("-7", null, A_COMPRESS, 7, null);
-		options.addOption("-8", null, A_COMPRESS, 8, null);
-		options.addOption("-9", "--best", A_COMPRESS, 9, null);
-		options.addOption("-e", null, A_SHOW_ERRORS, 0, null);
-		options.addOption("-l", null, A_LAX, 0, null);
-		options.addOption("-r", null, A_RECURSIVE, 0, null);
 		options.addOption("-w", "--workers", A_WORKERS, 0, null).setValueRequired();
-		options.addOption("-x", null, A_XML, 0, null);
-		options.addOption("-o", null, A_OUTPUT, 0, null).setValueRequired();
-		options.addOption("-d", "--destdir", A_DEST, 0, null).setValueRequired();
-		options.addOption(null, "--overwrite", A_OVERWRITE, 0, null);
-		options.addOption(null, "--prefix=", A_PREFIX, 0, null);
-		options.addOption("-i", "--ignore-digest", A_IGNORE_DIGEST, 0, null);
-		options.addOption("-b", null, A_BAD, 0, null);
-		options.addOption("-a", null, A_AFTER, 0, null).setValueRequired();
-		options.addOption("-u", null, A_TARGET_URI, 0, null).setValueRequired();
-		options.addOption("-t", null, A_TESTRUN, 0, null);
-		options.addOption("-q", null, A_QUIET, 0, null);
-		options.addOption(null, "--batch", A_BATCHMODE, 0, null);
-		options.addOption(null, "--remove", A_REMOVE, 0, null);
-		options.addOption(null, "--verify", A_VERIFY, 0, null);
-		options.addOption(null, "--dryrun", A_DRYRUN, 0, null);
-		options.addOption(null, "--twopass", A_TWOPASS, 0, null);
-		options.addOption(null, "--listfile", A_FILELIST, 0, null).setValueRequired();
-		options.addNamedArgument( "command", A_COMMAND, 1, 1);
-		options.addNamedArgument("files", A_FILES, 1, Integer.MAX_VALUE);
+		options.addNamedArgument( "command", A_COMMAND, 1, 1).setStopParsing();
 	}
 
 	public void show_commands() {
@@ -194,8 +144,7 @@ public class JWATTools {
 		System.out.println("");
 		/*
 		System.out.println("Options:");
-		System.out.println("   -r      recursive (currently has no effect)");
-		System.out.println("   -w<x>   set the amount of worker thread(s) (defaults to 1)");
+		System.out.println(" -w <x>  set the amount of worker thread(s) (defaults to 1)");
 		System.out.println("");
 		*/
 		System.out.println("See 'jwattools help <command>' for more information on a specific command.");
@@ -220,7 +169,7 @@ public class JWATTools {
 		configure_cli();
 		CommandLine cmdLine = null;
 		try {
-			cmdLine = ArgumentParser.parse(options, args);
+			cmdLine = ArgumentParser.parse(args, options, null);
 			/*
 			for ( int i=0; i<arguments.switchArgsList.size(); ++i) {
 				argument = arguments.switchArgsList.get( i );
@@ -228,7 +177,7 @@ public class JWATTools {
 			}
 			*/
 		}
-		catch (ParseException e) {
+		catch (ArgumentParseException e) {
 			System.out.println( getClass().getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}

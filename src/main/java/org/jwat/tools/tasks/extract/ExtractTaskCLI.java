@@ -4,9 +4,14 @@ import org.jwat.tools.JWATTools;
 import org.jwat.tools.tasks.TaskCLI;
 
 import com.antiaction.common.cli.Argument;
+import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
+import com.antiaction.common.cli.Options;
+import com.antiaction.common.cli.ArgumentParseException;
 
 public class ExtractTaskCLI extends TaskCLI {
+
+	public static final int A_TARGET_URI = 101;
 
 	public static final String commandName = "extract";
 
@@ -20,12 +25,24 @@ public class ExtractTaskCLI extends TaskCLI {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -u<URI>  (target)uri to extract");
-		System.out.println(" -w<x>    set the amount of worker thread(s) (defaults to 1)");
+		System.out.println(" -u <URI>  (target)uri to extract");
+		System.out.println(" -w <x>    set the amount of worker thread(s) (defaults to 1)");
 	}
 
 	@Override
 	public void runtask(CommandLine cmdLine) {
+		Options cliOptions = new Options();
+		cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
+		cliOptions.addOption("-u", null, A_TARGET_URI, 0, null).setValueRequired();
+		cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
+		try {
+			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
+		}
+		catch (ArgumentParseException e) {
+			System.out.println( getClass().getName() + ": " + e.getMessage() );
+			System.exit( 1 );
+		}
+
 		ExtractOptions options = new ExtractOptions();
 
 		Argument argument;
@@ -45,7 +62,7 @@ public class ExtractTaskCLI extends TaskCLI {
 			System.exit( 1 );
 		}
 
-		argument = cmdLine.idMap.get( JWATTools.A_TARGET_URI );
+		argument = cmdLine.idMap.get( A_TARGET_URI );
 		if ( argument != null && argument.value != null ) {
 			options.targetUri = argument.value;
 		}

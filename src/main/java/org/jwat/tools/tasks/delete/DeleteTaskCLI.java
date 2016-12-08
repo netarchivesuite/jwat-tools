@@ -6,9 +6,15 @@ import org.jwat.tools.JWATTools;
 import org.jwat.tools.tasks.TaskCLI;
 
 import com.antiaction.common.cli.Argument;
+import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
+import com.antiaction.common.cli.Options;
+import com.antiaction.common.cli.ArgumentParseException;
 
 public class DeleteTaskCLI extends TaskCLI {
+
+	public static final int A_OUTPUT = 101;
+	public static final int A_DRYRUN = 102;
 
 	public static final String commandName = "delete";
 
@@ -25,18 +31,30 @@ public class DeleteTaskCLI extends TaskCLI {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -o<file>  output filenames deleted");
-		System.out.println(" -t        test run, do not delete files");
+		System.out.println(" -o <file>    output filenames deleted");
+		System.out.println("    --dryrun  dry run, does not delete files");
 	}
 
 	@Override
 	public void runtask(CommandLine cmdLine) {
+		Options cliOptions = new Options();
+		cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
+		cliOptions.addOption("-o", null, A_OUTPUT, 0, null).setValueRequired();
+		cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
+		try {
+			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
+		}
+		catch (ArgumentParseException e) {
+			System.out.println( getClass().getName() + ": " + e.getMessage() );
+			System.exit( 1 );
+		}
+
 		DeleteOptions options = new DeleteOptions();
 
 		Argument argument;
 
 		// Output file.
-		argument = cmdLine.idMap.get( JWATTools.A_OUTPUT );
+		argument = cmdLine.idMap.get( A_OUTPUT );
 		if ( argument != null && argument.value != null ) {
 			options.outputFile = new File(argument.value);
 			if (options.outputFile.isDirectory()) {
@@ -51,10 +69,10 @@ public class DeleteTaskCLI extends TaskCLI {
 		}
 
 		// Test run.
-		if ( cmdLine.idMap.containsKey( JWATTools.A_TESTRUN ) ) {
-			options.bTestRun = true;
+		if ( cmdLine.idMap.containsKey( A_DRYRUN ) ) {
+			options.bDryRun = true;
 		}
-		System.out.println("Test run: " + options.bTestRun);
+		System.out.println("Test run: " + options.bDryRun);
 
 		// Files.
 		argument = cmdLine.idMap.get( JWATTools.A_FILES );

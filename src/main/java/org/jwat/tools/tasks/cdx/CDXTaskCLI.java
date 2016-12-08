@@ -6,9 +6,14 @@ import org.jwat.tools.JWATTools;
 import org.jwat.tools.tasks.TaskCLI;
 
 import com.antiaction.common.cli.Argument;
+import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
+import com.antiaction.common.cli.Options;
+import com.antiaction.common.cli.ArgumentParseException;
 
 public class CDXTaskCLI extends TaskCLI {
+
+	public static final int A_OUTPUT = 101;
 
 	public static final String commandName = "cdx";
 
@@ -25,12 +30,24 @@ public class CDXTaskCLI extends TaskCLI {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -o<file>  output cdx filename (unsorted)");
-		System.out.println(" -w<x>     set the amount of worker thread(s) (defaults to 1)");
+		System.out.println(" -o <file>  output cdx filename (unsorted)");
+		System.out.println(" -w <x>     set the amount of worker thread(s) (defaults to 1)");
 	}
 
 	@Override
 	public void runtask(CommandLine cmdLine) {
+		Options cliOptions = new Options();
+		cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
+		cliOptions.addOption("-o", null, A_OUTPUT, 0, null).setValueRequired();
+		cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
+		try {
+			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
+		}
+		catch (ArgumentParseException e) {
+			System.out.println( getClass().getName() + ": " + e.getMessage() );
+			System.exit( 1 );
+		}
+
 		CDXOptions options = new CDXOptions();
 
 		Argument argument;
@@ -51,7 +68,7 @@ public class CDXTaskCLI extends TaskCLI {
 		}
 
 		// Output file.
-		argument = cmdLine.idMap.get( JWATTools.A_OUTPUT );
+		argument = cmdLine.idMap.get( A_OUTPUT );
 		if ( argument != null && argument.value != null ) {
 			options.outputFile = new File(argument.value);
 			if (options.outputFile.isDirectory()) {

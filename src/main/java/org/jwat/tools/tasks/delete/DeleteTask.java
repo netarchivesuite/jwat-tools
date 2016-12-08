@@ -64,7 +64,7 @@ public class DeleteTask extends ProcessTask {
 		}
 		@Override
 		public void run() {
-			if (!options.bTestRun) {
+			if (!options.bDryRun) {
 				if (!srcFile.delete()) {
 					System.out.println("Could not delete file - " + srcFile.getPath());
 				}

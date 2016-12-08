@@ -7,9 +7,15 @@ import org.jwat.tools.JWATTools;
 import org.jwat.tools.tasks.TaskCLI;
 
 import com.antiaction.common.cli.Argument;
+import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
+import com.antiaction.common.cli.Options;
+import com.antiaction.common.cli.ArgumentParseException;
 
 public class ContainerMDTaskCLI extends TaskCLI {
+
+	public static final int A_DEST = 101;
+	public static final int A_LAX = 102;
 
 	public static final String commandName = "containermd";
 
@@ -23,19 +29,31 @@ public class ContainerMDTaskCLI extends TaskCLI {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -d <dir>        destination directory (defaults to current dir)");
-		System.out.println(" -l                  relaxed URL URI validation");
-		System.out.println(" -q                  quiet, no output to console");
-		System.out.println(" -w<x>               set the amount of worker thread(s) (defaults to 1)");
+		System.out.println(" -d <dir>  destination directory (defaults to current dir)");
+		System.out.println(" -l        relaxed URL URI validation");
+		System.out.println(" -q        quiet, no output to console");
+		System.out.println(" -w <x>    set the amount of worker thread(s) (defaults to 1)");
 	}
 
 	@Override
 	public void runtask(CommandLine cmdLine) {
+		Options cliOptions = new Options();
+		cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
+		cliOptions.addOption("-d", "--destdir", A_DEST, 0, null).setValueRequired();
+		cliOptions.addOption("-l", null, A_LAX, 0, null);
+		cliOptions.addOption("-q", null, JWATTools.A_QUIET, 0, null);
+		cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
+		try {
+			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
+		}
+		catch (ArgumentParseException e) {
+			System.out.println( getClass().getName() + ": " + e.getMessage() );
+			System.exit( 1 );
+		}
+
 		ContainerMDOptions options = new ContainerMDOptions();
 
 		Argument argument;
-
-		options.bQuiet = cmdLine.idMap.containsKey( JWATTools.A_QUIET );
 
 		// Thread workers.
 		argument = cmdLine.idMap.get( JWATTools.A_WORKERS );
@@ -53,7 +71,7 @@ public class ContainerMDTaskCLI extends TaskCLI {
 		}
 
 		// Output directory
-		argument = cmdLine.idMap.get( JWATTools.A_DEST );
+		argument = cmdLine.idMap.get( A_DEST );
 		if ( argument != null && argument.value != null ) {
 			File dir = new File(argument.value);
 			if (dir.exists()) {
@@ -72,10 +90,12 @@ public class ContainerMDTaskCLI extends TaskCLI {
 		}
 		
 		// Relaxed URI validation.
-		if ( cmdLine.idMap.containsKey( JWATTools.A_LAX ) ) {
+		if ( cmdLine.idMap.containsKey( A_LAX ) ) {
 			options.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
 			if (!options.bQuiet) System.out.println("Using relaxed URI validation for ARC URL and WARC Target-URI.");
 		}
+
+		options.bQuiet = cmdLine.idMap.containsKey( JWATTools.A_QUIET );
 
         // Files.
 		argument = cmdLine.idMap.get( JWATTools.A_FILES );

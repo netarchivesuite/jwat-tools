@@ -6,9 +6,16 @@ import org.jwat.tools.JWATTools;
 import org.jwat.tools.tasks.TaskCLI;
 
 import com.antiaction.common.cli.Argument;
+import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
+import com.antiaction.common.cli.Options;
+import com.antiaction.common.cli.ArgumentParseException;
 
 public class Arc2WarcTaskCLI extends TaskCLI {
+
+	public static final int A_DEST = 101;
+	public static final int A_OVERWRITE = 102;
+	public static final int A_PREFIX = 103;
 
 	public static final String commandName = "arc2warc";
 
@@ -30,6 +37,20 @@ public class Arc2WarcTaskCLI extends TaskCLI {
 
 	@Override
 	public void runtask(CommandLine cmdLine) {
+		Options cliOptions = new Options();
+		cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
+		cliOptions.addOption("-d", "--destdir", A_DEST, 0, null).setValueRequired();
+		cliOptions.addOption(null, "--overwrite", A_OVERWRITE, 0, null);
+		cliOptions.addOption(null, "--prefix=", A_PREFIX, 0, null);
+		cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
+		try {
+			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
+		}
+		catch (ArgumentParseException e) {
+			System.out.println( getClass().getName() + ": " + e.getMessage() );
+			System.exit( 1 );
+		}
+
 		Arc2WarcOptions options = new Arc2WarcOptions();
 
 		Argument argument;
@@ -51,7 +72,7 @@ public class Arc2WarcTaskCLI extends TaskCLI {
 
 		// Destination directory.
 		String dest = System.getProperty("user.dir");
-		argument = cmdLine.idMap.get( JWATTools.A_DEST );
+		argument = cmdLine.idMap.get( A_DEST );
 		if ( argument != null && argument.value != null ) {
 			dest = argument.value;
 		}
@@ -68,13 +89,13 @@ public class Arc2WarcTaskCLI extends TaskCLI {
 		}
 
 		// Overwrite.
-		argument = cmdLine.idMap.get( JWATTools.A_OVERWRITE );
+		argument = cmdLine.idMap.get( A_OVERWRITE );
 		if ( argument != null && argument.value != null ) {
 			options.bOverwrite = true;
 		}
 
 		// Prefix.
-		argument = cmdLine.idMap.get( JWATTools.A_PREFIX );
+		argument = cmdLine.idMap.get( A_PREFIX );
 		if ( argument != null && argument.value != null ) {
 			options.prefix = argument.value;
 		}

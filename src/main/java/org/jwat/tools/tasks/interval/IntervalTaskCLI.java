@@ -4,7 +4,10 @@ import org.jwat.tools.JWATTools;
 import org.jwat.tools.tasks.TaskCLI;
 
 import com.antiaction.common.cli.Argument;
+import com.antiaction.common.cli.ArgumentParseException;
+import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
+import com.antiaction.common.cli.Options;
 
 public class IntervalTaskCLI extends TaskCLI {
 
@@ -21,14 +24,25 @@ public class IntervalTaskCLI extends TaskCLI {
 		System.out.println("\tSkips data up to offset1 and save data to file until offset2 is reached.");
 		System.out.println("\tOffset1/2 can be decimal or hexadecimal ($<x> or 0x<x>).");
 		System.out.println("\tOffset2 can also be a length-ofsset (+<x>).");
+		/*
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -o<file>  output data filename");
+		*/
 	}
 
 	@Override
 	public void runtask(CommandLine cmdLine) {
+		Options cliOptions = new Options();
+		cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
+		try {
+			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
+		}
+		catch (ArgumentParseException e) {
+			System.out.println( getClass().getName() + ": " + e.getMessage() );
+			System.exit( 1 );
+		}
+
 		IntervalOptions options = new IntervalOptions();
 
 		Argument argument;

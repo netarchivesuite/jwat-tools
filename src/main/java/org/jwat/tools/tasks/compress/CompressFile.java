@@ -68,11 +68,11 @@ public class CompressFile {
 				if ( !dstFile.exists() ) {
 					//System.out.println( srcFname + " -> " + dstFname );
 					if ( ArcReaderFactory.isArcFile( pbin ) ) {
-						result = compressArcFile( pbin, dstFile, options );
+						result = compressArcFile( raf, pbin, dstFile, options );
 						result.srcFile = srcFile;
 					}
 					else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
-						result = compressWarcFile( pbin, dstFile, options );
+						result = compressWarcFile( raf, pbin, dstFile, options );
 						result.srcFile = srcFile;
 					}
 					else {
@@ -168,7 +168,7 @@ public class CompressFile {
 	}
 
 	// TODO
-	protected CompressResult compressArcFile(InputStream in, File dstFile, CompressOptions options) {
+	protected CompressResult compressArcFile(RandomAccessFile raf, InputStream in, File dstFile, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
         InputStream uncompressedFileIn = null;
 		FileOutputStream out = null;
@@ -237,6 +237,9 @@ public class CompressFile {
 			        	}
 			        	*/
 			        }
+			        pin.close();
+			        pin = null;
+			        payload.close();
 				}
 
 				cout.close();
@@ -312,7 +315,7 @@ public class CompressFile {
     protected byte[] endMark = "\r\n\r\n".getBytes();
 
     // TODO
-	protected CompressResult compressWarcFile(InputStream in, File dstFile, CompressOptions options) {
+	protected CompressResult compressWarcFile(RandomAccessFile raf, InputStream in, File dstFile, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
         InputStream uncompressedFileIn = null;
 		FileOutputStream out = null;
@@ -363,45 +366,79 @@ public class CompressFile {
 		        writer.writeEntryHeader(entry);
 
 		        cout = entry.getOutputStream();
-		        cout.write(warcRecord.header.headerBytes);
-		        /*
-		        if (options.bVerify) {
-		        	md5uncomp.update(warcRecord.header.headerBytes);
-		        }
-		        */
 
-		        // debug
-		        //System.out.println(warcRecord.getStartOffset());
-		        //System.out.println(warcRecord.getConsumed());
-
-		        payload = warcRecord.getPayload();
-				if (payload != null) {
-					pin = payload.getInputStreamComplete();
-			        while ((read = pin.read(buffer, 0, BUFFER_SIZE)) != -1) {
-			        	cout.write(buffer, 0, read);
-			        	/*
-			        	if (options.bVerify) {
-				        	md5uncomp.update(buffer, 0, read);
-			        	}
-			        	*/
+		        if (!options.bTwopass) {
+		        	/*
+		        	 * Write the "raw" data read by the WARC reader.
+		        	 */
+			        cout.write(warcRecord.header.headerBytes);
+			        /*
+			        if (options.bVerify) {
+			        	md5uncomp.update(warcRecord.header.headerBytes);
 			        }
-			        pin.close();
-			        pin = null;
-				}
+			        */
 
-				cout.write(endMark);
-				/*
-				if (options.bVerify) {
-		        	md5uncomp.update(endMark);
-				}
-				*/
+			        // debug
+			        //System.out.println(warcRecord.getStartOffset());
+			        //System.out.println(warcRecord.getConsumed());
+
+			        payload = warcRecord.getPayload();
+					if (payload != null) {
+						pin = payload.getInputStreamComplete();
+				        while ((read = pin.read(buffer, 0, BUFFER_SIZE)) != -1) {
+				        	cout.write(buffer, 0, read);
+				        	/*
+				        	if (options.bVerify) {
+					        	md5uncomp.update(buffer, 0, read);
+				        	}
+				        	*/
+				        }
+				        pin.close();
+				        pin = null;
+				        payload.close();
+					}
+
+					cout.write(endMark);
+					/*
+					if (options.bVerify) {
+			        	md5uncomp.update(endMark);
+					}
+					*/
+					warcRecord.close();
+					warcRecord = null;
+		        }
+		        else {
+		        	/*
+		        	 * Use WARC reader to get offset and length of record and read directly from file.
+		        	 */
+			        payload = warcRecord.getPayload();
+					if (payload != null) {
+						pin = payload.getInputStreamComplete();
+				        pin.close();
+				        pin = null;
+				        payload.close();
+					}
+					warcRecord.close();
+			        long offset  = warcRecord.getStartOffset();
+			        long consumed = warcRecord.getConsumed();
+					warcRecord = null;
+		        	long oldPos = raf.getFilePointer();
+		        	raf.seek(offset);
+		        	while (consumed > 0) {
+		        		read = (int)Math.min(consumed, (long)buffer.length);
+		        		read = raf.read(buffer, 0, read);
+		        		if (read > 0) {
+		        			consumed -= read;
+				        	cout.write(buffer, 0, read);
+		        		}
+		        	}
+		        	raf.seek(oldPos);
+		        }
 
 				cout.close();
 				cout = null;
 				entry.close();
 				entry = null;
-				warcRecord.close();
-				warcRecord = null;
 			}
 			writer.close();
 			writer = null;

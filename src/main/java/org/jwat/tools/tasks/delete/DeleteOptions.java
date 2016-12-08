@@ -7,7 +7,7 @@ public class DeleteOptions {
 
 	public File outputFile = new File("deleted_files.out");
 
-	public boolean bTestRun;
+	public boolean bDryRun;
 
 	public List<String> filesList;
 
