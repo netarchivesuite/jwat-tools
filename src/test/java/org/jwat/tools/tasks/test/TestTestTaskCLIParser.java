@@ -99,16 +99,6 @@ public class TestTestTaskCLIParser {
 			},
 		};
 
-		/*
-		public boolean bShowErrors = false;
-		public boolean bValidateDigest = true;
-		public boolean bBad = false;
-		public Long after = 0L;
-		public UriProfile uriProfile = UriProfile.RFC3986;
-		public List<ValidatorPlugin> validatorPlugins = new LinkedList<ValidatorPlugin>();
-		public List<String> filesList;
-		*/
-
 		for (int i=0; i<cases.length; ++i) {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
