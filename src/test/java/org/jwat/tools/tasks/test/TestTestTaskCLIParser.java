@@ -65,6 +65,7 @@ public class TestTestTaskCLIParser {
 				false, false, false, 0L, UriProfile.RFC3986, false,
 				new String[] {"file3"}
 			},
+			// FIXME
 			/*
 			{
 				new String[] {"--ignore-digest", "file4"},
@@ -96,7 +97,7 @@ public class TestTestTaskCLIParser {
 				1,
 				false, true, false, 0L, UriProfile.RFC3986, true,
 				new String[] {"file8"}
-			},
+			}
 		};
 
 		for (int i=0; i<cases.length; ++i) {
@@ -126,7 +127,7 @@ public class TestTestTaskCLIParser {
 
 		try {
 			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-w", "-1", "file"};
+			cmdLine.argsArray = new String[] {};
 			options = TestTaskCLIParser.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
@@ -144,7 +145,7 @@ public class TestTestTaskCLIParser {
 
 		try {
 			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-w", "fourtytwo"};
+			cmdLine.argsArray = new String[] {"-w", "0", "file"};
 			options = TestTaskCLIParser.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
@@ -153,7 +154,16 @@ public class TestTestTaskCLIParser {
 
 		try {
 			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-a", "fourtytwo"};
+			cmdLine.argsArray = new String[] {"-w", "fourtytwo", "file"};
+			options = TestTaskCLIParser.parseArguments(cmdLine);
+			Assert.fail("Exception expected!");
+		}
+		catch (ExitException e) {
+		}
+
+		try {
+			cmdLine = new CommandLine();
+			cmdLine.argsArray = new String[] {"-a", "fourtytwo", "file"};
 			options = TestTaskCLIParser.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}

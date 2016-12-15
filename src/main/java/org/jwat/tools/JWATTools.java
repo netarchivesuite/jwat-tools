@@ -80,7 +80,7 @@ public class JWATTools {
 	}
 
 	@SuppressWarnings("unchecked")
-	public void configure_cli() {
+	public static void configure_cli() {
 		Class<?>[] tasks = new Class<?>[] {
 				HelpTaskCLI.class,
 				Arc2WarcTaskCLI.class,
@@ -97,12 +97,11 @@ public class JWATTools {
 				UnpackTaskCLI.class,
 		};
 		addCommands((Class<? extends TaskCLI>[])tasks);
-
 		options.addOption("-w", "--workers", A_WORKERS, 0, null).setValueRequired();
-		options.addNamedArgument( "command", A_COMMAND, 1, 1).setStopParsing();
+		options.addNamedArgument( "command", A_COMMAND, 0, 1).setStopParsing();
 	}
 
-	public void show_commands() {
+	public static void show_commands() {
 		Collections.sort(commandList, new Comparator<Class<? extends TaskCLI>>() {
 			@Override
 			public int compare(Class<? extends TaskCLI> t1, Class<? extends TaskCLI> t2) {
@@ -150,7 +149,7 @@ public class JWATTools {
 		System.out.println("See 'jwattools help <command>' for more information on a specific command.");
 	}
 
-	public void show_help() {
+	public static void show_help() {
 		Package pkg = Package.getPackage("org.jwat.tools");
 		String version = null;
 		if (pkg != null) {
@@ -181,13 +180,12 @@ public class JWATTools {
 			System.out.println( getClass().getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}
-		if ( cmdLine == null ) {
+		Argument argument = cmdLine.idMap.get( JWATTools.A_COMMAND );
+		if ( argument == null ) {
 			show_help();
 		}
 		else {
-			Argument argument = cmdLine.idMap.get( JWATTools.A_COMMAND );
 			String commandStr = argument.value.toLowerCase();
-
 			Class<? extends TaskCLI> clazz = commandMap.get(commandStr);
 			if (clazz != null) {
 				try {

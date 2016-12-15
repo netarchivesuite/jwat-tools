@@ -22,6 +22,7 @@ public class DeleteTaskCLIParser {
 		Options cliOptions = new Options();
 		cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
 		cliOptions.addOption("-o", null, A_OUTPUT, 0, null).setValueRequired();
+		cliOptions.addOption(null, "--dryrun", A_DRYRUN, 0, null);
 		cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 		try {
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);

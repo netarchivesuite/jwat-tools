@@ -130,7 +130,7 @@ public class TestCompressTaskCLI {
 
 		try {
 			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-w", "-1", "file"};
+			cmdLine.argsArray = new String[] {};
 			options = CompressTaskCLIParser.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
@@ -148,7 +148,16 @@ public class TestCompressTaskCLI {
 
 		try {
 			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-w", "fourtytwo"};
+			cmdLine.argsArray = new String[] {"-w", "0", "file"};
+			options = CompressTaskCLIParser.parseArguments(cmdLine);
+			Assert.fail("Exception expected!");
+		}
+		catch (ExitException e) {
+		}
+
+		try {
+			cmdLine = new CommandLine();
+			cmdLine.argsArray = new String[] {"-w", "fourtytwo", "file"};
 			options = CompressTaskCLIParser.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}

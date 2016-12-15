@@ -1,10 +1,7 @@
 package org.jwat.tools;
 
-import java.util.List;
-
 import org.jwat.tools.tasks.TaskCLI;
 
-import com.antiaction.common.cli.Argument;
 import com.antiaction.common.cli.CommandLine;
 
 public class HelpTaskCLI extends TaskCLI {
@@ -28,16 +25,12 @@ public class HelpTaskCLI extends TaskCLI {
 
 	@Override
 	public void runtask(CommandLine cmdLine) {
-		Argument argument = cmdLine.idMap.get( JWATTools.A_FILES );
-		List<String> files = null;
-		String command = null;
-		if (argument != null) {
-			files = argument.values;
+		HelpOptions options = HelpTaskCLIParser.parseArguments(cmdLine);
+		String command = options.command;
+		if (command == null) {
+			JWATTools.show_help();
 		}
-		if (files != null && files.size() > 0) {
-			command = files.get(0);
-		}
-		if (command != null) {
+		else {
 			Class<? extends TaskCLI> clazz = JWATTools.commandMap.get(command);
 			if (clazz != null) {
 				try {

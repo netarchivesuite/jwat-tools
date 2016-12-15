@@ -1,6 +1,5 @@
-package org.jwat.tools.tasks.pathindex;
+package org.jwat.tools.tasks.decompress;
 
-import java.io.File;
 import java.util.List;
 
 import org.junit.After;
@@ -15,7 +14,7 @@ import org.jwat.tools.NoExitSecurityManager;
 import com.antiaction.common.cli.CommandLine;
 
 @RunWith(JUnit4.class)
-public class TestPathIndexTaskCLIParser {
+public class TestDecompressTaskCLIParser {
 
 	private SecurityManager securityManager;
 
@@ -33,30 +32,29 @@ public class TestPathIndexTaskCLIParser {
 	@Test
 	public void test_testtask_cli_parser() {
 		CommandLine cmdLine;
-		PathIndexOptions options;
+		DecompressOptions options;
 
-		PathIndexTaskCLIParser object = new PathIndexTaskCLIParser();
+		DecompressTaskCLIParser object = new DecompressTaskCLIParser();
 		Assert.assertNotNull(object);
 
 		Object[][] cases = new Object[][] {
 			{
 				new String[] {"file1"},
-				new File("path-index.unsorted.out"),
+				1,
 				new String[] {"file1"}
 			},
 			{
-				new String[] {"-o", "directory/file", "file2"},
-				new File("directory/file"),
+				new String[] {"-w", "8", "file2"},
+				8,
 				new String[] {"file2"}
 			}
 		};
-		// path-index.unsorted.out
+
 		for (int i=0; i<cases.length; ++i) {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
-			options = PathIndexTaskCLIParser.parseArguments(cmdLine);
-			System.out.println(options.outputFile);
-			Assert.assertEquals((File)cases[ i ][ 1 ], options.outputFile);
+			options = DecompressTaskCLIParser.parseArguments(cmdLine);
+			Assert.assertEquals(cases[ i ][ 1 ], options.threads);
 			String[] expectedFileList = (String[])cases[ i ][ 2 ];
 			List<String> fileList = options.filesList;
 			Assert.assertEquals(expectedFileList.length, fileList.size());
@@ -68,20 +66,12 @@ public class TestPathIndexTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {};
-			options = PathIndexTaskCLIParser.parseArguments(cmdLine);
+			options = DecompressTaskCLIParser.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
 		}
 
-		try {
-			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-o", "outfile"};
-			options = PathIndexTaskCLIParser.parseArguments(cmdLine);
-			Assert.fail("Exception expected!");
-		}
-		catch (ExitException e) {
-		}
 	}
 
 }
