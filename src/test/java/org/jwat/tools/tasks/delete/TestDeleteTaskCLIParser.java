@@ -31,7 +31,7 @@ public class TestDeleteTaskCLIParser {
 	}
 
 	@Test
-	public void test_testtask_cli_parser() {
+	public void test_deletetask_cli_parser() {
 		CommandLine cmdLine;
 		DeleteOptions options;
 

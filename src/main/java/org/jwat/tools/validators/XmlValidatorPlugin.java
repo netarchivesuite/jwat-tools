@@ -100,7 +100,6 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
     	 * Load and validate an XML document in two passes.
     	 * First pass load the XML document for wellformedness.
     	 * Second pass looks for DTD/XSD and validate against it.
-    	 * @param in XML input stream
          */
         public void validate(ManagedPayload managedPayload, TestFileResultItemDiagnosis itemDiagnosis) {
         	InputStream payloadStream = null;

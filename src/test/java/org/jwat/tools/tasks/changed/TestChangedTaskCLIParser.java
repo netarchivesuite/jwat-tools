@@ -1,5 +1,6 @@
-package org.jwat.tools.tasks.extract;
+package org.jwat.tools.tasks.changed;
 
+import java.io.File;
 import java.util.List;
 
 import org.junit.After;
@@ -14,7 +15,7 @@ import org.jwat.tools.NoExitSecurityManager;
 import com.antiaction.common.cli.CommandLine;
 
 @RunWith(JUnit4.class)
-public class TestExtractTaskCLIParser {
+public class TestChangedTaskCLIParser {
 
 	private SecurityManager securityManager;
 
@@ -30,35 +31,32 @@ public class TestExtractTaskCLIParser {
 	}
 
 	@Test
-	public void test_extracttask_cli_parser() {
+	public void test_changedtask_cli_parser() {
 		CommandLine cmdLine;
-		ExtractOptions options;
+		ChangedOptions options;
 
-		ExtractTaskCLIParser object = new ExtractTaskCLIParser();
+		ChangedTaskCLIParser object = new ChangedTaskCLIParser();
 		Assert.assertNotNull(object);
 
 		Object[][] cases = new Object[][] {
 			{
-				new String[] {"-w", "8", "file1"},
-				8, null, new String[] {"file1"}
+				new String[] {"file1"},
+				null,
+				new String[] {"file1"}
 			},
 			{
-				new String[] {"file2"},
-				1, null, new String[] {"file2"}
-			},
-			{
-				new String[] {"-u", "targeturi", "file3"},
-				1, "targeturi", new String[] {"file3"}
+				new String[] {"-o", "output-file", "file2"},
+				new File("output-file"),
+				new String[] {"file2"}
 			}
 		};
 
 		for (int i=0; i<cases.length; ++i) {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
-			options = ExtractTaskCLIParser.parseArguments(cmdLine);
-			Assert.assertEquals(cases[ i ][ 1 ], options.threads);
-			Assert.assertEquals(cases[ i ][ 2 ], options.targetUri);
-			String[] expectedFileList = (String[])cases[ i ][ 3 ];
+			options = ChangedTaskCLIParser.parseArguments(cmdLine);
+			Assert.assertEquals(cases[ i ][ 1 ], options.outputFile);
+			String[] expectedFileList = (String[])cases[ i ][ 2 ];
 			List<String> fileList = options.filesList;
 			Assert.assertEquals(expectedFileList.length, fileList.size());
 			for (int j=0; j<expectedFileList.length; ++j) {
@@ -69,7 +67,7 @@ public class TestExtractTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {};
-			options = ExtractTaskCLIParser.parseArguments(cmdLine);
+			options = ChangedTaskCLIParser.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -77,31 +75,12 @@ public class TestExtractTaskCLIParser {
 
 		try {
 			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-w", "42"};
-			options = ExtractTaskCLIParser.parseArguments(cmdLine);
+			cmdLine.argsArray = new String[] {"-o", "outfile"};
+			options = ChangedTaskCLIParser.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
 		}
-
-		try {
-			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-w", "0", "file"};
-			options = ExtractTaskCLIParser.parseArguments(cmdLine);
-			Assert.fail("Exception expected!");
-		}
-		catch (ExitException e) {
-		}
-
-		try {
-			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-w", "fourtytwo", "file"};
-			options = ExtractTaskCLIParser.parseArguments(cmdLine);
-			Assert.fail("Exception expected!");
-		}
-		catch (ExitException e) {
-		}
-
 	}
 
 }

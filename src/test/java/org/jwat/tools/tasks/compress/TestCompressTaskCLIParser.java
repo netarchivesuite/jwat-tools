@@ -15,7 +15,7 @@ import org.jwat.tools.NoExitSecurityManager;
 import com.antiaction.common.cli.CommandLine;
 
 @RunWith(JUnit4.class)
-public class TestCompressTaskCLI {
+public class TestCompressTaskCLIParser {
 
 	private SecurityManager securityManager;
 

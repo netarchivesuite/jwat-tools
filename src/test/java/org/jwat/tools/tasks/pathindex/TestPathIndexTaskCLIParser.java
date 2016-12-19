@@ -31,7 +31,7 @@ public class TestPathIndexTaskCLIParser {
 	}
 
 	@Test
-	public void test_testtask_cli_parser() {
+	public void test_pathindextask_cli_parser() {
 		CommandLine cmdLine;
 		PathIndexOptions options;
 

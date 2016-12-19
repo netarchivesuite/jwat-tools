@@ -22,13 +22,13 @@ public class CompressTask extends ProcessTask {
 	private CompressOptions options;
 
 	/** Valid results output stream. */
-	private SynchronizedOutput validOutput;
+	//private SynchronizedOutput validOutput;
 
 	/** Invalid results output stream. */
-	private SynchronizedOutput invalidOutput;
+	//private SynchronizedOutput invalidOutput;
 
 	/** Exception output stream. */
-	private SynchronizedOutput exceptionsOutput;
+	//private SynchronizedOutput exceptionsOutput;
 
 	public void runtask(CompressOptions options) {
 		this.options = options;
@@ -51,10 +51,13 @@ public class CompressTask extends ProcessTask {
 
 		calucate_runstats();
 
-		cout.println( "      Time: " + run_timestr + " (" + run_dtm + " ms.)" );
-		cout.println( "TotalBytes: " + toSizeString(current_size));
-		cout.println( "  AvgBytes: " + toSizePerSecondString(run_avgbpsec));
-		cout.println(String.format("    Gained: %s (%.2f%%).", toSizeString(uncompressed - compressed), current_gain));
+		cout.println("         Time: " + run_timestr + " (" + run_dtm + " ms.)" );
+		cout.println("   TotalBytes: " + toSizeString(current_size));
+		cout.println("     AvgBytes: " + toSizePerSecondString(run_avgbpsec));
+		cout.println(String.format("       Gained: %s (%.2f%%).", toSizeString(uncompressed - compressed), current_gain));
+		cout.println("    Completed: " + completed);
+		cout.println("  Incompleted: " + incomplete);
+		cout.println("IntegrityFail: " + integrityFail);
 	}
 
 	@Override
@@ -112,6 +115,12 @@ public class CompressTask extends ProcessTask {
 	/** Completed Compressed results list. */
 	private ConcurrentLinkedQueue<CompressResult> results = new ConcurrentLinkedQueue<CompressResult>();
 
+	private long completed = 0;
+
+	private long incomplete = 0;
+
+	private long integrityFail = 0;
+
 	private long uncompressed = 0;
 
 	private long compressed = 0;
@@ -142,24 +151,31 @@ public class CompressTask extends ProcessTask {
 							++processed;
 
 							if (result.bCompleted) {
-					        	if (result.bVerified) {
-					        		if (lstWriter != null) {
-						        		sb.setLength(0);
-							        	sb.append(result.srcFile.getName());
-							        	sb.append(",");
-							        	sb.append(result.srcFile.length());
-							        	sb.append(",");
-							        	sb.append(Base16.encodeArray(result.md5DigestBytesOrg));
-							        	sb.append(",");
-							        	sb.append(result.dstFile.getName());
-							        	sb.append(",");
-							        	sb.append(result.dstFile.length());
-							        	sb.append(",");
-							        	sb.append(Base16.encodeArray(result.md5compDigestBytesVerify));
-							        	//cout.println(sb.toString());
-							        	lstWriter.println(sb.toString());
-					        		}
-						        }
+								++completed;
+								if (options.bVerify) {
+						        	if (result.bVerified) {
+						        		if (lstWriter != null) {
+							        		sb.setLength(0);
+								        	sb.append(result.srcFile.getName());
+								        	sb.append(",");
+								        	sb.append(result.srcFile.length());
+								        	sb.append(",");
+								        	sb.append(Base16.encodeArray(result.md5DigestBytesOrg));
+								        	sb.append(",");
+								        	sb.append(result.dstFile.getName());
+								        	sb.append(",");
+								        	sb.append(result.dstFile.length());
+								        	sb.append(",");
+								        	sb.append(Base16.encodeArray(result.md5compDigestBytesVerify));
+								        	//cout.println(sb.toString());
+								        	lstWriter.println(sb.toString());
+						        		}
+							        }
+						        	else {
+						        		++integrityFail;
+										cout.print("Integrity fail: " + result.srcFile.getPath());
+						        	}
+								}
 								if (!options.bVerify || result.bVerified) {
 									uncompressed += result.srcFile.length();
 						        	compressed += result.dstFile.length();
@@ -167,6 +183,10 @@ public class CompressTask extends ProcessTask {
 										current_gain = (double)(uncompressed - compressed) / (double)uncompressed * 100.0;
 						        	}
 								}
+							}
+							else {
+								++incomplete;
+								cout.print("Incomplete: " + result.srcFile.getPath());
 							}
 
 							result.dstFile.setLastModified(result.srcFile.lastModified());

@@ -30,7 +30,7 @@ public class TestDecompressTaskCLIParser {
 	}
 
 	@Test
-	public void test_testtask_cli_parser() {
+	public void test_decompresstask_cli_parser() {
 		CommandLine cmdLine;
 		DecompressOptions options;
 
@@ -72,6 +72,32 @@ public class TestDecompressTaskCLIParser {
 		catch (ExitException e) {
 		}
 
+		try {
+			cmdLine = new CommandLine();
+			cmdLine.argsArray = new String[] {"-w", "8"};
+			options = DecompressTaskCLIParser.parseArguments(cmdLine);
+			Assert.fail("Exception expected!");
+		}
+		catch (ExitException e) {
+		}
+
+		try {
+			cmdLine = new CommandLine();
+			cmdLine.argsArray = new String[] {"-w", "0", "file"};
+			options = DecompressTaskCLIParser.parseArguments(cmdLine);
+			Assert.fail("Exception expected!");
+		}
+		catch (ExitException e) {
+		}
+
+		try {
+			cmdLine = new CommandLine();
+			cmdLine.argsArray = new String[] {"-w", "fourtytwo", "file"};
+			options = DecompressTaskCLIParser.parseArguments(cmdLine);
+			Assert.fail("Exception expected!");
+		}
+		catch (ExitException e) {
+		}
 	}
 
 }
