@@ -12,8 +12,6 @@ import org.jwat.archive.FileIdent;
 import org.jwat.common.Base16;
 import org.jwat.tools.tasks.ProcessTask;
 
-import com.antiaction.common.cli.SynchronizedOutput;
-
 public class CompressTask extends ProcessTask {
 
 	public CompressTask() {

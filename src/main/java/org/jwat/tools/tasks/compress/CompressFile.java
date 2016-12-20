@@ -167,6 +167,8 @@ public class CompressFile {
 		return result;
 	}
 
+    protected byte[] arcEndMark = "\n".getBytes();
+
 	// TODO
 	protected CompressResult compressArcFile(RandomAccessFile raf, InputStream in, File dstFile, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
@@ -219,35 +221,72 @@ public class CompressFile {
 		        writer.writeEntryHeader(entry);
 
 		        cout = entry.getOutputStream();
-		        cout.write(arcRecord.header.headerBytes);
-		        /*
-		        if (options.bVerify) {
-		        	md5uncomp.update(arcRecord.header.headerBytes);
-		        }
-		        */
 
-				payload = arcRecord.getPayload();
-				if (payload != null) {
-					pin = payload.getInputStreamComplete();
-			        while ((read = pin.read(buffer, 0, BUFFER_SIZE)) != -1) {
-			        	cout.write(buffer, 0, read);
-			        	/*
-			        	if (options.bVerify) {
-				        	md5uncomp.update(buffer, 0, read);
-			        	}
-			        	*/
+		        if (!options.bTwopass) {
+		        	/*
+		        	 * Write the "raw" data read by the ARC reader.
+		        	 */
+			        cout.write(arcRecord.header.headerBytes);
+			        /*
+			        if (options.bVerify) {
+			        	md5uncomp.update(arcRecord.header.headerBytes);
 			        }
-			        pin.close();
-			        pin = null;
-			        payload.close();
-				}
-
+			        */
+					payload = arcRecord.getPayload();
+					if (payload != null) {
+						pin = payload.getInputStreamComplete();
+				        while ((read = pin.read(buffer, 0, BUFFER_SIZE)) != -1) {
+				        	cout.write(buffer, 0, read);
+				        	/*
+				        	if (options.bVerify) {
+					        	md5uncomp.update(buffer, 0, read);
+				        	}
+				        	*/
+				        }
+				        pin.close();
+				        pin = null;
+				        payload.close();
+					}
+					cout.write(arcEndMark);
+					/*
+					if (options.bVerify) {
+			        	md5uncomp.update(arcEndMark);
+					}
+					*/
+			        arcRecord.close();
+			        arcRecord = null;
+		        }
+		        else {
+		        	/*
+		        	 * Use ARC reader to get offset and length of record and read directly from file.
+		        	 */
+					payload = arcRecord.getPayload();
+					if (payload != null) {
+						pin = payload.getInputStreamComplete();
+				        pin.close();
+				        pin = null;
+				        payload.close();
+					}
+					arcRecord.close();
+			        long offset  = arcRecord.getStartOffset();
+			        long consumed = arcRecord.getConsumed();
+					arcRecord = null;
+		        	long oldPos = raf.getFilePointer();
+		        	raf.seek(offset);
+		        	while (consumed > 0) {
+		        		read = (int)Math.min(consumed, (long)buffer.length);
+		        		read = raf.read(buffer, 0, read);
+		        		if (read > 0) {
+		        			consumed -= read;
+				        	cout.write(buffer, 0, read);
+		        		}
+		        	}
+		        	raf.seek(oldPos);
+		        }
 				cout.close();
 				cout = null;
 				entry.close();
 				entry = null;
-		        arcRecord.close();
-		        arcRecord = null;
 			}
 			writer.close();
 			writer = null;
@@ -312,7 +351,7 @@ public class CompressFile {
 		return result;
 	}
 
-    protected byte[] endMark = "\r\n\r\n".getBytes();
+    protected byte[] warcEndMark = "\r\n\r\n".getBytes();
 
     // TODO
 	protected CompressResult compressWarcFile(RandomAccessFile raf, InputStream in, File dstFile, CompressOptions options) {
@@ -377,11 +416,6 @@ public class CompressFile {
 			        	md5uncomp.update(warcRecord.header.headerBytes);
 			        }
 			        */
-
-			        // debug
-			        //System.out.println(warcRecord.getStartOffset());
-			        //System.out.println(warcRecord.getConsumed());
-
 			        payload = warcRecord.getPayload();
 					if (payload != null) {
 						pin = payload.getInputStreamComplete();
@@ -397,11 +431,10 @@ public class CompressFile {
 				        pin = null;
 				        payload.close();
 					}
-
-					cout.write(endMark);
+					cout.write(warcEndMark);
 					/*
 					if (options.bVerify) {
-			        	md5uncomp.update(endMark);
+			        	md5uncomp.update(warcEndMark);
 					}
 					*/
 					warcRecord.close();
@@ -434,7 +467,6 @@ public class CompressFile {
 		        	}
 		        	raf.seek(oldPos);
 		        }
-
 				cout.close();
 				cout = null;
 				entry.close();
