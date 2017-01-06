@@ -5,7 +5,7 @@ import java.io.File;
 import org.jwat.tools.JWATTools;
 
 import com.antiaction.common.cli.Argument;
-import com.antiaction.common.cli.ArgumentParseException;
+import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
@@ -21,15 +21,15 @@ public class Arc2WarcTaskCLIParser {
 
 	public static Arc2WarcOptions parseArguments(CommandLine cmdLine) {
 		Options cliOptions = new Options();
-		cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
-		cliOptions.addOption("-d", "--destdir", A_DEST, 0, null).setValueRequired();
-		cliOptions.addOption(null, "--overwrite", A_OVERWRITE, 0, null);
-		cliOptions.addOption(null, "--prefix=", A_PREFIX, 0, null);
-		cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 		try {
+			cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
+			cliOptions.addOption("-d", "--destdir", A_DEST, 0, null).setValueRequired();
+			cliOptions.addOption(null, "--overwrite", A_OVERWRITE, 0, null);
+			cliOptions.addOption(null, "--prefix", A_PREFIX, 0, null).setValueRequired();
+			cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
 		}
-		catch (ArgumentParseException e) {
+		catch (ArgumentParserException e) {
 			System.out.println( Arc2WarcTaskCLIParser.class.getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}
@@ -72,8 +72,7 @@ public class Arc2WarcTaskCLIParser {
 		}
 
 		// Overwrite.
-		argument = cmdLine.idMap.get( A_OVERWRITE );
-		if ( argument != null && argument.value != null ) {
+		if ( cmdLine.idMap.containsKey( A_OVERWRITE) ) {
 			options.bOverwrite = true;
 		}
 

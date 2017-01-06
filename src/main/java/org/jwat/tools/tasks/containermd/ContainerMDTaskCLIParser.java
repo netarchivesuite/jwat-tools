@@ -6,7 +6,7 @@ import org.jwat.common.UriProfile;
 import org.jwat.tools.JWATTools;
 
 import com.antiaction.common.cli.Argument;
-import com.antiaction.common.cli.ArgumentParseException;
+import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
@@ -21,15 +21,15 @@ public class ContainerMDTaskCLIParser {
 
 	public static ContainerMDOptions parseArguments(CommandLine cmdLine) {
 		Options cliOptions = new Options();
-		cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
-		cliOptions.addOption("-d", "--destdir", A_DEST, 0, null).setValueRequired();
-		cliOptions.addOption("-l", null, A_LAX, 0, null);
-		cliOptions.addOption("-q", null, JWATTools.A_QUIET, 0, null);
-		cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 		try {
+			cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
+			cliOptions.addOption("-d", "--destdir", A_DEST, 0, null).setValueRequired();
+			cliOptions.addOption("-l", null, A_LAX, 0, null);
+			cliOptions.addOption("-q", null, JWATTools.A_QUIET, 0, null);
+			cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
 		}
-		catch (ArgumentParseException e) {
+		catch (ArgumentParserException e) {
 			System.out.println( ContainerMDTaskCLIParser.class.getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}

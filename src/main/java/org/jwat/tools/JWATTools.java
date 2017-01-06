@@ -27,7 +27,7 @@ import com.antiaction.common.cli.Argument;
 import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
-import com.antiaction.common.cli.ArgumentParseException;
+import com.antiaction.common.cli.ArgumentParserException;
 
 public class JWATTools {
 
@@ -97,8 +97,6 @@ public class JWATTools {
 				UnpackTaskCLI.class,
 		};
 		addCommands((Class<? extends TaskCLI>[])tasks);
-		options.addOption("-w", "--workers", A_WORKERS, 0, null).setValueRequired();
-		options.addNamedArgument( "command", A_COMMAND, 0, 1).setStopParsing();
 	}
 
 	public static void show_commands() {
@@ -165,9 +163,11 @@ public class JWATTools {
 	}
 
 	public void Main(String[] args) {
-		configure_cli();
 		CommandLine cmdLine = null;
+		configure_cli();
 		try {
+			options.addOption("-w", "--workers", A_WORKERS, 0, null).setValueRequired();
+			options.addNamedArgument( "command", A_COMMAND, 0, 1).setStopParsing();
 			cmdLine = ArgumentParser.parse(args, options, null);
 			/*
 			for ( int i=0; i<arguments.switchArgsList.size(); ++i) {
@@ -176,7 +176,7 @@ public class JWATTools {
 			}
 			*/
 		}
-		catch (ArgumentParseException e) {
+		catch (ArgumentParserException e) {
 			System.out.println( getClass().getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}

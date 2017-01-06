@@ -82,10 +82,14 @@ public class CompressFile {
 				}
 				else {
 					System.out.println( dstFile.getName() + " already exists, skipping." );
+			        result = new CompressResult();
+			        result.srcFile = srcFile;
 				}
 			}
 			else if ( !srcFname.toLowerCase().endsWith( ".gz" ) ) {
 				System.out.println( "Invalid extension: " + srcFname );
+		        result = new CompressResult();
+		        result.srcFile = srcFile;
 			}
 		}
 		catch (FileNotFoundException e) {
@@ -98,6 +102,10 @@ public class CompressFile {
 			closeIOQuietly(pbin);
 			closeIOQuietly(rafin);
 			closeIOQuietly(raf);
+		}
+		if (result == null) {
+	        result = new CompressResult();
+	        result.srcFile = srcFile;
 		}
 		return result;
 	}

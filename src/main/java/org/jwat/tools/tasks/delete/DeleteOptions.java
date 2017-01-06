@@ -5,7 +5,9 @@ import java.util.List;
 
 public class DeleteOptions {
 
-	public File outputFile = new File("deleted_files.out");
+	public static String DEFAULT_DELETEDFILES_FILENAME = "deleted_files.out";
+
+	public File outputFile = new File(DEFAULT_DELETEDFILES_FILENAME);
 
 	public boolean bDryRun;
 

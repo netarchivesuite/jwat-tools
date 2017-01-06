@@ -45,9 +45,14 @@ public class TestChangedTaskCLIParser {
 				new String[] {"file1"}
 			},
 			{
-				new String[] {"-o", "output-file", "file2"},
+				new String[] {"file1", "file2"},
+				null,
+				new String[] {"file1", "file2"}
+			},
+			{
+				new String[] {"-o", "output-file", "file3"},
 				new File("output-file"),
-				new String[] {"file2"}
+				new String[] {"file3"}
 			}
 		};
 

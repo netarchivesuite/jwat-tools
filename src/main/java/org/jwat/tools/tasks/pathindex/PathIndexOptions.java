@@ -5,7 +5,9 @@ import java.util.List;
 
 public class PathIndexOptions {
 
-	public File outputFile = new File("path-index.unsorted.out");
+	public static String DEFAULT_OUTPUT_FILENAME = "path-index.unsorted.out";
+
+	public File outputFile = new File(DEFAULT_OUTPUT_FILENAME);
 
 	public List<String> filesList;
 

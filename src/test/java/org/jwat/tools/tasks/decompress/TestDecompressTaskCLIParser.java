@@ -44,9 +44,19 @@ public class TestDecompressTaskCLIParser {
 				new String[] {"file1"}
 			},
 			{
-				new String[] {"-w", "8", "file2"},
+				new String[] {"file1", "file2"},
+				1,
+				new String[] {"file1", "file2"}
+			},
+			{
+				new String[] {"-w", "8", "file3"},
 				8,
-				new String[] {"file2"}
+				new String[] {"file3"}
+			},
+			{
+				new String[] {"--workers", "42", "file4"},
+				42,
+				new String[] {"file4"}
 			}
 		};
 

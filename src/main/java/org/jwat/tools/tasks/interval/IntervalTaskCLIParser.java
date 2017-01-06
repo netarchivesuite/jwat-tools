@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import org.jwat.tools.JWATTools;
 
 import com.antiaction.common.cli.Argument;
-import com.antiaction.common.cli.ArgumentParseException;
+import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
@@ -21,14 +21,14 @@ public class IntervalTaskCLIParser {
 
 	public static IntervalOptions parseArguments(CommandLine cmdLine) {
 		Options cliOptions = new Options();
-		cliOptions.addNamedArgument( "offset1", A_OFFSET1, 1, 1);
-		cliOptions.addNamedArgument( "offset2", A_OFFSET2, 1, 1);
-		cliOptions.addNamedArgument( "files", JWATTools.A_FILES, 1, 1 );
-		cliOptions.addNamedArgument( "dstfile", A_DSTFILE, 1, 1);
 		try {
+			cliOptions.addNamedArgument( "offset1", A_OFFSET1, 1, 1);
+			cliOptions.addNamedArgument( "offset2", A_OFFSET2, 1, 1);
+			cliOptions.addNamedArgument( "files", JWATTools.A_FILES, 1, 1 );
+			cliOptions.addNamedArgument( "dstfile", A_DSTFILE, 1, 1);
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
 		}
-		catch (ArgumentParseException e) {
+		catch (ArgumentParserException e) {
 			System.out.println( IntervalTaskCLIParser.class.getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}

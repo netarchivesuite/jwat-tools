@@ -10,7 +10,7 @@ import org.jwat.tools.JWATTools;
 import org.jwat.tools.validators.XmlValidatorPlugin;
 
 import com.antiaction.common.cli.Argument;
-import com.antiaction.common.cli.ArgumentParseException;
+import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
@@ -29,18 +29,18 @@ public class TestTaskCLIParser {
 
 	public static TestOptions parseArguments(CommandLine cmdLine) {
 		Options cliOptions = new Options();
-		cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
-		cliOptions.addOption("-a", null, A_AFTER, 0, null).setValueRequired();
-		cliOptions.addOption("-b", null, A_BAD, 0, null);
-		cliOptions.addOption("-e", null, A_SHOW_ERRORS, 0, null);
-		cliOptions.addOption("-i", "--ignore-digest", A_IGNORE_DIGEST, 0, null);
-		cliOptions.addOption("-l", null, A_LAX, 0, null);
-		cliOptions.addOption("-x", null, A_XML, 0, null);
-		cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 		try {
+			cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
+			cliOptions.addOption("-a", null, A_AFTER, 0, null).setValueRequired();
+			cliOptions.addOption("-b", null, A_BAD, 0, null);
+			cliOptions.addOption("-e", null, A_SHOW_ERRORS, 0, null);
+			cliOptions.addOption("-i", "--ignore-digest", A_IGNORE_DIGEST, 0, null);
+			cliOptions.addOption("-l", null, A_LAX, 0, null);
+			cliOptions.addOption("-x", null, A_XML, 0, null);
+			cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
 		}
-		catch (ArgumentParseException e) {
+		catch (ArgumentParserException e) {
 			System.out.println( TestTaskCLIParser.class.getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}

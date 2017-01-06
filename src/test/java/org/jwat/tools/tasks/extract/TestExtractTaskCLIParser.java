@@ -39,16 +39,28 @@ public class TestExtractTaskCLIParser {
 
 		Object[][] cases = new Object[][] {
 			{
-				new String[] {"-w", "8", "file1"},
-				8, null, new String[] {"file1"}
+				new String[] {"file1"},
+				1, null, new String[] {"file1"}
 			},
 			{
-				new String[] {"file2"},
-				1, null, new String[] {"file2"}
+				new String[] {"file1", "file2"},
+				1, null, new String[] {"file1", "file2"}
 			},
 			{
-				new String[] {"-u", "targeturi", "file3"},
-				1, "targeturi", new String[] {"file3"}
+				new String[] {"-w", "8", "file3"},
+				8, null, new String[] {"file3"}
+			},
+			{
+				new String[] {"--workers", "42", "file4"},
+				42, null, new String[] {"file4"}
+			},
+			{
+				new String[] {"file5"},
+				1, null, new String[] {"file5"}
+			},
+			{
+				new String[] {"-u", "targeturi", "file6"},
+				1, "targeturi", new String[] {"file6"}
 			}
 		};
 

@@ -48,55 +48,70 @@ public class TestTestTaskCLIParser {
 
 		Object[][] cases = new Object[][] {
 			{
-				new String[] {"-w", "8", "file1"},
-				8,
+				new String[] {"file1"},
+				1,
 				false, true, false, 0L, UriProfile.RFC3986, false,
 				new String[] {"file1"}
 			},
 			{
-				new String[] {"-e", "file2"},
+				new String[] {"file1", "file2"},
 				1,
-				true, true, false, 0L, UriProfile.RFC3986, false,
-				new String[] {"file2"}
+				false, true, false, 0L, UriProfile.RFC3986, false,
+				new String[] {"file1", "file2"}
 			},
 			{
-				new String[] {"-i", "file3"},
-				1,
-				false, false, false, 0L, UriProfile.RFC3986, false,
+				new String[] {"-w", "8", "file3"},
+				8,
+				false, true, false, 0L, UriProfile.RFC3986, false,
 				new String[] {"file3"}
 			},
-			// FIXME
-			/*
 			{
-				new String[] {"--ignore-digest", "file4"},
-				1,
-				false, false, false, 0L, UriProfile.RFC3986, false,
+				new String[] {"--workers", "42", "file4"},
+				42,
+				false, true, false, 0L, UriProfile.RFC3986, false,
 				new String[] {"file4"}
 			},
-			*/
 			{
-				new String[] {"-b", "file5"},
+				new String[] {"-e", "file5"},
 				1,
-				false, true, true, 0L, UriProfile.RFC3986, false,
+				true, true, false, 0L, UriProfile.RFC3986, false,
 				new String[] {"file5"}
 			},
 			{
-				new String[] {"-a", dateFormat.format(date), "file6"},
+				new String[] {"-i", "file6"},
 				1,
-				false, true, false, (date.getTime() / 1000) * 1000, UriProfile.RFC3986, false,
+				false, false, false, 0L, UriProfile.RFC3986, false,
 				new String[] {"file6"}
 			},
 			{
-				new String[] {"-l", "file7"},
+				new String[] {"--ignore-digest", "file7"},
 				1,
-				false, true, false, 0L, UriProfile.RFC3986_ABS_16BIT_LAX, false,
+				false, false, false, 0L, UriProfile.RFC3986, false,
 				new String[] {"file7"}
 			},
 			{
-				new String[] {"-x", "file8"},
+				new String[] {"-b", "file8"},
+				1,
+				false, true, true, 0L, UriProfile.RFC3986, false,
+				new String[] {"file8"}
+			},
+			{
+				new String[] {"-a", dateFormat.format(date), "file9"},
+				1,
+				false, true, false, (date.getTime() / 1000) * 1000, UriProfile.RFC3986, false,
+				new String[] {"file9"}
+			},
+			{
+				new String[] {"-l", "file10"},
+				1,
+				false, true, false, 0L, UriProfile.RFC3986_ABS_16BIT_LAX, false,
+				new String[] {"file10"}
+			},
+			{
+				new String[] {"-x", "file11"},
 				1,
 				false, true, false, 0L, UriProfile.RFC3986, true,
-				new String[] {"file8"}
+				new String[] {"file11"}
 			}
 		};
 

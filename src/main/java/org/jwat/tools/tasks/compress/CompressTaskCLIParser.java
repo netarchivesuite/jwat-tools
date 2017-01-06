@@ -5,7 +5,7 @@ import java.io.File;
 import org.jwat.tools.JWATTools;
 
 import com.antiaction.common.cli.Argument;
-import com.antiaction.common.cli.ArgumentParseException;
+import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
@@ -26,28 +26,28 @@ public class CompressTaskCLIParser {
 
 	public static CompressOptions parseArguments(CommandLine cmdLine) {
 		Options cliOptions = new Options();
-		cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
-		cliOptions.addOption("-1", "--fast", A_COMPRESS, 1, null);
-		cliOptions.addOption("-2", null, A_COMPRESS, 2, null);
-		cliOptions.addOption("-3", null, A_COMPRESS, 3, null);
-		cliOptions.addOption("-4", null, A_COMPRESS, 4, null);
-		cliOptions.addOption("-5", null, A_COMPRESS, 5, null);
-		cliOptions.addOption("-6", null, A_COMPRESS, 6, null);
-		cliOptions.addOption("-7", null, A_COMPRESS, 7, null);
-		cliOptions.addOption("-8", null, A_COMPRESS, 8, null);
-		cliOptions.addOption("-9", "--best", A_COMPRESS, 9, null);
-		cliOptions.addOption("-d", "--destdir", A_DEST, 0, null).setValueRequired();
-		cliOptions.addOption(null, "--batch", A_BATCHMODE, 0, null);
-		cliOptions.addOption(null, "--remove", A_REMOVE, 0, null);
-		cliOptions.addOption(null, "--verify", A_VERIFY, 0, null);
-		cliOptions.addOption(null, "--dryrun", A_DRYRUN, 0, null);
-		cliOptions.addOption(null, "--twopass", A_TWOPASS, 0, null);
-		cliOptions.addOption(null, "--listfile", A_FILELIST, 0, null).setValueRequired();
-		cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 		try {
+			cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
+			cliOptions.addOption("-1", "--fast", A_COMPRESS, 1, null);
+			cliOptions.addOption("-2", null, A_COMPRESS, 2, null);
+			cliOptions.addOption("-3", null, A_COMPRESS, 3, null);
+			cliOptions.addOption("-4", null, A_COMPRESS, 4, null);
+			cliOptions.addOption("-5", null, A_COMPRESS, 5, null);
+			cliOptions.addOption("-6", null, A_COMPRESS, 6, null);
+			cliOptions.addOption("-7", null, A_COMPRESS, 7, null);
+			cliOptions.addOption("-8", null, A_COMPRESS, 8, null);
+			cliOptions.addOption("-9", "--best", A_COMPRESS, 9, null);
+			cliOptions.addOption("-d", "--destdir", A_DEST, 0, null).setValueRequired();
+			cliOptions.addOption(null, "--batch", A_BATCHMODE, 0, null);
+			cliOptions.addOption(null, "--remove", A_REMOVE, 0, null);
+			cliOptions.addOption(null, "--verify", A_VERIFY, 0, null);
+			cliOptions.addOption(null, "--dryrun", A_DRYRUN, 0, null);
+			cliOptions.addOption(null, "--twopass", A_TWOPASS, 0, null);
+			cliOptions.addOption(null, "--listfile", A_FILELIST, 0, null).setValueRequired();
+			cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
 		}
-		catch (ArgumentParseException e) {
+		catch (ArgumentParserException e) {
 			System.out.println( CompressTaskCLIParser.class.getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}

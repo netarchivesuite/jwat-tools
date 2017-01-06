@@ -1,7 +1,7 @@
 package org.jwat.tools;
 
 import com.antiaction.common.cli.Argument;
-import com.antiaction.common.cli.ArgumentParseException;
+import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.ArgumentParser;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
@@ -15,11 +15,11 @@ public class HelpTaskCLIParser {
 
 	public static HelpOptions parseArguments(CommandLine cmdLine) {
 		Options cliOptions = new Options();
-		cliOptions.addNamedArgument( "helpfor_command", A_HELPFOR_COMMAND, 1, 1);
 		try {
+			cliOptions.addNamedArgument( "helpfor_command", A_HELPFOR_COMMAND, 1, 1);
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
 		}
-		catch (ArgumentParseException e) {
+		catch (ArgumentParserException e) {
 			System.out.println( HelpTaskCLIParser.class.getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}

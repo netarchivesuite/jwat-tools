@@ -40,70 +40,88 @@ public class TestCompressTaskCLIParser {
 
 		Object[][] cases = new Object[][] {
 			{
-				new String[] {"-w", "8", "-1", "file1"},
-				8, 1,
+				new String[] {"file1"},
+				1, -1,
 				false, false, false, false, false,
 				null, null, new String[] {"file1"}
 			},
 			{
-				new String[] {"-d", "destination", "-2", "file2"},
-				1, 2,
+				new String[] {"file1", "file2"},
+				1, -1,
 				false, false, false, false, false,
-				new File("destination"), null, new String[] {"file2"}
+				null, null, new String[] {"file1", "file2"}
 			},
 			{
-				new String[] {"--destdir", "destination", "-3", "file3"},
-				1, 3,
+				new String[] {"-w", "8", "-1", "file3"},
+				8, 1,
 				false, false, false, false, false,
-				new File("destination"), null, new String[] {"file3"}
+				null, null, new String[] {"file3"}
 			},
 			{
-				new String[] {"--batch", "-4", "file4"},
-				1, 4,
-				true, false, false, false, false,
+				new String[] {"--workers", "42", "-1", "file4"},
+				42, 1,
+				false, false, false, false, false,
 				null, null, new String[] {"file4"}
 			},
 			{
-				new String[] {"--dryrun", "-5", "file5"},
-				1, 5,
-				false, true, false, false, false,
-				null, null, new String[] {"file5"}
+				new String[] {"-d", "destination", "-2", "file5"},
+				1, 2,
+				false, false, false, false, false,
+				new File("destination"), null, new String[] {"file5"}
 			},
 			{
-				new String[] {"--remove", "-6", "file6"},
-				1, 6,
-				false, false, true, false, false,
-				null, null, new String[] {"file6"}
+				new String[] {"--destdir", "destination", "-3", "file6"},
+				1, 3,
+				false, false, false, false, false,
+				new File("destination"), null, new String[] {"file6"}
 			},
 			{
-				new String[] {"--twopass", "-7", "file7"},
-				1, 7,
-				false, false, false, true, false,
+				new String[] {"--batch", "-4", "file7"},
+				1, 4,
+				true, false, false, false, false,
 				null, null, new String[] {"file7"}
 			},
 			{
-				new String[] {"--verify", "-8", "file8"},
-				1, 8,
-				false, false, false, false, true,
+				new String[] {"--dryrun", "-5", "file8"},
+				1, 5,
+				false, true, false, false, false,
 				null, null, new String[] {"file8"}
 			},
 			{
-				new String[] {"--listfile", "listfile1", "-9", "file9"},
-				1, 9,
-				false, false, false, false, false,
-				null, new File("listfile1"), new String[] {"file9"}
+				new String[] {"--remove", "-6", "file9"},
+				1, 6,
+				false, false, true, false, false,
+				null, null, new String[] {"file9"}
 			},
 			{
-				new String[] {"--fast", "-w", "4", "file10"},
-				4, 1,
-				false, false, false, false, false,
+				new String[] {"--twopass", "-7", "file10"},
+				1, 7,
+				false, false, false, true, false,
 				null, null, new String[] {"file10"}
 			},
 			{
-				new String[] {"--best", "-w", "6", "file11"},
+				new String[] {"--verify", "-8", "file11"},
+				1, 8,
+				false, false, false, false, true,
+				null, null, new String[] {"file11"}
+			},
+			{
+				new String[] {"--listfile", "listfile1", "-9", "file12"},
+				1, 9,
+				false, false, false, false, false,
+				null, new File("listfile1"), new String[] {"file12"}
+			},
+			{
+				new String[] {"--fast", "-w", "4", "file13"},
+				4, 1,
+				false, false, false, false, false,
+				null, null, new String[] {"file13"}
+			},
+			{
+				new String[] {"--best", "-w", "6", "file14"},
 				6, 9,
 				false, false, false, false, false,
-				null, null, new String[] {"file11"}
+				null, null, new String[] {"file14"}
 			}
 		};
 

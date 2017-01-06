@@ -41,13 +41,18 @@ public class TestPathIndexTaskCLIParser {
 		Object[][] cases = new Object[][] {
 			{
 				new String[] {"file1"},
-				new File("path-index.unsorted.out"),
+				new File(PathIndexOptions.DEFAULT_OUTPUT_FILENAME),
 				new String[] {"file1"}
 			},
 			{
-				new String[] {"-o", "directory/file", "file2"},
+				new String[] {"file1", "file2"},
+				new File(PathIndexOptions.DEFAULT_OUTPUT_FILENAME),
+				new String[] {"file1", "file2"}
+			},
+			{
+				new String[] {"-o", "directory/file", "file3"},
 				new File("directory/file"),
-				new String[] {"file2"}
+				new String[] {"file3"}
 			}
 		};
 		// path-index.unsorted.out

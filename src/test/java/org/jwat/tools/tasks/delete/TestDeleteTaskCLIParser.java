@@ -41,18 +41,23 @@ public class TestDeleteTaskCLIParser {
 		Object[][] cases = new Object[][] {
 			{
 				new String[] {"file1"},
-				false, new File("deleted_files.out"),
+				false, new File(DeleteOptions.DEFAULT_DELETEDFILES_FILENAME),
 				new String[] {"file1"}
 			},
 			{
-				new String[] {"-o", "output-file", "file2"},
-				false, new File("output-file"),
-				new String[] {"file2"}
+				new String[] {"file1", "file2"},
+				false, new File(DeleteOptions.DEFAULT_DELETEDFILES_FILENAME),
+				new String[] {"file1", "file2"}
 			},
 			{
-				new String[] {"-o", "output-file2", "--dryrun", "file3"},
-				true, new File("output-file2"),
+				new String[] {"-o", "output-file", "file3"},
+				false, new File("output-file"),
 				new String[] {"file3"}
+			},
+			{
+				new String[] {"-o", "output-file2", "--dryrun", "file4"},
+				true, new File("output-file2"),
+				new String[] {"file4"}
 			}
 		};
 
