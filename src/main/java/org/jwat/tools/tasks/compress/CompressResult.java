@@ -1,6 +1,7 @@
 package org.jwat.tools.tasks.compress;
 
 import java.io.File;
+import java.util.Map;
 
 public class CompressResult {
 
@@ -9,6 +10,8 @@ public class CompressResult {
 	protected File dstFile;
 
 	protected File idxFile;
+
+	protected Map<String, Long> schemesMap;
 
 	protected boolean bCompleted = false;
 

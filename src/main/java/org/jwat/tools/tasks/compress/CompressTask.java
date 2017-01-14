@@ -4,6 +4,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +60,13 @@ public class CompressTask extends ProcessTask {
 		cout.println("    Completed: " + completed);
 		cout.println("  Incompleted: " + incomplete);
 		cout.println("IntegrityFail: " + integrityFail);
+
+		Iterator<Entry<String, Long>> schemesIter = schemesMap.entrySet().iterator();
+		Entry<String, Long> schemeEntry;
+		while (schemesIter.hasNext()) {
+			schemeEntry = schemesIter.next();
+			cout.println(schemeEntry.getKey() + " (" + schemeEntry.getValue() + ")");
+		}
 	}
 
 	@Override
@@ -113,6 +124,8 @@ public class CompressTask extends ProcessTask {
 	/** Completed Compressed results list. */
 	private ConcurrentLinkedQueue<CompressResult> results = new ConcurrentLinkedQueue<CompressResult>();
 
+	protected Map<String, Long> schemesMap = new HashMap<String, Long>();
+
 	private long completed = 0;
 
 	private long incomplete = 0;
@@ -135,6 +148,10 @@ public class CompressTask extends ProcessTask {
 		public void run() {
 			StringBuilder sb = new StringBuilder();
 			CompressResult result;
+			Iterator<Entry<String, Long>> schemesIter;
+			Entry<String, Long> schemeEntry;
+			String scheme;
+			Long count;
 			boolean bLoop = true;
 			PrintWriter lstWriter = null;
 			try {
@@ -147,6 +164,19 @@ public class CompressTask extends ProcessTask {
 							result = results.poll();
 							current_size += result.srcFile.length();
 							++processed;
+
+							if (result.schemesMap != null) {
+								schemesIter = result.schemesMap.entrySet().iterator();
+								while (schemesIter.hasNext()) {
+									schemeEntry = schemesIter.next();
+									scheme = schemeEntry.getKey();
+									count = schemesMap.get(scheme);
+									if (count == null) {
+										count = 0L;
+									}
+									schemesMap.put(scheme, count + schemeEntry.getValue());
+								}
+							}
 
 							if (result.bCompleted) {
 								++completed;

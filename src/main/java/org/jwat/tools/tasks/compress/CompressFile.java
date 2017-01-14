@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
 import java.util.Date;
+import java.util.HashMap;
 
 import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcReaderFactory;
@@ -187,6 +188,9 @@ public class CompressFile {
         OutputStream cout = null;
 		ArcReader arcReader = null;
 		ArcRecordBase arcRecord = null;
+        String scheme = null;
+    	Long count;
+        int idx;
 		Payload payload;
 		int read;
 		InputStream pin = null;
@@ -211,6 +215,8 @@ public class CompressFile {
 	        	uncompressedFileIn = in;
 	        }
 
+	        result.schemesMap = new HashMap<String, Long>();
+
 	        arcReader = ArcReaderFactory.getReaderUncompressed( uncompressedFileIn );
 			arcReader.setBlockDigestEnabled( false );
 			arcReader.setPayloadDigestEnabled( false );
@@ -227,6 +233,26 @@ public class CompressFile {
 		        entry.xfl = 0;
 		        entry.os = GzipConstants.OS_UNKNOWN;
 		        writer.writeEntryHeader(entry);
+
+		        scheme = null;
+		        if (arcRecord.header.urlUri != null) {
+		        	scheme = arcRecord.header.urlUri.getScheme();
+		        }
+		        if (scheme == null) {
+		        	if (arcRecord.header.urlStr != null) {
+		        		idx = arcRecord.header.urlStr.indexOf("://");
+		        		if (idx > 0) {
+		        			scheme = arcRecord.header.urlStr.substring(0, idx);
+		        		}
+		        	}
+		        }
+		        if (scheme != null) {
+		        	count = result.schemesMap.get(scheme);
+		        	if (count == null) {
+		        		count = 0L;
+		        	}
+		        	result.schemesMap.put(scheme, count + 1);
+		        }
 
 		        cout = entry.getOutputStream();
 
