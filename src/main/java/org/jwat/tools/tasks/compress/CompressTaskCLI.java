@@ -29,6 +29,7 @@ public class CompressTaskCLI extends TaskCLI {
 		System.out.println("     --remove    remove input file after compression (only on success)");
 		System.out.println("     --listfile  list file of old/new filename, length and checksum");
 		System.out.println("     --twopass   index file and then bitstream compress based on index");
+		System.out.println("     --hdrfiles  write (W)ARC/HTTP headers to a seperate file for each input file");
 		System.out.println(" -w<x>           set the amount of worker thread(s) (defaults to 1)");
 	}
 

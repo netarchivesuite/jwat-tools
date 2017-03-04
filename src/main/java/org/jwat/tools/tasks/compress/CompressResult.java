@@ -15,13 +15,13 @@ public class CompressResult {
 
 	protected boolean bCompleted = false;
 
-    protected boolean bVerified = false;
+	protected boolean bVerified = false;
 
-    protected byte[] md5DigestBytesOrg;
+	protected byte[] md5DigestBytesOrg;
 
-    protected byte[] md5DigestBytesVerify;
+	protected byte[] md5DigestBytesVerify;
 
-    protected byte[] md5compDigestBytesVerify;
+	protected byte[] md5compDigestBytesVerify;
 
 	protected Throwable t;
 

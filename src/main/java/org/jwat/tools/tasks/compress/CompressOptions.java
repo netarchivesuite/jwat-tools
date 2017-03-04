@@ -21,9 +21,13 @@ public class CompressOptions {
 
 	public boolean bTwopass = false;
 
+	public boolean bHeaderFiles = false;
+
 	public File dstPath;
 
 	public File lstFile;
+
+	public File hdrFile;
 
 	public List<String> filesList;
 

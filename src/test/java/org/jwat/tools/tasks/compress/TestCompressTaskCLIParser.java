@@ -42,86 +42,92 @@ public class TestCompressTaskCLIParser {
 			{
 				new String[] {"file1"},
 				1, -1,
-				false, false, false, false, false,
+				false, false, false, false, false, false,
 				null, null, new String[] {"file1"}
 			},
 			{
 				new String[] {"file1", "file2"},
 				1, -1,
-				false, false, false, false, false,
+				false, false, false, false, false, false,
 				null, null, new String[] {"file1", "file2"}
 			},
 			{
 				new String[] {"-w", "8", "-1", "file3"},
 				8, 1,
-				false, false, false, false, false,
+				false, false, false, false, false, false,
 				null, null, new String[] {"file3"}
 			},
 			{
 				new String[] {"--workers", "42", "-1", "file4"},
 				42, 1,
-				false, false, false, false, false,
+				false, false, false, false, false, false,
 				null, null, new String[] {"file4"}
 			},
 			{
 				new String[] {"-d", "destination", "-2", "file5"},
 				1, 2,
-				false, false, false, false, false,
+				false, false, false, false, false, false,
 				new File("destination"), null, new String[] {"file5"}
 			},
 			{
 				new String[] {"--destdir", "destination", "-3", "file6"},
 				1, 3,
-				false, false, false, false, false,
+				false, false, false, false, false, false,
 				new File("destination"), null, new String[] {"file6"}
 			},
 			{
 				new String[] {"--batch", "-4", "file7"},
 				1, 4,
-				true, false, false, false, false,
+				true, false, false, false, false, false,
 				null, null, new String[] {"file7"}
 			},
 			{
 				new String[] {"--dryrun", "-5", "file8"},
 				1, 5,
-				false, true, false, false, false,
+				false, true, false, false, false, false,
 				null, null, new String[] {"file8"}
 			},
 			{
 				new String[] {"--remove", "-6", "file9"},
 				1, 6,
-				false, false, true, false, false,
+				false, false, true, false, false, false,
 				null, null, new String[] {"file9"}
 			},
 			{
 				new String[] {"--twopass", "-7", "file10"},
 				1, 7,
-				false, false, false, true, false,
+				false, false, false, true, false, false,
 				null, null, new String[] {"file10"}
 			},
 			{
 				new String[] {"--verify", "-8", "file11"},
 				1, 8,
-				false, false, false, false, true,
+				false, false, false, false, true, false,
 				null, null, new String[] {"file11"}
 			},
 			{
 				new String[] {"--listfile", "listfile1", "-9", "file12"},
 				1, 9,
-				false, false, false, false, false,
+				false, false, false, false, false, false,
 				null, new File("listfile1"), new String[] {"file12"}
 			},
 			{
 				new String[] {"--fast", "-w", "4", "file13"},
 				4, 1,
-				false, false, false, false, false,
+				false, false, false, false, false, false,
 				null, null, new String[] {"file13"}
 			},
 			{
 				new String[] {"--best", "-w", "6", "file14"},
 				6, 9,
-				false, false, false, false, false,
+				false, false, false, false, false, false,
 				null, null, new String[] {"file14"}
+			},
+			{
+				new String[] {"--hdrfiles", "file15"},
+				1, -1,
+				false, false, false, false, false, true,
+				null, null, new String[] {"file15"}
 			}
 		};
 
@@ -136,9 +142,10 @@ public class TestCompressTaskCLIParser {
 			Assert.assertEquals(cases[ i ][ 5 ], options.bRemove);
 			Assert.assertEquals(cases[ i ][ 6 ], options.bTwopass);
 			Assert.assertEquals(cases[ i ][ 7 ], options.bVerify);
-			Assert.assertEquals(cases[ i ][ 8 ], options.dstPath);
-			Assert.assertEquals(cases[ i ][ 9 ], options.lstFile);
-			String[] expectedFileList = (String[])cases[ i ][ 10 ];
+			Assert.assertEquals(cases[ i ][ 8 ], options.bHeaderFiles);
+			Assert.assertEquals(cases[ i ][ 9 ], options.dstPath);
+			Assert.assertEquals(cases[ i ][ 10 ], options.lstFile);
+			String[] expectedFileList = (String[])cases[ i ][ 11 ];
 			List<String> fileList = options.filesList;
 			Assert.assertEquals(expectedFileList.length, fileList.size());
 			for (int j=0; j<expectedFileList.length; ++j) {

@@ -11,24 +11,36 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
+import org.jwat.arc.ArcHeader;
 import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcReaderFactory;
 import org.jwat.arc.ArcRecordBase;
 import org.jwat.common.ArrayUtils;
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.DigestInputStreamNoSkip;
+import org.jwat.common.HeaderLine;
+import org.jwat.common.HttpHeader;
 import org.jwat.common.Payload;
+import org.jwat.common.PayloadWithHeaderAbstract;
 import org.jwat.common.RandomAccessFileInputStream;
+import org.jwat.common.RandomAccessFileOutputStream;
 import org.jwat.gzip.GzipConstants;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
 import org.jwat.gzip.GzipWriter;
+import org.jwat.tools.tasks.compress.JSONSerializer.JSONSerializerFactory;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcReaderFactory;
 import org.jwat.warc.WarcRecord;
+
+import com.antiaction.common.json.annotation.JSONNullable;
+import com.antiaction.common.json.annotation.JSONTypeInstance;
 
 public class CompressFile {
 
@@ -40,6 +52,12 @@ public class CompressFile {
 
 	//private static final int BUFFER_SIZE = 65 * 1024;
 	private static final int BUFFER_SIZE = 8192;
+
+	private static ThreadLocalObjectPool<JSONSerializer> jsonTLPool;
+
+	static {
+		jsonTLPool = ThreadLocalObjectPool.getPool(new JSONSerializerFactory());
+	}
 
 	/**
 	 * Compress input file according to its type.
@@ -69,16 +87,13 @@ public class CompressFile {
 				if ( !dstFile.exists() ) {
 					//System.out.println( srcFname + " -> " + dstFname );
 					if ( ArcReaderFactory.isArcFile( pbin ) ) {
-						result = compressArcFile( raf, pbin, dstFile, options );
-						result.srcFile = srcFile;
+						result = compressArcFile( raf, pbin, srcFile, dstFile, options );
 					}
 					else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
-						result = compressWarcFile( raf, pbin, dstFile, options );
-						result.srcFile = srcFile;
+						result = compressWarcFile( raf, pbin, srcFile, dstFile, options );
 					}
 					else {
-						result = compressNormalFile( pbin, dstFile, options );
-						result.srcFile = srcFile;
+						result = compressNormalFile( pbin, srcFile, dstFile, options );
 					}
 				}
 				else {
@@ -112,7 +127,7 @@ public class CompressFile {
 	}
 
 	// TODO
-	protected CompressResult compressNormalFile(InputStream in, File dstFile, CompressOptions options) {
+	protected CompressResult compressNormalFile(InputStream in, File srcFile, File dstFile, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
 		FileOutputStream out = null;
         GzipWriter writer = null;
@@ -122,6 +137,7 @@ public class CompressFile {
         MessageDigest md5 = null;
         MessageDigest md5comp = null;
         CompressResult result = new CompressResult();
+		result.srcFile = srcFile;
         result.dstFile = dstFile;
 		try {
 			out = new FileOutputStream(dstFile, false);
@@ -179,10 +195,11 @@ public class CompressFile {
     protected byte[] arcEndMark = "\n".getBytes();
 
 	// TODO
-	protected CompressResult compressArcFile(RandomAccessFile raf, InputStream in, File dstFile, CompressOptions options) {
+	protected CompressResult compressArcFile(RandomAccessFile raf, InputStream in, File srcFile, File dstFile, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
         InputStream uncompressedFileIn = null;
-		FileOutputStream out = null;
+        RandomAccessFile rafOut = null;
+		OutputStream out = null;
         GzipWriter writer = null;
         GzipEntry entry = null;
         OutputStream cout = null;
@@ -200,9 +217,18 @@ public class CompressFile {
         GzipReader reader = null;
         InputStream uncompressedEntryIn = null;
         CompressResult result = new CompressResult();
+		result.srcFile = srcFile;
         result.dstFile = dstFile;
-		try {
-			out = new FileOutputStream(dstFile, false);
+        JSONSerializer jser = null;
+        RecordEntry recordEntry = null;
+        try {
+			if (options.bHeaderFiles) {
+				jser = jsonTLPool.getThreadLocalObject();
+				jser.open(result, options);
+			}
+
+            rafOut = new RandomAccessFile(dstFile, "rw");
+            out = new RandomAccessFileOutputStream(rafOut);
 	        writer = new GzipWriter(out, GZIP_OUTPUT_BUFFER_SIZE);
 	        writer.setCompressionLevel(options.compressionLevel);
 
@@ -221,6 +247,11 @@ public class CompressFile {
 			arcReader.setBlockDigestEnabled( false );
 			arcReader.setPayloadDigestEnabled( false );
 			while ((arcRecord = arcReader.getNextRecord()) != null) {
+				if (options.bHeaderFiles) {
+			        recordEntry = new RecordEntry();
+		        	recordEntry.aL = arcHeaderToNameValueList(arcRecord.header);
+		        	recordEntry.i = rafOut.getFilePointer();
+				}
 				Date date = arcRecord.header.archiveDate;
 				if (date == null) {
 					date = new Date(0L);
@@ -268,6 +299,13 @@ public class CompressFile {
 			        */
 					payload = arcRecord.getPayload();
 					if (payload != null) {
+						if (options.bHeaderFiles) {
+							PayloadWithHeaderAbstract wrappedHeader = payload.getPayloadHeaderWrapped();
+							if (wrappedHeader instanceof HttpHeader) {
+					        	recordEntry.hL = headerLinesToNameValueList(((HttpHeader)wrappedHeader).getHeaderList());
+							}
+						}
+						// Payload
 						pin = payload.getInputStreamComplete();
 				        while ((read = pin.read(buffer, 0, BUFFER_SIZE)) != -1) {
 				        	cout.write(buffer, 0, read);
@@ -296,6 +334,13 @@ public class CompressFile {
 		        	 */
 					payload = arcRecord.getPayload();
 					if (payload != null) {
+						if (options.bHeaderFiles) {
+							PayloadWithHeaderAbstract wrappedHeader = payload.getPayloadHeaderWrapped();
+							if (wrappedHeader instanceof HttpHeader) {
+					        	recordEntry.hL = headerLinesToNameValueList(((HttpHeader)wrappedHeader).getHeaderList());
+							}
+						}
+						// Payload
 						pin = payload.getInputStreamComplete();
 				        pin.close();
 				        pin = null;
@@ -321,9 +366,17 @@ public class CompressFile {
 				cout = null;
 				entry.close();
 				entry = null;
+				if (options.bHeaderFiles) {
+		        	recordEntry.l = rafOut.getFilePointer() - recordEntry.i;
+					jser.serialize(recordEntry);
+				}
 			}
 			writer.close();
 			writer = null;
+			out.close();
+			out = null;
+			rafOut.close();
+			rafOut = null;
 			arcReader.close();
 			arcReader = null;
 			uncompressedFileIn.close();
@@ -362,7 +415,13 @@ public class CompressFile {
 		        //System.out.println("  compressed md5:     " + Base16.encodeArray(md5compDigestBytesVerify));
 		        //System.out.println(bVerified);
 			}
-	        result.bCompleted = true;
+
+			if (options.bHeaderFiles) {
+				jser.close();
+				jser = null;
+			}
+
+			result.bCompleted = true;
 		}
 		catch (Throwable t) {
 			result.bCompleted = false;
@@ -370,6 +429,7 @@ public class CompressFile {
 			t.printStackTrace();
 		}
 		finally {
+			closeIOQuietly(jser);
 			closeIOQuietly(pin);
 			closeIOQuietly(arcRecord);
 			closeIOQuietly(arcReader);
@@ -378,6 +438,7 @@ public class CompressFile {
 			closeIOQuietly(cout);
 			closeIOQuietly(writer);
 			closeIOQuietly(out);
+			closeIOQuietly(rafOut);
 			closeIOQuietly(uncompressedEntryIn);
 			closeIOQuietly(entry);
 			closeIOQuietly(reader);
@@ -388,10 +449,11 @@ public class CompressFile {
     protected byte[] warcEndMark = "\r\n\r\n".getBytes();
 
     // TODO
-	protected CompressResult compressWarcFile(RandomAccessFile raf, InputStream in, File dstFile, CompressOptions options) {
+	protected CompressResult compressWarcFile(RandomAccessFile raf, InputStream in, File srcFile, File dstFile, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
         InputStream uncompressedFileIn = null;
-		FileOutputStream out = null;
+        RandomAccessFile rafOut = null;
+		OutputStream out = null;
         GzipWriter writer = null;
         GzipEntry entry = null;
 		WarcReader warcReader = null;
@@ -406,9 +468,18 @@ public class CompressFile {
         GzipReader reader = null;
         InputStream uncompressedEntryIn = null;
         CompressResult result = new CompressResult();
+		result.srcFile = srcFile;
         result.dstFile = dstFile;
-		try {
-			out = new FileOutputStream(dstFile, false);
+        JSONSerializer jser = null;
+        RecordEntry recordEntry = null;
+        try {
+			if (options.bHeaderFiles) {
+				jser = jsonTLPool.getThreadLocalObject();
+				jser.open(result, options);
+			}
+
+            rafOut = new RandomAccessFile(dstFile, "rw");
+            out = new RandomAccessFileOutputStream(rafOut);
 	        writer = new GzipWriter(out, GZIP_OUTPUT_BUFFER_SIZE);
 	        writer.setCompressionLevel(options.compressionLevel);
 
@@ -425,6 +496,11 @@ public class CompressFile {
 			warcReader.setBlockDigestEnabled( true );
 			warcReader.setPayloadDigestEnabled( true );
 			while ( (warcRecord = warcReader.getNextRecord()) != null ) {
+				if (options.bHeaderFiles) {
+			        recordEntry = new RecordEntry();
+		        	recordEntry.wL = headerLinesToNameValueList(warcRecord.header.getHeaderList());
+		        	recordEntry.i = rafOut.getFilePointer();
+				}
 				Date date = warcRecord.header.warcDate;
 				if (date == null) {
 					date = new Date(0L);
@@ -452,6 +528,13 @@ public class CompressFile {
 			        */
 			        payload = warcRecord.getPayload();
 					if (payload != null) {
+						if (options.bHeaderFiles) {
+							PayloadWithHeaderAbstract wrappedHeader = payload.getPayloadHeaderWrapped();
+							if (wrappedHeader instanceof HttpHeader) {
+					        	recordEntry.hL = headerLinesToNameValueList(((HttpHeader)wrappedHeader).getHeaderList());
+							}
+						}
+						// Payload
 						pin = payload.getInputStreamComplete();
 				        while ((read = pin.read(buffer, 0, BUFFER_SIZE)) != -1) {
 				        	cout.write(buffer, 0, read);
@@ -480,6 +563,13 @@ public class CompressFile {
 		        	 */
 			        payload = warcRecord.getPayload();
 					if (payload != null) {
+						if (options.bHeaderFiles) {
+							PayloadWithHeaderAbstract wrappedHeader = payload.getPayloadHeaderWrapped();
+							if (wrappedHeader instanceof HttpHeader) {
+					        	recordEntry.hL = headerLinesToNameValueList(((HttpHeader)wrappedHeader).getHeaderList());
+							}
+						}
+						// Payload
 						pin = payload.getInputStreamComplete();
 				        pin.close();
 				        pin = null;
@@ -505,9 +595,17 @@ public class CompressFile {
 				cout = null;
 				entry.close();
 				entry = null;
+				if (options.bHeaderFiles) {
+		        	recordEntry.l = rafOut.getFilePointer() - recordEntry.i;
+					jser.serialize(recordEntry);
+				}
 			}
 			writer.close();
 			writer = null;
+			out.close();
+			out = null;
+			rafOut.close();
+			rafOut = null;
 			warcReader.close();
 			warcReader = null;
 			uncompressedFileIn.close();
@@ -520,10 +618,18 @@ public class CompressFile {
 
 		        md5uncomp.reset();
 
+	            //entryIdx = 0;
+
 		        compressedFileIn = new FileInputStream(dstFile);
 		        compressedFileIn = new DigestInputStreamNoSkip(compressedFileIn, md5comp);
 		        reader = new GzipReader(compressedFileIn, GZIP_OUTPUT_BUFFER_SIZE);
 		        while ((entry = reader.getNextEntry()) != null) {
+		        	/*
+		        	recordEntry = recordEntries.get(entryIdx++);
+		        	if (recordEntry.i != entry.startOffset) {
+		        		bInvalidOffset = true;
+		        	}
+		        	*/
 		        	uncompressedEntryIn = entry.getInputStream();
 		        	while ((read = uncompressedEntryIn.read(buffer, 0, BUFFER_SIZE)) != -1) {
 			        	md5uncomp.update(buffer, 0, read);
@@ -548,7 +654,13 @@ public class CompressFile {
 		        //System.out.println("  compressed md5:     " + Base16.encodeArray(md5compDigestBytesVerify));
 		        //System.out.println(bVerified);
 			}
-	        result.bCompleted = true;
+
+			if (options.bHeaderFiles) {
+				jser.close();
+				jser = null;
+			}
+
+			result.bCompleted = true;
 		}
 		catch (Throwable t) {
 			result.bCompleted = false;
@@ -556,6 +668,7 @@ public class CompressFile {
 			t.printStackTrace();
 		}
 		finally {
+			closeIOQuietly(jser);
 			closeIOQuietly(pin);
 			closeIOQuietly(warcRecord);
 			closeIOQuietly(warcReader);
@@ -564,6 +677,7 @@ public class CompressFile {
 			closeIOQuietly(cout);
 			closeIOQuietly(writer);
 			closeIOQuietly(out);
+			closeIOQuietly(rafOut);
 			closeIOQuietly(uncompressedEntryIn);
 			closeIOQuietly(entry);
 			closeIOQuietly(reader);
@@ -579,6 +693,91 @@ public class CompressFile {
 			}
 	        catch (IOException e) {
 			}
+		}
+	}
+
+	public List<NameValue> arcHeaderToNameValueList(ArcHeader header) {
+		List<NameValue> nameValueList = new ArrayList<NameValue>();
+	    if (header.urlStr != null ) {
+    		nameValueList.add(new NameValue("url", header.urlStr));
+	    }
+	    if (header.ipAddressStr != null ) {
+    		nameValueList.add(new NameValue("ip", header.ipAddressStr));
+	    }
+	    if (header.archiveDateStr != null ) {
+    		nameValueList.add(new NameValue("archive-date", header.archiveDateStr));
+	    }
+	    if (header.contentTypeStr != null ) {
+    		nameValueList.add(new NameValue("content-type", header.contentTypeStr));
+	    }
+	    if (header.resultCodeStr != null ) {
+    		nameValueList.add(new NameValue("result-code", header.resultCodeStr));
+	    }
+	    if (header.checksumStr != null ) {
+    		nameValueList.add(new NameValue("checksum", header.checksumStr));
+	    }
+	    if (header.locationStr != null ) {
+    		nameValueList.add(new NameValue("location", header.locationStr));
+	    }
+	    if (header.offsetStr != null ) {
+    		nameValueList.add(new NameValue("offset", header.offsetStr));
+	    }
+	    if (header.filenameStr != null ) {
+    		nameValueList.add(new NameValue("filename", header.filenameStr));
+	    }
+	    if (header.archiveLengthStr != null ) {
+    		nameValueList.add(new NameValue("archive-length", header.archiveLengthStr));
+	    }
+		return nameValueList;
+	}
+
+	public List<NameValue> headerLinesToNameValueList(List<HeaderLine> headerLines) {
+		List<NameValue> nameValueList = null;
+        Iterator<HeaderLine> hlIter;
+        Iterator<HeaderLine> ahlIter;
+        HeaderLine headerLine;
+        if (headerLines != null) {
+        	nameValueList = new ArrayList<NameValue>();
+        	hlIter = headerLines.iterator();
+        	while (hlIter.hasNext()) {
+        		headerLine = hlIter.next();
+        		nameValueList.add(new NameValue(headerLine.name, headerLine.value));
+        		if (headerLine.lines != null && headerLine.lines.size() > 0) {
+        			ahlIter = headerLines.iterator();
+		        	while (ahlIter.hasNext()) {
+		        		headerLine = ahlIter.next();
+		        		nameValueList.add(new NameValue(headerLine.name, headerLine.value));
+		        	}
+        		}
+        	}
+        }
+		return nameValueList;
+	}
+
+	public static class RecordEntry {
+		public long i;
+		public long l;
+		@JSONTypeInstance(ArrayList.class)
+		@JSONNullable
+		public List<NameValue> aL;
+		@JSONTypeInstance(ArrayList.class)
+		@JSONNullable
+		public List<NameValue> wL;
+		@JSONTypeInstance(ArrayList.class)
+		@JSONNullable
+		public List<NameValue> hL;
+		public RecordEntry() {
+		}
+	}
+
+	public static class NameValue {
+		public String n;
+		public String v;
+		public NameValue() {
+		}
+		public NameValue(String n, String v) {
+			this.n = n;
+			this.v = v;
 		}
 	}
 

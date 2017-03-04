@@ -20,6 +20,7 @@ public class CompressTaskCLIParser {
 	public static final int A_DEST = 106;
 	public static final int A_FILELIST = 107;
 	public static final int A_TWOPASS = 108;
+	public static final int A_HDRFILES = 109;
 
 	protected CompressTaskCLIParser() {
 	}
@@ -44,6 +45,7 @@ public class CompressTaskCLIParser {
 			cliOptions.addOption(null, "--dryrun", A_DRYRUN, 0, null);
 			cliOptions.addOption(null, "--twopass", A_TWOPASS, 0, null);
 			cliOptions.addOption(null, "--listfile", A_FILELIST, 0, null).setValueRequired();
+			cliOptions.addOption(null, "--hdrfiles", A_HDRFILES, 0, null);
 			cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
 		}
@@ -119,6 +121,12 @@ public class CompressTaskCLIParser {
 			options.bTwopass = true;
 		}
 		System.out.println( "Twopass: " + options.bTwopass );
+
+		argument = cmdLine.idMap.get( A_HDRFILES );
+		if (argument != null) {
+			options.bHeaderFiles = true;
+		}
+		System.out.println( "Header Files: " + options.bHeaderFiles );
 
 		// Files.
 		argument = cmdLine.idMap.get( JWATTools.A_FILES );
