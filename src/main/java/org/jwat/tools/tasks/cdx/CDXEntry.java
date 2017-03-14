@@ -12,6 +12,5 @@ public class CDXEntry {
 	public String checksum;
 	public long offset; 
 	public long length; 
-	public String fileName;
 
 }

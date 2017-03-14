@@ -1,6 +1,7 @@
 package org.jwat.tools.tasks.cdx;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
@@ -93,10 +94,8 @@ public class CDXTask extends ProcessTask {
 		@Override
 		public void run() {
 			CDXFile cdxFile = new CDXFile();
-			cdxFile.processFile(srcFile);
-			// FIXME
-			cdxFile.srcFile = srcFile;
-			results.add(cdxFile);
+			CDXResult result = cdxFile.processFile(srcFile);
+			results.add(result);
 			resultsReady.release();
 		}
 	}
@@ -105,7 +104,7 @@ public class CDXTask extends ProcessTask {
 	private Semaphore resultsReady = new Semaphore(0);
 
 	/** Completed CDXFile results list. */
-	private ConcurrentLinkedQueue<CDXFile> results = new ConcurrentLinkedQueue<CDXFile>();
+	private ConcurrentLinkedQueue<CDXResult> results = new ConcurrentLinkedQueue<CDXResult>();
 
 	class ResultThread implements Runnable {
 
@@ -119,21 +118,23 @@ public class CDXTask extends ProcessTask {
 			cdxOutput.out.println(" CDX N b a m s k r M V g");
 			cdxOutput.release();
 
-			CDXFile cdxFile;
+			CDXResult result;
 			List<CDXEntry> entries;
+			Iterator<CDXEntry> iter;
 			CDXEntry entry;
 			String tmpLine;
 			boolean bLoop = true;
 			while (bLoop) {
 				try {
 					if (resultsReady.tryAcquire(1, TimeUnit.SECONDS)) {
-						cdxFile = results.poll();
-						entries = cdxFile.entries;
+						result = results.poll();
+						entries = result.entries;
+						iter = entries.iterator();
 						cdxOutput.acquire();
-						for (int i=0; i<entries.size(); ++i) {
-							entry = entries.get(i);
+						while (iter.hasNext()) {
+							entry = iter.next();
 							try {
-								tmpLine = cdxEntry(entry, "NbamskrMVg".toCharArray());
+								tmpLine = cdxEntry(entry, result.filename, "NbamskrMVg".toCharArray());
 								if (tmpLine != null) {
 									//cdxOutput.out.println(cdxEntry(entry, "Abams--vg".toCharArray()));
 									cdxOutput.out.println(tmpLine);
@@ -142,8 +143,9 @@ public class CDXTask extends ProcessTask {
 								cout.println(t.toString());
 							}
 						}
+						result.entries.clear();
 						cdxOutput.release();
-						current_size += cdxFile.srcFile.length();
+						current_size += result.srcFile.length();
 						++processed;
 
 						calculate_progress();
@@ -186,7 +188,7 @@ public class CDXTask extends ProcessTask {
 		// filedesc:kb-pligtsystem-44761-20121107134629-00000.warc 20121107134629 filedesc:kb-pligtsystem-44761-20121107134629-00000.warc warc/warcinfo0.1.0 - - - - 0 kb-pligtsystem-44761-20121107134629-00000.warc
 		// net-bog-klubben.dk/1000028.pdf 20050520084930 http://www.net-bog-klubben.dk/1000028.pdf application/pdf 200 - - - 820 kb-pligtsystem-44761-20121107134629-00000.warc
 
-		public String cdxEntry(CDXEntry entry, char[] format) {
+		public String cdxEntry(CDXEntry entry, String filename, char[] format) {
 			StringBuilder sb = new StringBuilder();
 			sb.setLength(0);
 			char c;
@@ -280,7 +282,7 @@ public class CDXTask extends ProcessTask {
 					sb.append(entry.length);
 					break;
 				case 'g':
-					sb.append(entry.fileName);
+					sb.append(filename);
 					break;
 				case '-':
 				default:

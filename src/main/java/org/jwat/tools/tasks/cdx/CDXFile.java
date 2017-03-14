@@ -2,8 +2,6 @@ package org.jwat.tools.tasks.cdx;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.jwat.arc.ArcHeader;
 import org.jwat.arc.ArcRecord;
@@ -20,24 +18,21 @@ import org.jwat.warc.WarcRecord;
 
 public class CDXFile implements ArchiveParserCallback {
 
-	protected File srcFile;
-
-	protected String fileName;
-
-	protected List<CDXEntry> entries = new ArrayList<CDXEntry>();
-
-	protected long consumed = 0;
+	protected CDXResult result;
 
 	public CDXFile() {
 	}
 
-	public void processFile(File file) {
-		fileName = file.getName();
+	public CDXResult processFile(File srcFile) {
+		result = new CDXResult();
+		result.srcFile = srcFile;
+		result.filename = srcFile.getName();
 		ArchiveParser archiveParser = new ArchiveParser();
 		archiveParser.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
 		archiveParser.bBlockDigestEnabled = true;
 		archiveParser.bPayloadDigestEnabled = true;
-		consumed = archiveParser.parse(file, this);
+		result.consumed = archiveParser.parse(srcFile, this);
+		return result;
 	}
 
 	@Override
@@ -53,76 +48,154 @@ public class CDXFile implements ArchiveParserCallback {
 	}
 
 	@Override
-	public void apcArcRecordStart(ArcRecordBase arcRecord, long startOffset,
-			boolean compressed) throws IOException {
+	public void apcArcRecordStart(ArcRecordBase arcRecord, long startOffset, boolean compressed) throws IOException {
 		if (arcRecord.recordType == ArcRecord.RT_ARC_RECORD) {
 			CDXEntry entry = new CDXEntry();
 			ArcHeader arcHeader = arcRecord.header;
+			long length = arcHeader.archiveLength;
+			String mimetype = null;
+			String responseCode = "-";
+			int idx;
+			/*
+			 * HttpHeader content-type.
+			 */
+			HttpHeader httpHeader = arcRecord.getHttpHeader();
+        	if (httpHeader != null && httpHeader.contentType != null) {
+        		responseCode = httpHeader.statusCodeStr;
+        		length = httpHeader.getPayloadLength();
+    			String httpContentTypeStr = httpHeader.contentType;
+    			ContentType httpContentType = ContentType.parseContentType(httpContentTypeStr);
+        		if (httpContentType != null) {
+        			httpContentTypeStr = httpContentType.toStringShort();
+        		}
+        		else {
+        			if (httpContentTypeStr != null) {
+            			idx = httpContentTypeStr.indexOf(';');
+            			if (idx != -1) {
+            				httpContentTypeStr = httpContentTypeStr.substring(0, idx);
+            			}
+            			httpContentTypeStr = httpContentTypeStr.trim();
+        			}
+        		}
+        		mimetype = httpContentTypeStr;
+        	}
+        	/*
+        	 * ArcRecord content-type.
+        	 */
+        	if (mimetype == null) {
+            	ContentType recordContentType = arcHeader.contentType;
+            	String recordContentTypeStr = null;
+            	if (recordContentType != null) {
+            		recordContentTypeStr = recordContentType.toStringShort();
+            	}
+            	else {
+                	recordContentTypeStr = arcHeader.contentTypeStr;
+                	if (recordContentTypeStr != null) {
+            			idx = recordContentTypeStr.indexOf(';');
+            			if (idx != -1) {
+            				recordContentTypeStr = recordContentTypeStr.substring(0, idx);
+            			}
+                	}
+        			recordContentTypeStr = recordContentTypeStr.trim();
+            	}
+            	mimetype = recordContentTypeStr;
+        	}
+        	/*
+        	 * CDX entry values.
+        	 */
 			entry.date = arcHeader.archiveDate;
 			entry.ip = arcHeader.ipAddressStr;
 			entry.url = arcHeader.urlStr;
-			String mimeType = arcHeader.contentTypeStr;
-			String responseCode = null;
-			ContentType contentType = arcHeader.contentType;
-			long length = arcHeader.archiveLength;
-			// TODO
-	        if (contentType != null
-	                && arcHeader.contentType.contentType.equals("application")
-	                && arcHeader.contentType.mediaType.equals("http")) {
-	            String value = arcHeader.contentType.getParameter("msgtype");
-	            HttpHeader httpHeader = arcRecord.getHttpHeader();
-	            if ("response".equalsIgnoreCase(value)) {
-	            	if (httpHeader != null && httpHeader.contentType != null) {
-	            		mimeType = httpHeader.contentType;
-	            		responseCode = httpHeader.statusCodeStr;
-	            		length = httpHeader.getPayloadLength();
-	            	}
-	            }
-	        }
-	        entry.mimetype = mimeType;
+        	entry.mimetype = mimetype;
 	        entry.responseCode = responseCode;
 	        entry.checksum = null;
 	        entry.offset = startOffset;
 	        entry.length = length;
-	        entry.fileName = fileName;
-	        entries.add(entry);
+	        if (entry.url != null && !entry.url.toLowerCase().startsWith("filedesc:")) {
+		        result.entries.add(entry);
+	        }
 		}
         arcRecord.close();
 	}
 
 	@Override
-	public void apcWarcRecordStart(WarcRecord warcRecord, long startOffset,
-			boolean compressed) throws IOException {
+	public void apcWarcRecordStart(WarcRecord warcRecord, long startOffset, boolean compressed) throws IOException {
 		if (warcRecord.header.warcTypeIdx == WarcConstants.RT_IDX_RESPONSE) {
 			CDXEntry entry = new CDXEntry();
-			WarcHeader WarcHeader = warcRecord.header;
-			entry.date = WarcHeader.warcDate;
-			entry.ip = WarcHeader.warcIpAddress;
-			entry.url = WarcHeader.warcTargetUriStr;
-			String mimeType = WarcHeader.contentTypeStr;
-			String responseCode = null;
-			ContentType contentType = WarcHeader.contentType;
-			long length = WarcHeader.contentLength;
-	        if (contentType != null
-	                && WarcHeader.contentType.contentType.equals("application")
-	                && WarcHeader.contentType.mediaType.equals("http")) {
-	            String value = WarcHeader.contentType.getParameter("msgtype");
+			WarcHeader warcHeader = warcRecord.header;
+			long length = warcHeader.contentLength;
+			String responseCode = "-";
+			String mimetype = null;
+            String msgtype = null;
+            int idx;
+			/*
+			 * HttpHeader content-type.
+			 */
+			String recordContentTypeStr = warcHeader.contentTypeStr;
+			ContentType recordContentType = warcHeader.contentType;
+			if (recordContentType == null) {
+				recordContentType = ContentType.parseContentType(recordContentTypeStr);
+			}
+			if (recordContentType != null) {
+				String httpContentTypeStr;
+				ContentType httpContentType;
+		        if (warcHeader.contentType.contentType.equals("application") && warcHeader.contentType.mediaType.equals("http")) {
+		            msgtype = warcHeader.contentType.getParameter("msgtype");
+		        }
 	            HttpHeader httpHeader = warcRecord.getHttpHeader();
-	            if ("response".equalsIgnoreCase(value)) {
-	            	if (httpHeader != null && httpHeader.contentType != null) {
-	            		mimeType = httpHeader.contentType;
-	            		responseCode = httpHeader.statusCodeStr;
-	            		length = httpHeader.getPayloadLength();
-	            	}
-	            }
-	        }
-	        entry.mimetype = mimeType;
+            	if (httpHeader != null && httpHeader.contentType != null) {
+            		responseCode = httpHeader.statusCodeStr;
+            		length = httpHeader.getPayloadLength();
+            		httpContentTypeStr = httpHeader.contentType;
+        			httpContentType = ContentType.parseContentType(httpContentTypeStr);
+            		if (httpContentType != null) {
+            			httpContentTypeStr = httpContentType.toStringShort();
+            		}
+            		else {
+            			if (httpContentTypeStr != null) {
+                			idx = httpContentTypeStr.indexOf(';');
+                			if (idx != -1) {
+                				httpContentTypeStr = httpContentTypeStr.substring(0, idx);
+                			}
+                			httpContentTypeStr = httpContentTypeStr.trim();
+            			}
+            		}
+            		mimetype = httpContentTypeStr;
+            	}
+			}
+        	/*
+        	 * WarcRecord content-type.
+        	 */
+        	if (mimetype == null) {
+            	if (recordContentType != null) {
+            		recordContentTypeStr = recordContentType.toStringShort();
+            	}
+            	else {
+            		if (recordContentTypeStr != null) {
+            			idx = recordContentTypeStr.indexOf(';');
+            			if (idx != -1) {
+            				recordContentTypeStr = recordContentTypeStr.substring(0, idx);
+            			}
+            			recordContentTypeStr = recordContentTypeStr.trim();
+            		}
+            	}
+            	mimetype = recordContentTypeStr;
+        	}
+        	/*
+        	 * CDX entry values.
+        	 */
+			entry.date = warcHeader.warcDate;
+			entry.ip = warcHeader.warcIpAddress;
+			entry.url = warcHeader.warcTargetUriStr;
+	        entry.mimetype = mimetype;
 	        entry.responseCode = responseCode;
 	        entry.checksum = null;
 	        entry.offset = startOffset;
 	        entry.length = length;
-	        entry.fileName = fileName;
-	        entries.add(entry);
+	        String warctype = warcHeader.warcTypeStr;
+	        if (warctype.equalsIgnoreCase("resource") && (msgtype == null || (msgtype != null && msgtype.equalsIgnoreCase("response")))) {
+		        result.entries.add(entry);
+	        }
 		}
 		warcRecord.close();
 	}
