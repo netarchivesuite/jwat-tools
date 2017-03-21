@@ -1,6 +1,7 @@
 package org.jwat.tools.tasks.containermd;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,7 +51,7 @@ public class ContainerMDTask extends ProcessTask {
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle(options.filesList, this, options.threads);
+		threadpool_feeder_lifecycle(options.filesList, options.bQueueFirst, this, options.threads);
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -61,7 +62,7 @@ public class ContainerMDTask extends ProcessTask {
 			}
 		}
 
-		calucate_runstats();
+		calculate_runstats();
 
 		if (!options.bQuiet) {
     		cout.println( "#" );
@@ -178,20 +179,27 @@ public class ContainerMDTask extends ProcessTask {
 				try {
 					if (resultsReady.tryAcquire(1, TimeUnit.SECONDS)) {
 						result = results.poll();
-						File outputFile = new File(options.outputDir, 
-								result.srcFile.getName().replaceFirst("\\.w?arc(\\.gz)?", ".containerMD.xml"));
-						SynchronizedOutput validOutput = 
-								new SynchronizedOutput(outputFile);
-
-						validOutput.acquire();
+						File outputFile = new File(options.outputDir, result.srcFile.getName().replaceFirst("\\.w?arc(\\.gz)?", ".containerMD.xml"));
+						SynchronizedOutput validOutput = null;
 						try {
-							result.printResult(validOutput.out);
+							validOutput = new SynchronizedOutput(outputFile, 1024*1024);
 						}
-						catch (Throwable t) {
+						catch (IOException e) {
 							++result.runtimeErrors;
-							t.printStackTrace();
+							e.printStackTrace();
 						}
-						validOutput.release();
+
+						if (validOutput != null) {
+							validOutput.acquire();
+							try {
+								result.printResult(validOutput.out);
+							}
+							catch (Throwable t) {
+								++result.runtimeErrors;
+								t.printStackTrace();
+							}
+							validOutput.release();
+						}
 						update_summary(result);
 						current_size += result.srcFile.length();
 						++processed;

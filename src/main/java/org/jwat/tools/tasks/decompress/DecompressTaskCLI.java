@@ -21,7 +21,8 @@ public class DecompressTaskCLI extends TaskCLI {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -w<x>  set the amount of worker thread(s) (defaults to 1)");
+		System.out.println("    --queue-first  queue files before processing");
+		System.out.println(" -w<x>             set the amount of worker thread(s) (defaults to 1)");
 	}
 
 	@Override

@@ -1,6 +1,7 @@
 package org.jwat.tools.tasks.pathindex;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.jwat.archive.FileIdent;
 import org.jwat.tools.tasks.ProcessTask;
@@ -16,7 +17,13 @@ public class PathIndexTask extends ProcessTask {
 	}
 
 	public void runtask(PathIndexOptions options) {
-		pathIndexOutput = new SynchronizedOutput(options.outputFile);
+		try {
+			pathIndexOutput = new SynchronizedOutput(options.outputFile, 1024*1024);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 
 		filelist_feeder(options.filesList, this);
 

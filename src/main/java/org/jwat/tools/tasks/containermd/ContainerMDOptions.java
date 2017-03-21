@@ -7,6 +7,8 @@ import org.jwat.common.UriProfile;
 
 public class ContainerMDOptions {
 
+	public boolean bQueueFirst = false;
+
 	public int threads = 1;
 
 	public boolean bQuiet = false;

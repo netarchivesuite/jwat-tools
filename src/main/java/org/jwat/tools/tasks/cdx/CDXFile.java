@@ -193,7 +193,7 @@ public class CDXFile implements ArchiveParserCallback {
 	        entry.offset = startOffset;
 	        entry.length = length;
 	        String warctype = warcHeader.warcTypeStr;
-	        if (warctype.equalsIgnoreCase("resource") && (msgtype == null || (msgtype != null && msgtype.equalsIgnoreCase("response")))) {
+	        if (warctype.equalsIgnoreCase("response") && (msgtype == null || (msgtype != null && msgtype.equalsIgnoreCase("response")))) {
 		        result.entries.add(entry);
 	        }
 		}

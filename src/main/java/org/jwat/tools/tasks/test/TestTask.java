@@ -71,15 +71,21 @@ public class TestTask extends ProcessTask {
 		// TODO optional
 		//cloner = Cloner.getCloner();
 
-		validOutput = new SynchronizedOutput("v.out");
-		invalidOutput = new SynchronizedOutput("i.out");
-		exceptionsOutput = new SynchronizedOutput("e.out");
+		try {
+			validOutput = new SynchronizedOutput("v.out", 1024*1024);
+			invalidOutput = new SynchronizedOutput("i.out", 1024*1024);
+			exceptionsOutput = new SynchronizedOutput("e.out", 1024*1024);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle(options.filesList, this, options.threads);
+		threadpool_feeder_lifecycle(options.filesList, options.bQueueFirst, this, options.threads);
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -90,7 +96,7 @@ public class TestTask extends ProcessTask {
 			}
 		}
 
-		calucate_runstats();
+		calculate_runstats();
 
 		if (cloner != null) {
 			try {

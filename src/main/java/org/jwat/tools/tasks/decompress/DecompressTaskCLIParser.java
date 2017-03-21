@@ -16,6 +16,7 @@ public class DecompressTaskCLIParser {
 	public static DecompressOptions parseArguments(CommandLine cmdLine) {
 		Options cliOptions = new Options();
 		try {
+			cliOptions.addOption(null, "--queue-first", JWATTools.A_QUEUE_FIRST, 0, null);
 			cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
 			cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
@@ -28,6 +29,9 @@ public class DecompressTaskCLIParser {
 		DecompressOptions options = new DecompressOptions();
 
 		Argument argument;
+
+		// Queue first.
+		options.bQueueFirst = cmdLine.idMap.containsKey(JWATTools.A_QUEUE_FIRST);
 
 		// Thread workers.
 		argument = cmdLine.idMap.get( JWATTools.A_WORKERS );

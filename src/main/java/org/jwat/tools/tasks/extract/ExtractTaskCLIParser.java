@@ -18,6 +18,7 @@ public class ExtractTaskCLIParser {
 	public static ExtractOptions parseArguments(CommandLine cmdLine) {
 		Options cliOptions = new Options();
 		try {
+			cliOptions.addOption(null, "--queue-first", JWATTools.A_QUEUE_FIRST, 0, null);
 			cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
 			cliOptions.addOption("-u", null, A_TARGET_URI, 0, null).setValueRequired();
 			cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
@@ -31,6 +32,9 @@ public class ExtractTaskCLIParser {
 		ExtractOptions options = new ExtractOptions();
 
 		Argument argument;
+
+		// Queue first.
+		options.bQueueFirst = cmdLine.idMap.containsKey(JWATTools.A_QUEUE_FIRST);
 
 		// Thread workers.
 		argument = cmdLine.idMap.get( JWATTools.A_WORKERS );

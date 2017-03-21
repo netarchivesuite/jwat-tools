@@ -18,10 +18,11 @@ public class Arc2WarcTaskCLI extends TaskCLI {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -d <dir>        destination directory (defaults to current dir)");
-		System.out.println("    --overwrite  overwrite destination file (default is to skip file)");
-		System.out.println("    --prefix     destination filename prefix (default is '" + Arc2WarcOptions.DEFAULT_PREFIX + "')");
-		System.out.println(" -w <x>          set the amount of worker thread(s) (defaults to 1)");
+		System.out.println(" -d <dir>          destination directory (defaults to current dir)");
+		System.out.println("    --overwrite    overwrite destination file (default is to skip file)");
+		System.out.println("    --prefix       destination filename prefix (default is '" + Arc2WarcOptions.DEFAULT_PREFIX + "')");
+		System.out.println("    --queue-first  queue files before processing");
+		System.out.println(" -w <x>            set the amount of worker thread(s) (defaults to 1)");
 	}
 
 	@Override

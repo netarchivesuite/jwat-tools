@@ -1,12 +1,16 @@
 package org.jwat.tools.tasks.cdx;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.httpclient.URIException;
+import org.archive.wayback.UrlCanonicalizer;
+import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.jwat.arc.ArcDateParser;
 import org.jwat.archive.FileIdent;
 import org.jwat.common.Uri;
@@ -25,14 +29,20 @@ public class CDXTask extends ProcessTask {
 
 	public void runtask(CDXOptions options) {
 		System.out.println("Using output: " + options.outputFile.getPath());
-		cdxOutput = new SynchronizedOutput(options.outputFile);
+		try {
+			cdxOutput = new SynchronizedOutput(options.outputFile, 32*1024*1024);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 		//cdxOutput.out.println("CDX b e a m s c v n g");
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle(options.filesList, this, options.threads);
+		threadpool_feeder_lifecycle(options.filesList, options.bQueueFirst, this, options.threads);
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -44,7 +54,7 @@ public class CDXTask extends ProcessTask {
 		}
 		cdxOutput.close();
 
-		calucate_runstats();
+		calculate_runstats();
 
 		cout.println( "      Time: " + run_timestr + " (" + run_dtm + " ms.)" );
 		cout.println( "TotalBytes: " + toSizeString(current_size));
@@ -118,6 +128,9 @@ public class CDXTask extends ProcessTask {
 			cdxOutput.out.println(" CDX N b a m s k r M V g");
 			cdxOutput.release();
 
+			// "Abams--vg".toCharArray()
+			char[] cdxformat = "NbamskrMVg".toCharArray();
+
 			CDXResult result;
 			List<CDXEntry> entries;
 			Iterator<CDXEntry> iter;
@@ -134,9 +147,8 @@ public class CDXTask extends ProcessTask {
 						while (iter.hasNext()) {
 							entry = iter.next();
 							try {
-								tmpLine = cdxEntry(entry, result.filename, "NbamskrMVg".toCharArray());
+								tmpLine = cdxEntry(entry, result.filename, cdxformat);
 								if (tmpLine != null) {
-									//cdxOutput.out.println(cdxEntry(entry, "Abams--vg".toCharArray()));
 									cdxOutput.out.println(tmpLine);
 								}
 							} catch (Throwable t) {
@@ -188,6 +200,8 @@ public class CDXTask extends ProcessTask {
 		// filedesc:kb-pligtsystem-44761-20121107134629-00000.warc 20121107134629 filedesc:kb-pligtsystem-44761-20121107134629-00000.warc warc/warcinfo0.1.0 - - - - 0 kb-pligtsystem-44761-20121107134629-00000.warc
 		// net-bog-klubben.dk/1000028.pdf 20050520084930 http://www.net-bog-klubben.dk/1000028.pdf application/pdf 200 - - - 820 kb-pligtsystem-44761-20121107134629-00000.warc
 
+		public UrlCanonicalizer canonicalizer = new AggressiveUrlCanonicalizer(); 
+
 		public String cdxEntry(CDXEntry entry, String filename, char[] format) {
 			StringBuilder sb = new StringBuilder();
 			sb.setLength(0);
@@ -219,28 +233,33 @@ public class CDXTask extends ProcessTask {
 				case 'A':
 				case 'N':
 					if (entry.url != null && entry.url.length() > 0) {
-						uri = Uri.create(entry.url, UriProfile.RFC3986_ABS_16BIT_LAX);
-						StringBuilder cUrl = new StringBuilder();
-						if ("http".equalsIgnoreCase(uri.getScheme())) {
-							host = uri.getHost();
-							port = uri.getPort();
-							query = uri.getRawQuery();
-							if (host.startsWith("www.")) {
-								host = host.substring("www.".length());
+						try {
+							sb.append(canonicalizer.urlStringToKey(entry.url));
+						}
+						catch (URIException e) {
+							uri = Uri.create(entry.url, UriProfile.RFC3986_ABS_16BIT_LAX);
+							StringBuilder cUrl = new StringBuilder();
+							if ("http".equalsIgnoreCase(uri.getScheme())) {
+								host = uri.getHost();
+								port = uri.getPort();
+								query = uri.getRawQuery();
+								if (host.startsWith("www.")) {
+									host = host.substring("www.".length());
+								}
+								cUrl.append(host);
+								if (port != -1 && port != 80) {
+									cUrl.append(':');
+									cUrl.append(port);
+								}
+								cUrl.append(uri.getRawPath());
+								if (query != null) {
+									cUrl.append('?');
+									cUrl.append(query);
+								}
+								sb.append(cUrl.toString().toLowerCase());
+							} else {
+								sb.append(entry.url.toLowerCase());
 							}
-							cUrl.append(host);
-							if (port != -1 && port != 80) {
-								cUrl.append(':');
-								cUrl.append(port);
-							}
-							cUrl.append(uri.getRawPath());
-							if (query != null) {
-								cUrl.append('?');
-								cUrl.append(query);
-							}
-							sb.append(cUrl.toString().toLowerCase());
-						} else {
-							sb.append(entry.url.toLowerCase());
 						}
 					} else {
 						sb.append('-');

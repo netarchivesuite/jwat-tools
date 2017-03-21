@@ -22,6 +22,7 @@ public class ContainerMDTaskCLIParser {
 	public static ContainerMDOptions parseArguments(CommandLine cmdLine) {
 		Options cliOptions = new Options();
 		try {
+			cliOptions.addOption(null, "--queue-first", JWATTools.A_QUEUE_FIRST, 0, null);
 			cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
 			cliOptions.addOption("-d", "--destdir", A_DEST, 0, null).setValueRequired();
 			cliOptions.addOption("-l", null, A_LAX, 0, null);
@@ -37,6 +38,9 @@ public class ContainerMDTaskCLIParser {
 		ContainerMDOptions options = new ContainerMDOptions();
 
 		Argument argument;
+
+		// Queue first.
+		options.bQueueFirst = cmdLine.idMap.containsKey(JWATTools.A_QUEUE_FIRST);
 
 		// Thread workers.
 		argument = cmdLine.idMap.get( JWATTools.A_WORKERS );

@@ -1,6 +1,7 @@
 package org.jwat.tools.tasks.delete;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -26,10 +27,16 @@ public class DeleteTask extends ProcessTask {
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		deletedFilesOutput = new SynchronizedOutput(options.outputFile);
+		try {
+			deletedFilesOutput = new SynchronizedOutput(options.outputFile, 1024*1024);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 
 		// FIXME Use other feeder.
-		threadpool_feeder_lifecycle( options.filesList, this, 1 );
+		threadpool_feeder_lifecycle( options.filesList, false, this, 1 );
 
 		deletedFilesOutput.out.flush();
 		deletedFilesOutput.out.close();
@@ -43,7 +50,7 @@ public class DeleteTask extends ProcessTask {
 			}
 		}
 
-		calucate_runstats();
+		calculate_runstats();
 
 		cout.println( "      Time: " + run_timestr + " (" + run_dtm + " ms.)" );
 		cout.println( "TotalBytes: " + toSizeString(current_size));

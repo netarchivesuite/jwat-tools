@@ -30,6 +30,7 @@ public class TestTaskCLIParser {
 	public static TestOptions parseArguments(CommandLine cmdLine) {
 		Options cliOptions = new Options();
 		try {
+			cliOptions.addOption(null, "--queue-first", JWATTools.A_QUEUE_FIRST, 0, null);
 			cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
 			cliOptions.addOption("-a", null, A_AFTER, 0, null).setValueRequired();
 			cliOptions.addOption("-b", null, A_BAD, 0, null);
@@ -48,6 +49,9 @@ public class TestTaskCLIParser {
 		TestOptions options = new TestOptions();
 
 		Argument argument;
+
+		// Queue first.
+		options.bQueueFirst = cmdLine.idMap.containsKey(JWATTools.A_QUEUE_FIRST);
 
 		// Thread workers.
 		argument = cmdLine.idMap.get( JWATTools.A_WORKERS );

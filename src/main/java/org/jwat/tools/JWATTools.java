@@ -32,9 +32,10 @@ import com.antiaction.common.cli.ArgumentParserException;
 public class JWATTools {
 
 	public static final int A_WORKERS = 1;
-	public static final int A_COMMAND = 2;
-	public static final int A_FILES = 3;
-	public static final int A_QUIET = 4;
+	public static final int A_QUEUE_FIRST = 2;
+	public static final int A_QUIET = 3;
+	public static final int A_COMMAND = 4;
+	public static final int A_FILES = 5;
 
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
@@ -166,6 +167,7 @@ public class JWATTools {
 		CommandLine cmdLine = null;
 		configure_cli();
 		try {
+			options.addOption(null, "--queue-first", A_QUEUE_FIRST, 0, null);
 			options.addOption("-w", "--workers", A_WORKERS, 0, null).setValueRequired();
 			options.addNamedArgument( "command", A_COMMAND, 0, 1).setStopParsing();
 			cmdLine = ArgumentParser.parse(args, options, null);

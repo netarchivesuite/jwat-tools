@@ -6,6 +6,8 @@ import java.util.zip.Deflater;
 
 public class CompressOptions {
 
+	public boolean bQueueFirst = false;
+
 	/** Threads to use in thread pool. */
 	public int threads = 1;
 

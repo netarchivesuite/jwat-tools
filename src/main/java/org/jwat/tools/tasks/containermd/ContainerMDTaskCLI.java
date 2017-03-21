@@ -18,10 +18,11 @@ public class ContainerMDTaskCLI extends TaskCLI {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -d <dir>  destination directory (defaults to current dir)");
-		System.out.println(" -l        relaxed URL URI validation");
-		System.out.println(" -q        quiet, no output to console");
-		System.out.println(" -w <x>    set the amount of worker thread(s) (defaults to 1)");
+		System.out.println(" -d <dir>          destination directory (defaults to current dir)");
+		System.out.println(" -l                relaxed URL URI validation");
+		System.out.println(" -q                quiet, no output to console");
+		System.out.println("    --queue-first  queue files before processing");
+		System.out.println(" -w <x>            set the amount of worker thread(s) (defaults to 1)");
 	}
 
 	@Override

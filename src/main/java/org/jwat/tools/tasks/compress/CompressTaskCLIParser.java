@@ -28,6 +28,7 @@ public class CompressTaskCLIParser {
 	public static CompressOptions parseArguments(CommandLine cmdLine) {
 		Options cliOptions = new Options();
 		try {
+			cliOptions.addOption(null, "--queue-first", JWATTools.A_QUEUE_FIRST, 0, null);
 			cliOptions.addOption("-w", "--workers", JWATTools.A_WORKERS, 0, null).setValueRequired();
 			cliOptions.addOption("-1", "--fast", A_COMPRESS, 1, null);
 			cliOptions.addOption("-2", null, A_COMPRESS, 2, null);
@@ -57,6 +58,9 @@ public class CompressTaskCLIParser {
 		CompressOptions options = new CompressOptions();
 
 		Argument argument;
+
+		// Queue first.
+		options.bQueueFirst = cmdLine.idMap.containsKey(JWATTools.A_QUEUE_FIRST);
 
 		// Thread workers.
 		argument = cmdLine.idMap.get( JWATTools.A_WORKERS );

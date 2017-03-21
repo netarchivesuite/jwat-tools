@@ -114,6 +114,108 @@
     </dependency>
 
     <dependency>
+      <groupId>org.netpreserve.openwayback</groupId>
+      <artifactId>openwayback-core</artifactId>
+      <version>2.0.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.netpreserve.openwayback</groupId>
+          <artifactId>openwayback-cdx-server</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.netpreserve.openwayback</groupId>
+          <artifactId>openwayback-webapp</artifactId>
+        </exclusion>
+<!--
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.beanshell</groupId>
+          <artifactId>bsh</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.htmlparser</groupId>
+          <artifactId>htmlparser</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.flagstone</groupId>
+          <artifactId>transform</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.jwat</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+-->
+        <!-- Dependencies from the access-control-core artifact. -->
+<!--
+        <exclusion>
+          <groupId>com.thoughtworks.xstream</groupId>
+          <artifactId>xstream</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-dbcp</groupId>
+          <artifactId>commons-dbcp</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.jettison</groupId>
+          <artifactId>jettison</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>redis.clients</groupId>
+          <artifactId>jedis</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>redis.clients</groupId>
+          <artifactId>jedis</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sleepycat</groupId>
+          <artifactId>je</artifactId>
+        </exclusion>
+-->
+        <!-- Dependencies from the webarchive-commons artifact. -->
+<!--
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+-->
+<!--
+        <exclusion>
+          <groupId>org.json</groupId>
+          <artifactId>json</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-lang</groupId>
+          <artifactId>commons-lang</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-io</groupId>
+          <artifactId>commons-io</artifactId>
+        </exclusion>
+-->
+<!--
+        <exclusion>
+         <groupId>it.unimi.dsi</groupId>
+          <artifactId>dsiutils</artifactId>
+        </exclusion>
+-->
+<!--
+        <exclusion>
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time</artifactId>
+        </exclusion>
+-->
+      </exclusions>
+    </dependency>
+
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.12</version>

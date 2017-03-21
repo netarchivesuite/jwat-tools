@@ -21,16 +21,17 @@ public class CompressTaskCLI extends TaskCLI {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -1, --fast      compress faster, low compression ratio");
-		System.out.println(" -9, --best      compesss better, high compression ratio");
-		System.out.println(" -d, --destdir   destination directory of compressed files");
-		System.out.println("     --dryrun    remove output file leaving the orignal in place");
-		System.out.println("     --verify    decompress output file and compare against input file");
-		System.out.println("     --remove    remove input file after compression (only on success)");
-		System.out.println("     --listfile  list file of old/new filename, length and checksum");
-		System.out.println("     --twopass   index file and then bitstream compress based on index");
-		System.out.println("     --hdrfiles  write (W)ARC/HTTP headers to a seperate file for each input file");
-		System.out.println(" -w<x>           set the amount of worker thread(s) (defaults to 1)");
+		System.out.println(" -1, --fast         compress faster, low compression ratio");
+		System.out.println(" -9, --best         compesss better, high compression ratio");
+		System.out.println(" -d, --destdir      destination directory of compressed files");
+		System.out.println("     --dryrun       remove output file leaving the orignal in place");
+		System.out.println("     --verify       decompress output file and compare against input file");
+		System.out.println("     --remove       remove input file after compression (only on success)");
+		System.out.println("     --listfile     list file of old/new filename, length and checksum");
+		System.out.println("     --twopass      index file and then bitstream compress based on index");
+		System.out.println("     --hdrfiles     write (W)ARC/HTTP headers to a seperate file for each input file");
+		System.out.println("     --queue-first  queue files before processing");
+		System.out.println(" -w <x>             set the amount of worker thread(s) (defaults to 1)");
 	}
 
 	@Override

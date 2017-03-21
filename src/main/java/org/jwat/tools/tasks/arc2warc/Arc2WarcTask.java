@@ -1,6 +1,7 @@
 package org.jwat.tools.tasks.arc2warc;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -27,13 +28,19 @@ public class Arc2WarcTask extends ProcessTask {
 	public void runtask(Arc2WarcOptions options) {
 		this.options = options;
 
-		exceptionsOutput = new SynchronizedOutput("e.out");
+		try {
+			exceptionsOutput = new SynchronizedOutput("e.out", 1024*1024);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle(options.filesList, this, options.threads);
+		threadpool_feeder_lifecycle(options.filesList, options.bQueueFirst, this, options.threads);
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -44,7 +51,7 @@ public class Arc2WarcTask extends ProcessTask {
 			}
 		}
 
-		calucate_runstats();
+		calculate_runstats();
 
 		exceptionsOutput.close();
 

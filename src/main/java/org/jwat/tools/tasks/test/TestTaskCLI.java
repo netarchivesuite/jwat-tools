@@ -24,6 +24,7 @@ public class TestTaskCLI extends TaskCLI {
 		System.out.println(" -i --ignore-digest   skip digest calculation and validation");
 		System.out.println(" -l                   relaxed URL URI validation");
 		System.out.println(" -x                   to validate text/xml payload (eg. mets)");
+		System.out.println("    --queue-first     queue files before processing");
 		System.out.println(" -w <x>               set the amount of worker thread(s) (defaults to 1)");
 	}
 

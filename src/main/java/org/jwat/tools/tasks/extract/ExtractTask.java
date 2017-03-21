@@ -22,7 +22,7 @@ public class ExtractTask extends ProcessTask {
 		Thread thread = new Thread(resultThread);
 		thread.start();
 
-		threadpool_feeder_lifecycle( options.filesList, this, options.threads );
+		threadpool_feeder_lifecycle( options.filesList, options.bQueueFirst, this, options.threads );
 
 		resultThread.bExit = true;
 		while (!resultThread.bClosed) {
@@ -33,7 +33,7 @@ public class ExtractTask extends ProcessTask {
 			}
 		}
 
-		calucate_runstats();
+		calculate_runstats();
 
 		cout.println( "      Time: " + run_timestr + " (" + run_dtm + " ms.)" );
 		cout.println( "TotalBytes: " + toSizeString(current_size));

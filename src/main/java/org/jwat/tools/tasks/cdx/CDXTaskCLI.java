@@ -21,8 +21,9 @@ public class CDXTaskCLI extends TaskCLI {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -o <file>  output cdx filename (unsorted)");
-		System.out.println(" -w <x>     set the amount of worker thread(s) (defaults to 1)");
+		System.out.println(" -o <file>         output cdx filename (unsorted)");
+		System.out.println("    --queue-first  queue files before processing");
+		System.out.println(" -w <x>            set the amount of worker thread(s) (defaults to 1)");
 	}
 
 	@Override

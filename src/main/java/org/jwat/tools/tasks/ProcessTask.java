@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.antiaction.common.cli.ProgressableOutput;
@@ -15,7 +13,7 @@ import com.antiaction.common.cli.WildcardMatcher;
 public abstract class ProcessTask extends Task {
 
 	/** ThreadPool executor. */
-	public ExecutorService executor; 
+	public ThreadPoolExecutorPausable executor; 
 
 	public ProgressableOutput cout = new ProgressableOutput(System.out);
 
@@ -43,10 +41,13 @@ public abstract class ProcessTask extends Task {
 	futures.add(future);
 	 */
 
-	public void threadpool_feeder_lifecycle(List<String> filesList, ProcessTask task, int threads) {
+	public void threadpool_feeder_lifecycle(List<String> filesList, boolean bQueueFirst, ProcessTask task, int threads) {
 		cout.println( "Using " + threads + " thread(s)." );
 		//executor = Executors.newFixedThreadPool(16);
-		executor = new ThreadPoolExecutor(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+		executor = new ThreadPoolExecutorPausable(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+		if (bQueueFirst) {
+			executor.pause();
+		}
 		startCtm = System.currentTimeMillis();
 		cout.println("ThreadPool started.");
 		try {
@@ -55,6 +56,9 @@ public abstract class ProcessTask extends Task {
 			cout.println("Died unexpectedly!");
 		} finally {
 			cout.println("Queued " + queued + " file(s).");
+			if (bQueueFirst) {
+				executor.resume();
+			}
 			//System.out.println("Queued: " + queued + " - Processed: " + processed + ".");
 			executor.shutdown();
 			/*
@@ -213,7 +217,7 @@ public abstract class ProcessTask extends Task {
 	public long run_avgbpsec;
 	public String run_timestr;
 
-	public void calucate_runstats() {
+	public void calculate_runstats() {
 		run_dtm = System.currentTimeMillis() - startCtm;
 		long run_dts = run_dtm / 1000;
 		if (run_dts > 0) {
