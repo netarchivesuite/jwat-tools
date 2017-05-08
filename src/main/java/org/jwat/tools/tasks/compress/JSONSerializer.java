@@ -9,8 +9,8 @@ import java.io.OutputStream;
 import org.jwat.gzip.GzipConstants;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipWriter;
-import org.jwat.tools.tasks.compress.CompressFile.RecordEntry;
-import org.jwat.tools.tasks.compress.ThreadLocalObjectPool.ThreadLocalObjectFactory;
+import org.jwat.tools.core.IOUtils;
+import org.jwat.tools.core.ThreadLocalObjectPool.ThreadLocalObjectFactory;
 
 import com.antiaction.common.json.JSONEncoder;
 import com.antiaction.common.json.JSONEncoding;
@@ -52,15 +52,15 @@ public class JSONSerializer implements Closeable {
 	public static JSONSerializer getInstance() throws JSONException {
 		JSONSerializer jser = new JSONSerializer();
 		jser.json_encoding = JSONEncoding.getJSONEncoding();
+		jser.json_encoder = jser.json_encoding.getJSONEncoder(JSONEncoding.E_UTF8);
 		jser.json_objectmappings = new JSONObjectMappings();
 		jser.json_objectmappings.register(RecordEntry.class);
-		jser.json_encoder = jser.json_encoding.getJSONEncoder(JSONEncoding.E_UTF8);
 		return jser;
 	}
 
 	public void open(CompressResult result, CompressOptions options) throws JSONException, IOException {
 		json_marshaller = json_objectmappings.getStreamMarshaller();
-		dstFname = result.dstFile.getName() + ".headers";
+		dstFname = result.dstFile.getName() + ".headers.gz";
 		if (options.dstPath == null) {
 			dstFile = new File( result.srcFile.getParentFile(), dstFname );
 		}
@@ -98,10 +98,10 @@ public class JSONSerializer implements Closeable {
 			out = null;
 		}
 		finally {
-			CompressFile.closeIOQuietly(cout);
-			CompressFile.closeIOQuietly(entry);
-			CompressFile.closeIOQuietly(writer);
-			CompressFile.closeIOQuietly(out);
+			IOUtils.closeIOQuietly(cout);
+			IOUtils.closeIOQuietly(entry);
+			IOUtils.closeIOQuietly(writer);
+			IOUtils.closeIOQuietly(out);
 		}
 	}
 

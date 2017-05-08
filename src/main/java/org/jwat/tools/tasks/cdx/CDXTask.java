@@ -8,13 +8,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.httpclient.URIException;
 import org.archive.wayback.UrlCanonicalizer;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
-import org.jwat.arc.ArcDateParser;
 import org.jwat.archive.FileIdent;
-import org.jwat.common.Uri;
-import org.jwat.common.UriProfile;
 import org.jwat.tools.tasks.ProcessTask;
 
 import com.antiaction.common.cli.SynchronizedOutput;
@@ -122,6 +118,8 @@ public class CDXTask extends ProcessTask {
 
 		boolean bClosed = false;
 
+		protected UrlCanonicalizer canonicalizer = new AggressiveUrlCanonicalizer(); 
+
 		@Override
 		public void run() {
 			cdxOutput.acquire();
@@ -147,7 +145,7 @@ public class CDXTask extends ProcessTask {
 						while (iter.hasNext()) {
 							entry = iter.next();
 							try {
-								tmpLine = cdxEntry(entry, result.filename, cdxformat);
+								tmpLine = entry.toCDXLine(result.filename, canonicalizer, cdxformat);
 								if (tmpLine != null) {
 									cdxOutput.out.println(tmpLine);
 								}
@@ -174,143 +172,6 @@ public class CDXTask extends ProcessTask {
 			bClosed = true;
 		}
 
-		/*
-		cdxOutput.out.println("CDX b e a m s c v n g");
-		date
-		ip
-		url
-		mimetype
-		response code
-		old stylechecksum
-		v uncompressed arc file offset * 
-		n arc document length * 
-		g file name 
-		*/
-
-		// vinavisen.dk/vinavisen/website.nsf/pages/ 20050506142753 http://www.vinavisen.dk/vinavisen/website.nsf/pages/ text/html 200 - - 294494 kb-pligtsystem-44290-20121018212853-00000.warc
-
-		// NAS
-		//b e a m s c v n g
-
-		// Wayback-1.4.2
-		// A b a m s - - v g
-		// net-bog-klubben.dk/1000028.pdf 20050520084930 http://www.net-bog-klubben.dk/1000028.pdf application/pdf 200 - - 820 kb-pligtsystem-44761-20121107134629-00000.warc
-
-		// CDX N b a m s k r M V g
-		// filedesc:kb-pligtsystem-44761-20121107134629-00000.warc 20121107134629 filedesc:kb-pligtsystem-44761-20121107134629-00000.warc warc/warcinfo0.1.0 - - - - 0 kb-pligtsystem-44761-20121107134629-00000.warc
-		// net-bog-klubben.dk/1000028.pdf 20050520084930 http://www.net-bog-klubben.dk/1000028.pdf application/pdf 200 - - - 820 kb-pligtsystem-44761-20121107134629-00000.warc
-
-		public UrlCanonicalizer canonicalizer = new AggressiveUrlCanonicalizer(); 
-
-		public String cdxEntry(CDXEntry entry, String filename, char[] format) {
-			StringBuilder sb = new StringBuilder();
-			sb.setLength(0);
-			char c;
-			Uri uri;
-			String host;
-			int port;
-			String query;
-			for (int i=0; i<format.length; ++i) {
-				if (sb.length() > 0) {
-					sb.append(' ');
-				}
-				c = format[i];
-				switch (c) {
-				case 'b':
-					if (entry.date != null) {
-						sb.append(ArcDateParser.getDateFormat().format(entry.date));
-					} else {
-						sb.append('-');
-					}
-					break;
-				case 'e':
-					if (entry.ip != null && entry.ip.length() > 0) {
-						sb.append(entry.ip);
-					} else {
-						sb.append('-');
-					}
-					break;
-				case 'A':
-				case 'N':
-					if (entry.url != null && entry.url.length() > 0) {
-						try {
-							sb.append(canonicalizer.urlStringToKey(entry.url));
-						}
-						catch (URIException e) {
-							uri = Uri.create(entry.url, UriProfile.RFC3986_ABS_16BIT_LAX);
-							StringBuilder cUrl = new StringBuilder();
-							if ("http".equalsIgnoreCase(uri.getScheme())) {
-								host = uri.getHost();
-								port = uri.getPort();
-								query = uri.getRawQuery();
-								if (host.startsWith("www.")) {
-									host = host.substring("www.".length());
-								}
-								cUrl.append(host);
-								if (port != -1 && port != 80) {
-									cUrl.append(':');
-									cUrl.append(port);
-								}
-								cUrl.append(uri.getRawPath());
-								if (query != null) {
-									cUrl.append('?');
-									cUrl.append(query);
-								}
-								sb.append(cUrl.toString().toLowerCase());
-							} else {
-								sb.append(entry.url.toLowerCase());
-							}
-						}
-					} else {
-						sb.append('-');
-					}
-					break;
-				case 'a':
-					if (entry.url != null && entry.url.length() > 0) {
-						sb.append(entry.url);
-					} else {
-						sb.append('-');
-					}
-					break;
-				case 'm':
-					if (entry.mimetype != null && entry.mimetype.length() > 0) {
-						sb.append(entry.mimetype);
-					} else {
-						sb.append('-');
-					}
-					break;
-				case 's':
-					if (entry.responseCode != null && entry.responseCode.length() > 0) {
-						sb.append(entry.responseCode);
-					} else {
-						sb.append('-');
-					}
-					break;
-				case 'c':
-					if (entry.checksum != null && entry.checksum.length() > 0) {
-						sb.append(entry.checksum);
-					} else {
-						sb.append('-');
-					}
-					break;
-				case 'v':
-				case 'V':
-					sb.append(entry.offset);
-					break;
-				case 'n':
-					sb.append(entry.length);
-					break;
-				case 'g':
-					sb.append(filename);
-					break;
-				case '-':
-				default:
-					sb.append('-');
-					break;
-				}
-			}
-			return sb.toString();
-		}
 	}
 
 }

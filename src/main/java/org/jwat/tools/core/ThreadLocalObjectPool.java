@@ -1,4 +1,4 @@
-package org.jwat.tools.tasks.compress;
+package org.jwat.tools.core;
 
 public class ThreadLocalObjectPool<O> {
 

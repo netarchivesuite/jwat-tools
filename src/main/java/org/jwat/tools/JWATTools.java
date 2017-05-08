@@ -19,15 +19,16 @@ import org.jwat.tools.tasks.containermd.ContainerMDTaskCLI;
 import org.jwat.tools.tasks.decompress.DecompressTaskCLI;
 import org.jwat.tools.tasks.delete.DeleteTaskCLI;
 import org.jwat.tools.tasks.extract.ExtractTaskCLI;
+import org.jwat.tools.tasks.headers2cdx.Headers2CDXTaskCLI;
 import org.jwat.tools.tasks.interval.IntervalTaskCLI;
 import org.jwat.tools.tasks.pathindex.PathIndexTaskCLI;
 import org.jwat.tools.tasks.test.TestTaskCLI;
 
 import com.antiaction.common.cli.Argument;
 import com.antiaction.common.cli.ArgumentParser;
+import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
-import com.antiaction.common.cli.ArgumentParserException;
 
 public class JWATTools {
 
@@ -96,6 +97,7 @@ public class JWATTools {
 				PathIndexTaskCLI.class,
 				TestTaskCLI.class,
 				UnpackTaskCLI.class,
+				Headers2CDXTaskCLI.class
 		};
 		addCommands((Class<? extends TaskCLI>[])tasks);
 	}
