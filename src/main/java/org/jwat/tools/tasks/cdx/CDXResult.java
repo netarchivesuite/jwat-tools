@@ -14,4 +14,11 @@ public class CDXResult {
 
 	protected List<CDXEntry> entries = new LinkedList<CDXEntry>();
 
+	/**
+	 * Get a list of cddx entries for this result.
+	 * @return
+     */
+	public List<CDXEntry> getEntries() {
+		return entries;
+	}
 }
