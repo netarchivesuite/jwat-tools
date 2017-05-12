@@ -23,6 +23,10 @@ import org.jwat.warc.WarcHeader;
 
 public class Headers2CDXFile {
 
+	public static final int ARC_HEADER_BUFFER_SIZE = 4096;
+	public static final int WARC_HEADER_BUFFER_SIZE = 16384;
+	public static final int HTTP_HEADER_BUFFER_SIZE = 32768;
+
 	private static ThreadLocalObjectPool<JSONDeserializer> jsonTLPool;
 
 	static {
@@ -74,15 +78,17 @@ public class Headers2CDXFile {
     	        	// ARC header.
     	        	bIn = new ByteArrayInputStream(recordEntry.ah);
     	    		arcHeader = ArcHeader.initHeader(arcFieldParsers, uriProfile, diagnostics);
-    	    		bcpbin = new ByteCountingPushBackInputStream(bIn, 1024);
+    	    		bcpbin = new ByteCountingPushBackInputStream(bIn, ARC_HEADER_BUFFER_SIZE);
     	    		arcHeader.parseHeader(bcpbin);
     	    		bcpbin.close();
     	    		bIn.close();
     	    		// HTTP header.
             		httpHeader = null;
             		if (recordEntry.ht != null && recordEntry.hh != null) {
+            			// debug
+            			//System.out.println(new String(recordEntry.hh));
         	        	bIn = new ByteArrayInputStream(recordEntry.hh);
-        	    		bcpbin = new ByteCountingPushBackInputStream(bIn, 1024);
+        	    		bcpbin = new ByteCountingPushBackInputStream(bIn, HTTP_HEADER_BUFFER_SIZE);
         	    		length = arcHeader.archiveLength;
         	    		if (length == null) {
         	    			try {
@@ -95,6 +101,11 @@ public class Headers2CDXFile {
         	    			length = (long)recordEntry.hh.length;
         	    		}
             			httpHeader = HttpHeader.processPayload(recordEntry.ht, bcpbin, length, null);
+            			if (!httpHeader.isValid()) {
+                			// debug
+                			//System.out.println(httpHeader.isValid());
+                			System.out.println(new String(recordEntry.hh));
+            			}
         	    		bcpbin.close();
         	    		bIn.close();
             		}
@@ -109,7 +120,7 @@ public class Headers2CDXFile {
     	        	// WARC header.
     	        	bIn = new ByteArrayInputStream(recordEntry.wh);
     	    		warcHeader = WarcHeader.initHeader(recordHeaderMaxSize, lineReader, headerLineReader, warcFieldParsers, uriProfile, diagnostics);
-    	    		bcpbin = new ByteCountingPushBackInputStream(bIn, 1024);
+    	    		bcpbin = new ByteCountingPushBackInputStream(bIn, WARC_HEADER_BUFFER_SIZE);
     	    		warcHeader.parseHeader(bcpbin);
     	    		bcpbin.close();
     	    		bIn.close();
@@ -119,7 +130,7 @@ public class Headers2CDXFile {
             			// debug
             			//System.out.println(new String(recordEntry.hh));
         	        	bIn = new ByteArrayInputStream(recordEntry.hh);
-        	    		bcpbin = new ByteCountingPushBackInputStream(bIn, 1024);
+        	    		bcpbin = new ByteCountingPushBackInputStream(bIn, HTTP_HEADER_BUFFER_SIZE);
         	    		length = warcHeader.contentLength;
         	    		if (length == null) {
         	    			try {
