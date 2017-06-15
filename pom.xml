@@ -60,7 +60,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jwat.core.version>1.0.6-SNAPSHOT</jwat.core.version>
+    <jwat.core.version>1.0.6</jwat.core.version>
+    <common-cli.version>0.2.0</common-cli.version>
+    <common-json.version>0.7.0</common-json.version>
+    <jna.version>3.2.7</jna.version>
     <maven.assembly.plugin>2.2.2</maven.assembly.plugin>
     <maven.compiler.plugin>3.3</maven.compiler.plugin>
     <maven.jar.plugin>2.3</maven.jar.plugin>
@@ -99,18 +102,18 @@
     <dependency>
       <groupId>com.antiaction</groupId>
       <artifactId>common-cli</artifactId>
-      <version>0.2.0-SNAPSHOT</version>
+      <version>${common-cli.version}</version>
     </dependency>
     <dependency>
       <groupId>com.antiaction</groupId>
       <artifactId>common-json</artifactId>
-      <version>0.7.0-SNAPSHOT</version>
+      <version>${common-json.version}</version>
     </dependency>
 
     <dependency>
       <groupId>net.java.dev.jna</groupId>
       <artifactId>jna</artifactId>
-      <version>3.2.7</version>
+      <version>${jna.version}</version>
     </dependency>
 
     <dependency>

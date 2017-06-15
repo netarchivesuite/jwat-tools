@@ -239,7 +239,10 @@ public class TestTask extends ProcessTask {
 				case FileIdent.FILEID_ARC_GZ:
 				case FileIdent.FILEID_WARC:
 				case FileIdent.FILEID_WARC_GZ:
-					cout.println("Empty file: '" + srcFile.getPath() + "'");
+					//cout.println("Empty file: '" + srcFile.getPath() + "'");
+					executor.submit(new TaskRunnable(srcFile));
+					queued_size += srcFile.length();
+					++queued;
 					break;
 				default:
 					break;
