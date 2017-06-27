@@ -19,6 +19,13 @@ This project currently includes a commandline tool with various gzip/arc/warc/xm
 * Test
 * Unpack
 
+### Downloads ###
+
+Releases and snapshot can also be download by following these links.
+
+[Releases](https://oss.sonatype.org/content/repositories/releases/org/jwat/jwat-tools/ "Sonatype release repository")
+[Snapshots](https://oss.sonatype.org/content/repositories/snapshots/org/jwat/jwat-tools/ "Sonatype snapshot repository")
+
 ### History ###
 
 ###### V0.6.3-SNAPSHOT ######

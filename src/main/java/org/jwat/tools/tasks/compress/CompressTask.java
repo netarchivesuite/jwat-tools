@@ -3,6 +3,7 @@ package org.jwat.tools.tasks.compress;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -16,6 +17,8 @@ import org.jwat.archive.FileIdent;
 import org.jwat.common.Base16;
 import org.jwat.tools.tasks.ProcessTask;
 
+import com.antiaction.common.cli.SynchronizedOutput;
+
 public class CompressTask extends ProcessTask {
 
 	public CompressTask() {
@@ -23,17 +26,23 @@ public class CompressTask extends ProcessTask {
 
 	private CompressOptions options;
 
-	/** Valid results output stream. */
-	//private SynchronizedOutput validOutput;
-
-	/** Invalid results output stream. */
-	//private SynchronizedOutput invalidOutput;
+    /** Integrity fails  output stream. */
+	private SynchronizedOutput failsOutput;
 
 	/** Exception output stream. */
-	//private SynchronizedOutput exceptionsOutput;
+	private SynchronizedOutput exceptionsOutput;
 
 	public void runtask(CompressOptions options) {
 		this.options = options;
+
+		try {
+			failsOutput = new SynchronizedOutput("fails.out", 1024*1024);
+			exceptionsOutput = new SynchronizedOutput("exceptions.out", 1024*1024);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
@@ -50,6 +59,9 @@ public class CompressTask extends ProcessTask {
 				e.printStackTrace();
 			}
 		}
+
+		exceptionsOutput.close();
+		failsOutput.close();
 
 		calculate_runstats();
 
@@ -202,6 +214,9 @@ public class CompressTask extends ProcessTask {
 						        	else {
 						        		++integrityFail;
 										cout.print("Integrity fail: " + result.srcFile.getPath());
+										failsOutput.acquire();
+										failsOutput.out.println(result.srcFile.getPath());
+										failsOutput.release();
 						        	}
 								}
 								if (!options.bVerify || result.bVerified) {
@@ -215,6 +230,14 @@ public class CompressTask extends ProcessTask {
 							else {
 								++incomplete;
 								cout.print("Incomplete: " + result.srcFile.getPath());
+							}
+							if (result.t != null) {
+								exceptionsOutput.acquire();
+								exceptionsOutput.out.println( "#" );
+								exceptionsOutput.out.println( "# Exception while processing '" + result.srcFile + "'" );
+								exceptionsOutput.out.println( "#" );
+								result.t.printStackTrace( exceptionsOutput.out );
+								exceptionsOutput.release();
 							}
 
 							result.dstFile.setLastModified(result.srcFile.lastModified());

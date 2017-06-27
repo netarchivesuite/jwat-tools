@@ -31,6 +31,8 @@ public class CompressOptions {
 
 	public File hdrFile;
 
+	public File failFile;
+
 	public List<String> filesList;
 
 }

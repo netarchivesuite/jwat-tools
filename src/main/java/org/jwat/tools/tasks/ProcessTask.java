@@ -57,6 +57,7 @@ public abstract class ProcessTask extends Task {
 		} finally {
 			cout.println("Queued " + queued + " file(s).");
 			if (bQueueFirst) {
+				startCtm = System.currentTimeMillis();
 				executor.resume();
 			}
 			//System.out.println("Queued: " + queued + " - Processed: " + processed + ".");
