@@ -11,7 +11,7 @@
 
   <groupId>org.jwat</groupId>
   <artifactId>jwat-tools</artifactId>
-  <version>0.6.4-SNAPSHOT</version>
+  <version>0.6.4</version>
 
   <packaging>jar</packaging>
 
@@ -60,7 +60,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jwat.core.version>1.1.0-SNAPSHOT</jwat.core.version>
+    <jwat.core.version>1.1.0</jwat.core.version>
     <common-cli.version>0.2.0</common-cli.version>
     <common-json.version>0.7.0</common-json.version>
     <jna.version>3.2.7</jna.version>
