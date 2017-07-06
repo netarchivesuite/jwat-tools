@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.jwat.arc.ArcHeader;
+import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcRecord;
 import org.jwat.arc.ArcRecordBase;
 import org.jwat.archive.ArchiveParser;
@@ -12,8 +13,10 @@ import org.jwat.common.ContentType;
 import org.jwat.common.HttpHeader;
 import org.jwat.common.UriProfile;
 import org.jwat.gzip.GzipEntry;
+import org.jwat.gzip.GzipReader;
 import org.jwat.warc.WarcConstants;
 import org.jwat.warc.WarcHeader;
+import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcRecord;
 
 public class CDXFile implements ArchiveParserCallback {
@@ -205,7 +208,7 @@ public class CDXFile implements ArchiveParserCallback {
 	}
 
 	@Override
-	public void apcDone() {
+	public void apcDone(GzipReader gzipReader, ArcReader arcReader, WarcReader warcReader) {
 	}
 
 }

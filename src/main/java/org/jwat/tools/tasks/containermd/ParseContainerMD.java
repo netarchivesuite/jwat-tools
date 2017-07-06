@@ -3,6 +3,7 @@ package org.jwat.tools.tasks.containermd;
 import java.io.File;
 import java.io.IOException;
 
+import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcRecordBase;
 import org.jwat.archive.ArchiveParser;
 import org.jwat.archive.ArchiveParserCallback;
@@ -11,10 +12,12 @@ import org.jwat.archive.ManagedPayload;
 import org.jwat.common.ContentType;
 import org.jwat.common.HttpHeader;
 import org.jwat.gzip.GzipEntry;
+import org.jwat.gzip.GzipReader;
 import org.jwat.tools.core.ManagedPayloadContentType;
 import org.jwat.tools.core.ManagedPayloadContentTypeIdentifier;
 import org.jwat.warc.WarcConstants;
 import org.jwat.warc.WarcHeader;
+import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcRecord;
 
 public class ParseContainerMD implements ArchiveParserCallback {
@@ -327,6 +330,6 @@ public class ParseContainerMD implements ArchiveParserCallback {
 	}
 
 	@Override
-	public void apcDone() {
+	public void apcDone(GzipReader gzipReader, ArcReader arcReader, WarcReader warcReader) {
 	}
 }

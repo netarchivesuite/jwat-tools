@@ -3,6 +3,7 @@ package org.jwat.tools.tasks.test;
 import java.io.File;
 import java.io.IOException;
 
+import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcRecordBase;
 import org.jwat.archive.ArchiveParser;
 import org.jwat.archive.ArchiveParserCallback;
@@ -10,9 +11,13 @@ import org.jwat.archive.Cloner;
 import org.jwat.archive.FileIdent;
 import org.jwat.archive.ManagedPayload;
 import org.jwat.common.ContentType;
+import org.jwat.common.Diagnosis;
+import org.jwat.common.DiagnosisType;
 import org.jwat.gzip.GzipEntry;
+import org.jwat.gzip.GzipReader;
 import org.jwat.tools.core.ManagedPayloadContentTypeIdentifier;
 import org.jwat.tools.core.ValidatorPlugin;
+import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcRecord;
 
 public class TestFile2 implements ArchiveParserCallback {
@@ -96,13 +101,38 @@ public class TestFile2 implements ArchiveParserCallback {
 			++result.skipped;
 			break;
 		}
+		if (file.length() == 0) {
+			TestFileResultItemDiagnosis itemDiagnosis = new TestFileResultItemDiagnosis();
+			itemDiagnosis.offset = 0;
+			switch (fileId) {
+			case FileIdent.FILEID_GZIP:
+				itemDiagnosis.errors.add(new Diagnosis(DiagnosisType.ERROR_EXPECTED, "GZip file", "One or more entries"));
+				++result.gzipErrors;
+				break;
+			case FileIdent.FILEID_ARC:
+			case FileIdent.FILEID_ARC_GZ:
+				itemDiagnosis.errors.add(new Diagnosis(DiagnosisType.ERROR_EXPECTED, "ARC file", "One or more records"));
+				++result.arcErrors;
+				break;
+			case FileIdent.FILEID_WARC:
+			case FileIdent.FILEID_WARC_GZ:
+				itemDiagnosis.errors.add(new Diagnosis(DiagnosisType.ERROR_EXPECTED, "WARC file", "One or more records"));
+				++result.warcErrors;
+				break;
+			case FileIdent.FILEID_UNKNOWN:
+				break;
+			}
+			if (itemDiagnosis.errors.size() > 0) {
+				result.rdList.add(itemDiagnosis);
+			}
+		}
 	}
 
 	@Override
 	public void apcGzipEntryStart(GzipEntry gzipEntry, long startOffset) {
 		++result.gzipEntries;
-		result.gzipErrors = gzipEntry.diagnostics.getErrors().size();
-		result.gzipWarnings = gzipEntry.diagnostics.getWarnings().size();
+		result.gzipErrors += gzipEntry.diagnostics.getErrors().size();
+		result.gzipWarnings += gzipEntry.diagnostics.getWarnings().size();
 		if ( options.bShowErrors ) {
 			//TestResult.showGzipErrors(srcFile, gzipEntry, System.out);
 			if (gzipEntry.diagnostics.hasErrors() || gzipEntry.diagnostics.hasWarnings()) {
@@ -213,7 +243,65 @@ public class TestFile2 implements ArchiveParserCallback {
 	}
 
 	@Override
-	public void apcDone() {
+	public void apcDone(GzipReader gzipReader, ArcReader arcReader, WarcReader warcReader) {
+		TestFileResultItemDiagnosis itemDiagnosis;
+		if (gzipReader != null) {
+			result.gzipErrors += gzipReader.diagnostics.getErrors().size();
+			result.gzipWarnings += gzipReader.diagnostics.getWarnings().size();
+			if ( options.bShowErrors ) {
+				if (gzipReader.diagnostics.hasErrors() || gzipReader.diagnostics.hasWarnings()) {
+					itemDiagnosis = new TestFileResultItemDiagnosis();
+					itemDiagnosis.offset = gzipReader.getStartOffset();
+					itemDiagnosis.errors = gzipReader.diagnostics.getErrors();
+					itemDiagnosis.warnings = gzipReader.diagnostics.getWarnings();
+					result.rdList.add(itemDiagnosis);
+				}
+			}
+		}
+		if (arcReader != null) {
+			itemDiagnosis = new TestFileResultItemDiagnosis();
+			itemDiagnosis.offset = arcReader.getStartOffset();
+			if (arcReader.diagnostics.hasErrors() || arcReader.diagnostics.hasWarnings()) {
+				itemDiagnosis.errors = arcReader.diagnostics.getErrors();
+				itemDiagnosis.warnings = arcReader.diagnostics.getWarnings();
+			}
+			if ( options.bShowErrors ) {
+				if (itemDiagnosis.errors.size() > 0 || itemDiagnosis.warnings.size() > 0) {
+					result.rdList.add(itemDiagnosis);
+				}
+			}
+			result.arcErrors += itemDiagnosis.errors.size();
+			result.arcWarnings += itemDiagnosis.warnings.size();
+			for (int i=0; i<itemDiagnosis.throwables.size(); ++i) {
+				TestFileResultItemThrowable itemThrowable = new TestFileResultItemThrowable();
+				itemThrowable.startOffset = arcReader.getStartOffset();
+				itemThrowable.offset = arcReader.getOffset();
+				itemThrowable.t = itemDiagnosis.throwables.get(i);
+				result.throwableList.add(itemThrowable);
+			}
+		}
+		if (warcReader != null) {
+			itemDiagnosis = new TestFileResultItemDiagnosis();
+			itemDiagnosis.offset = warcReader.getStartOffset();
+			if (warcReader.diagnostics.hasErrors() || warcReader.diagnostics.hasWarnings()) {
+				itemDiagnosis.errors = warcReader.diagnostics.getErrors();
+				itemDiagnosis.warnings = warcReader.diagnostics.getWarnings();
+			}
+			if ( options.bShowErrors ) {
+				if (itemDiagnosis.errors.size() > 0 || itemDiagnosis.warnings.size() > 0) {
+					result.rdList.add(itemDiagnosis);
+				}
+			}
+			result.warcErrors += itemDiagnosis.errors.size();
+			result.warcWarnings += itemDiagnosis.warnings.size();
+			for (int i=0; i<itemDiagnosis.throwables.size(); ++i) {
+				TestFileResultItemThrowable itemThrowable = new TestFileResultItemThrowable();
+				itemThrowable.startOffset = warcReader.getStartOffset();
+				itemThrowable.offset = warcReader.getOffset();
+				itemThrowable.t = itemDiagnosis.throwables.get(i);
+				result.throwableList.add(itemThrowable);
+			}
+		}
 	}
 
 	protected void validate_payload(ArcRecordBase arcRecord, ContentType contentType, TestFileResultItemDiagnosis itemDiagnosis) throws IOException {

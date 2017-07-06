@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcRecordBase;
 import org.jwat.archive.ArchiveParser;
 import org.jwat.archive.ArchiveParserCallback;
@@ -12,6 +13,8 @@ import org.jwat.common.HttpHeader;
 import org.jwat.common.Payload;
 import org.jwat.common.UriProfile;
 import org.jwat.gzip.GzipEntry;
+import org.jwat.gzip.GzipReader;
+import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcRecord;
 
 public class ExtractFile implements ArchiveParserCallback {
@@ -127,7 +130,7 @@ public class ExtractFile implements ArchiveParserCallback {
 	}
 
 	@Override
-	public void apcDone() {
+	public void apcDone(GzipReader gzipReader, ArcReader arcReader, WarcReader warcReader) {
 	}
 
 }
