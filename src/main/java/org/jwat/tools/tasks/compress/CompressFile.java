@@ -88,6 +88,13 @@ public class CompressFile {
 					else {
 						result = compressNormalFile( pbin, srcFile, dstFile, options );
 					}
+					if (result.bCompleted) {
+						result.dstFile.setLastModified(result.srcFile.lastModified());
+					}
+					else {
+						result.dstFile.delete();
+						result.dstFile = null;
+					}
 				}
 				else {
 					System.out.println( dstFile.getName() + " already exists, skipping." );
@@ -173,7 +180,6 @@ public class CompressFile {
 		catch (Throwable t) {
 			result.bCompleted = false;
 			result.t = t;
-			t.printStackTrace();
 		}
 		finally {
 			IOUtils.closeIOQuietly(in);
@@ -241,6 +247,11 @@ public class CompressFile {
 			arcReader.setPayloadDigestEnabled( false );
 			long readerConsumed = arcReader.getConsumed();
 			while ((arcRecord = arcReader.getNextRecord()) != null) {
+				// debug
+				//System.out.println(arcRecord.getStartOffset());
+				if (arcRecord.header.archiveLength == null || arcRecord.header.archiveLength < 0) {
+					throw new Exception("Missing or invalid ARC record length!");
+				}
 				if (options.bHeaderFiles) {
 			        recordEntry = new RecordEntry();
 			        recordEntry.ah = arcRecord.header.headerBytes;
@@ -354,9 +365,12 @@ public class CompressFile {
 		        	while (consumed > 0) {
 		        		read = (int)Math.min(consumed, (long)buffer.length);
 		        		read = raf.read(buffer, 0, read);
-		        		if (read > 0) {
+		        		if (read != -1) {
 		        			consumed -= read;
 				        	cout.write(buffer, 0, read);
+		        		}
+		        		else {
+		        			throw new IOException("Unexpected end of ARC payload!");
 		        		}
 		        	}
 		        	raf.seek(oldPos);
@@ -445,7 +459,6 @@ public class CompressFile {
 		catch (Throwable t) {
 			result.bCompleted = false;
 			result.t = t;
-			t.printStackTrace();
 		}
 		finally {
 			IOUtils.closeIOQuietly(jser);
@@ -516,6 +529,11 @@ public class CompressFile {
 			warcReader.setPayloadDigestEnabled( true );
 			long readerConsumed = warcReader.getConsumed();
 			while ( (warcRecord = warcReader.getNextRecord()) != null ) {
+				// debug
+				//System.out.println(warcRecord.getStartOffset());
+				if (warcRecord.header.contentLength == null || warcRecord.header.contentLength < 0) {
+					throw new Exception("Missing or invalid WARC record length!");
+				}
 				if (options.bHeaderFiles) {
 			        recordEntry = new RecordEntry();
 		        	recordEntry.wh = warcRecord.header.headerBytes;
@@ -609,9 +627,12 @@ public class CompressFile {
 		        	while (consumed > 0) {
 		        		read = (int)Math.min(consumed, (long)buffer.length);
 		        		read = raf.read(buffer, 0, read);
-		        		if (read > 0) {
+		        		if (read != -1) {
 		        			consumed -= read;
 				        	cout.write(buffer, 0, read);
+		        		}
+		        		else {
+		        			throw new IOException("Unexpected end of WARC payload!");
 		        		}
 		        	}
 		        	raf.seek(oldPos);
@@ -710,7 +731,6 @@ public class CompressFile {
 		catch (Throwable t) {
 			result.bCompleted = false;
 			result.t = t;
-			t.printStackTrace();
 		}
 		finally {
 			IOUtils.closeIOQuietly(jser);

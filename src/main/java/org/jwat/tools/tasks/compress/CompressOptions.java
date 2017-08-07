@@ -25,6 +25,8 @@ public class CompressOptions {
 
 	public boolean bHeaderFiles = false;
 
+	public boolean bQuiet = false;
+
 	public File dstPath;
 
 	public File lstFile;

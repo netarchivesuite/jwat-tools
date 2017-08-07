@@ -47,6 +47,7 @@ public class CompressTaskCLIParser {
 			cliOptions.addOption(null, "--twopass", A_TWOPASS, 0, null);
 			cliOptions.addOption(null, "--listfile", A_FILELIST, 0, null).setValueRequired();
 			cliOptions.addOption(null, "--hdrfiles", A_HDRFILES, 0, null);
+			cliOptions.addOption("-q", "--quiet", JWATTools.A_QUIET, 0, null);
 			cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
 		}
@@ -82,60 +83,68 @@ public class CompressTaskCLIParser {
 		if (argument != null) {
 			options.compressionLevel = argument.option.subId;
 		}
-		System.out.println( "Compression level: " + options.compressionLevel );
 
 		argument = cmdLine.idMap.get( A_BATCHMODE );
 		if (argument != null) {
 			options.bBatch = true;
 		}
-		System.out.println( "Batch mode: " + options.bBatch );
 
 		argument = cmdLine.idMap.get( A_DRYRUN );
 		if (argument != null) {
 			options.bDryrun = true;
 		}
-		System.out.println( "Dry run: " + options.bDryrun );
 
 		argument = cmdLine.idMap.get( A_VERIFY );
 		if (argument != null) {
 			options.bVerify = true;
 		}
-		System.out.println( "Verify output: " + options.bVerify );
 
 		argument = cmdLine.idMap.get( A_REMOVE );
 		if (argument != null) {
 			options.bRemove = true;
 		}
-		System.out.println( "Remove input: " + options.bRemove );
 
 		argument = cmdLine.idMap.get( A_DEST );
 		if (argument != null) {
 			options.dstPath = new File( argument.value );
 		}
-		System.out.println( "Dest path: " + options.dstPath );
 
 		argument = cmdLine.idMap.get( A_FILELIST );
 		if (argument != null) {
 			options.lstFile = new File( argument.value );
 		}
-		System.out.println( "List file: " + options.lstFile );
 
 		argument = cmdLine.idMap.get( A_TWOPASS );
 		if (argument != null) {
 			options.bTwopass = true;
 		}
-		System.out.println( "Twopass: " + options.bTwopass );
 
 		argument = cmdLine.idMap.get( A_HDRFILES );
 		if (argument != null) {
 			options.bHeaderFiles = true;
 		}
-		System.out.println( "Header Files: " + options.bHeaderFiles );
+
+		options.bQuiet = cmdLine.idMap.containsKey( JWATTools.A_QUIET );
 
 		// Files.
 		argument = cmdLine.idMap.get( JWATTools.A_FILES );
 		options.filesList = argument.values;
 
+		if (!options.bQuiet) {
+			System.out.println("JWATTools v" + JWATTools.getVersionString());
+			System.out.println( "Compression level: " + options.compressionLevel );
+			System.out.println( "       Batch mode: " + options.bBatch );
+			System.out.println( "          Dry run: " + options.bDryrun );
+			System.out.println( "    Verify output: " + options.bVerify );
+			System.out.println( "     Remove input: " + options.bRemove );
+			System.out.println( "        Dest path: " + options.dstPath );
+			System.out.println( "        List file: " + options.lstFile );
+			System.out.println( "          Twopass: " + options.bTwopass );
+			System.out.println( "     Header Files: " + options.bHeaderFiles );
+			System.out.println( "            Quiet: " + options.bQuiet );
+		}
+
 		return options;
 	}
+
 }

@@ -32,12 +32,16 @@ public class CompressTask extends ProcessTask {
 	/** Exception output stream. */
 	private SynchronizedOutput exceptionsOutput;
 
+    /** Cmopress report output stream. */
+	private SynchronizedOutput compressReportOutput;
+
 	public void runtask(CompressOptions options) {
 		this.options = options;
 
 		try {
 			failsOutput = new SynchronizedOutput("fails.out", 1024*1024);
 			exceptionsOutput = new SynchronizedOutput("exceptions.out", 1024*1024);
+			compressReportOutput = new SynchronizedOutput("compress-report.out", 1024*1024);
 		}
 		catch (IOException e) {
 			e.printStackTrace();
@@ -65,20 +69,39 @@ public class CompressTask extends ProcessTask {
 
 		calculate_runstats();
 
-		cout.println("         Time: " + run_timestr + " (" + run_dtm + " ms.)" );
-		cout.println("   TotalBytes: " + toSizeString(current_size));
-		cout.println("     AvgBytes: " + toSizePerSecondString(run_avgbpsec));
-		cout.println(String.format("       Gained: %s (%.2f%%).", toSizeString(uncompressed - compressed), current_gain));
-		cout.println("    Completed: " + completed);
-		cout.println("  Incompleted: " + incomplete);
-		cout.println("IntegrityFail: " + integrityFail);
+		if (!options.bQuiet) {
+			cout.println("         Time: " + run_timestr + " (" + run_dtm + " ms.)" );
+			cout.println("   TotalBytes: " + toSizeString(current_size));
+			cout.println("     AvgBytes: " + toSizePerSecondString(run_avgbpsec));
+			cout.println(String.format("       Gained: %s (%.2f%%).", toSizeString(uncompressed - compressed), current_gain));
+			cout.println("    Completed: " + completed);
+			cout.println("  Incompleted: " + incomplete);
+			cout.println("IntegrityFail: " + integrityFail);
+			Iterator<Entry<String, Long>> schemesIter = schemesMap.entrySet().iterator();
+			Entry<String, Long> schemeEntry;
+			while (schemesIter.hasNext()) {
+				schemeEntry = schemesIter.next();
+				cout.println(schemeEntry.getKey() + " (" + schemeEntry.getValue() + ")");
+			}
+		}
 
+		compressReportOutput.acquire();
+		compressReportOutput.out.println("         Time: " + run_timestr + " (" + run_dtm + " ms.)" );
+		compressReportOutput.out.println("   TotalBytes: " + toSizeString(current_size));
+		compressReportOutput.out.println("     AvgBytes: " + toSizePerSecondString(run_avgbpsec));
+		compressReportOutput.out.println(String.format("       Gained: %s (%.2f%%).", toSizeString(uncompressed - compressed), current_gain));
+		compressReportOutput.out.println("    Completed: " + completed);
+		compressReportOutput.out.println("  Incompleted: " + incomplete);
+		compressReportOutput.out.println("IntegrityFail: " + integrityFail);
 		Iterator<Entry<String, Long>> schemesIter = schemesMap.entrySet().iterator();
 		Entry<String, Long> schemeEntry;
 		while (schemesIter.hasNext()) {
 			schemeEntry = schemesIter.next();
-			cout.println(schemeEntry.getKey() + " (" + schemeEntry.getValue() + ")");
+			compressReportOutput.out.println(schemeEntry.getKey() + " (" + schemeEntry.getValue() + ")");
 		}
+		compressReportOutput.release();
+
+		compressReportOutput.close();
 	}
 
 	@Override
@@ -230,6 +253,9 @@ public class CompressTask extends ProcessTask {
 							else {
 								++incomplete;
 								cout.print("Incomplete: " + result.srcFile.getPath());
+								failsOutput.acquire();
+								failsOutput.out.println(result.srcFile.getPath());
+								failsOutput.release();
 							}
 							if (result.t != null) {
 								exceptionsOutput.acquire();
@@ -239,8 +265,6 @@ public class CompressTask extends ProcessTask {
 								result.t.printStackTrace( exceptionsOutput.out );
 								exceptionsOutput.release();
 							}
-
-							result.dstFile.setLastModified(result.srcFile.lastModified());
 
 							if (options.bDryrun) {
 								result.dstFile.delete();
