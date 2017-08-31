@@ -54,8 +54,10 @@ public class ContainerMDUtils {
 		sb.append('<').append(CONTAINER_PREFIX).append(':');
 		sb.append(name);
 		for (String[] attr : attrs) {
-			sb.append(' ').append(attr[0]).append("=\"").append(attr[1])
+		    if (isSet(attr[0]) && isSet(attr[1])) {
+			    sb.append(' ').append(attr[0]).append("=\"").append(attr[1])
 					.append('"');
+			}
 		}
 		sb.append('>');
 	}
@@ -81,7 +83,7 @@ public class ContainerMDUtils {
 		sb.append("<").append(CONTAINER_PREFIX).append(':');
 		sb.append(name);
 		for (String[] attr : attrs) {
-			if (attr[0] != null) {
+			if (isSet(attr[0]) && isSet(attr[1])) {
 				sb.append(' ').append(attr[0]);
 				sb.append("=\"").append(encodeContent(attr[1])).append('"');
 			}
