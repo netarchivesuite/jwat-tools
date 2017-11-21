@@ -8,9 +8,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 
-public class ChangedTask extends ProcessTask {
+public class ChangedTask extends AbstractTask {
 
 	public List<Long> data = new ArrayList<Long>();
 

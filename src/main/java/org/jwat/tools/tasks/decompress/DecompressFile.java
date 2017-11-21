@@ -17,6 +17,7 @@ public class DecompressFile {
 	protected File srcFile;
 
 	public void decompressFile(File srcFile) {
+		this.srcFile = srcFile;
 		String srcFname = srcFile.getName();
 		RandomAccessFile raf = null;
 		RandomAccessFileInputStream rafin;

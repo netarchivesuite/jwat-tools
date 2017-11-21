@@ -18,16 +18,13 @@ import org.jwat.archive.Cloner;
 import org.jwat.archive.FileIdent;
 import org.jwat.common.Diagnosis;
 import org.jwat.common.DiagnosisType;
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 
 import com.antiaction.common.cli.SynchronizedOutput;
 
-public class TestTask extends ProcessTask {
+public class TestTask extends AbstractTask {
 
 	private TestOptions options;
-
-	public TestTask() {
-	}
 
 	/*
 	 * Summary.
@@ -65,8 +62,13 @@ public class TestTask extends ProcessTask {
 	/** Exception output stream. */
 	private SynchronizedOutput exceptionsOutput;
 
+	public TestTask() {
+	}
+
 	public void runtask(TestOptions options) {
 		this.options = options;
+	    options.recordHeaderMaxSize = recordHeaderMaxSize;
+	    options.payloadHeaderMaxSize = payloadHeaderMaxSize;
 
 		// TODO optional
 		//cloner = Cloner.getCloner();
@@ -259,12 +261,8 @@ public class TestTask extends ProcessTask {
 		@Override
 		public void run() {
 			TestFile2 testFile = new TestFile2();
-			// FIXME
-		    testFile.recordHeaderMaxSize = recordHeaderMaxSize;
-		    testFile.payloadHeaderMaxSize = payloadHeaderMaxSize;
 			testFile.callback = null;
 			TestFileResult result = testFile.processFile(srcFile, options, cloner);
-			result.srcFile = srcFile;
 			results.add(result);
 			resultsReady.release();
 		}
@@ -344,6 +342,8 @@ public class TestTask extends ProcessTask {
 					}
 				} catch (InterruptedException e) {
 					bLoop = false;
+				} catch (Throwable t) {
+					t.printStackTrace();
 				}
 			}
 			cout.println("Output Thread stopped.");

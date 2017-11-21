@@ -10,12 +10,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.archive.wayback.UrlCanonicalizer;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 import org.jwat.tools.tasks.cdx.CDXEntry;
 
 import com.antiaction.common.cli.SynchronizedOutput;
 
-public class Headers2CDXTask extends ProcessTask {
+public class Headers2CDXTask extends AbstractTask {
 
 	/** Valid results output stream. */
 	private SynchronizedOutput cdxOutput;

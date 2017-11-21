@@ -2,9 +2,9 @@ package org.jwat.tools.tasks.test;
 
 public class TestFileResultItemThrowable {
 
-	public long startOffset;
+	public Long startOffset;
 
-	public long offset;
+	public Long offset;
 
 	public Throwable t;
 

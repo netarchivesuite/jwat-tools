@@ -13,7 +13,7 @@ import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
 
 // TODO
-public class UnpackTask extends ProcessTask {
+public class UnpackTask extends AbstractTask {
 
 	public UnpackTask() {
 	}

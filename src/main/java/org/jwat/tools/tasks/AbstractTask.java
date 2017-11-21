@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import com.antiaction.common.cli.ProgressableOutput;
 import com.antiaction.common.cli.WildcardMatcher;
 
-public abstract class ProcessTask extends Task {
+public abstract class AbstractTask {
 
 	/** ThreadPool executor. */
 	public ThreadPoolExecutorPausable executor; 
@@ -41,7 +41,7 @@ public abstract class ProcessTask extends Task {
 	futures.add(future);
 	 */
 
-	public void threadpool_feeder_lifecycle(List<String> filesList, boolean bQueueFirst, ProcessTask task, int threads) {
+	public void threadpool_feeder_lifecycle(List<String> filesList, boolean bQueueFirst, AbstractTask task, int threads) {
 		cout.println( "Using " + threads + " thread(s)." );
 		//executor = Executors.newFixedThreadPool(16);
 		executor = new ThreadPoolExecutorPausable(threads, threads, 20L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
@@ -97,7 +97,7 @@ public abstract class ProcessTask extends Task {
 		}
 	}
 
-	public void filelist_feeder(List<String> filesList, ProcessTask task) {
+	public void filelist_feeder(List<String> filesList, AbstractTask task) {
 		String fileSeparator = System.getProperty( "file.separator" );
 		File parentFile;
 		String filepart;
@@ -132,7 +132,7 @@ public abstract class ProcessTask extends Task {
 		}
 	}
 
-	protected void filelist_feeder_process(File parentFile, FileFilter filter, ProcessTask task) {
+	protected void filelist_feeder_process(File parentFile, FileFilter filter, AbstractTask task) {
 		if ( parentFile.isFile() ) {
 			task.process( parentFile );
 		}

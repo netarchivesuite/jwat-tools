@@ -42,6 +42,7 @@ public class Arc2Warc {
 	 * @param srcFile a valid arc(.gz) file
 	 */
 	public void arc2warc(File srcFile, Arc2WarcOptions options) {
+		this.srcFile = srcFile;
 		repairPayload = RepairPayload.getRepairPayload();
 		try {
 			String srcFname = srcFile.getName();

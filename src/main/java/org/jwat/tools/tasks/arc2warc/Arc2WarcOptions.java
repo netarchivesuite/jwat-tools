@@ -11,6 +11,12 @@ public class Arc2WarcOptions {
 
 	public int threads = 1;
 
+	public boolean bValidateDigest = false;
+
+	public int recordHeaderMaxSize = 8192;
+
+    public int payloadHeaderMaxSize = 32768;
+
 	public File destDir;
 
 	public String prefix = DEFAULT_PREFIX;

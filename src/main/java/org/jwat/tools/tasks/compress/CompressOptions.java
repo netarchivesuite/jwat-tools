@@ -27,6 +27,12 @@ public class CompressOptions {
 
 	public boolean bQuiet = false;
 
+	public boolean bValidateDigest = true;
+
+	public int recordHeaderMaxSize = 8192;
+
+    public int payloadHeaderMaxSize = 32768;
+
 	public File dstPath;
 
 	public File lstFile;

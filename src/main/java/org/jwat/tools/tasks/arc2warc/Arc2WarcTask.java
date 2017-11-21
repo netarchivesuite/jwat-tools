@@ -7,13 +7,20 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.jwat.archive.FileIdent;
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 
 import com.antiaction.common.cli.SynchronizedOutput;
 
-public class Arc2WarcTask extends ProcessTask {
+public class Arc2WarcTask extends AbstractTask {
 
 	private Arc2WarcOptions options;
+
+	/*
+	 * Settings.
+	 */
+
+	private int recordHeaderMaxSize = 1024 * 1024;
+    private int payloadHeaderMaxSize = 1024 * 1024;
 
 	/** Exception output stream. */
 	private SynchronizedOutput exceptionsOutput;
@@ -27,6 +34,8 @@ public class Arc2WarcTask extends ProcessTask {
 
 	public void runtask(Arc2WarcOptions options) {
 		this.options = options;
+	    options.recordHeaderMaxSize = recordHeaderMaxSize;
+	    options.payloadHeaderMaxSize = payloadHeaderMaxSize;
 
 		try {
 			exceptionsOutput = new SynchronizedOutput("e.out", 1024*1024);
@@ -100,8 +109,6 @@ public class Arc2WarcTask extends ProcessTask {
 		public void run() {
 			Arc2Warc arc2warc = new Arc2Warc();
 			arc2warc.arc2warc(srcFile, options);
-			// FIXME
-			arc2warc.srcFile = srcFile;
 			results.add(arc2warc);
 			resultsReady.release();
 		}
@@ -150,6 +157,8 @@ public class Arc2WarcTask extends ProcessTask {
 					}
 				} catch (InterruptedException e) {
 					bLoop = false;
+				} catch (Throwable t) {
+					t.printStackTrace();
 				}
 			}
 			bClosed = true;

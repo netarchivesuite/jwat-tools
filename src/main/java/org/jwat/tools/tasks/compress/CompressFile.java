@@ -242,9 +242,11 @@ public class CompressFile {
 
 	        result.schemesMap = new HashMap<String, Long>();
 
-	        arcReader = ArcReaderFactory.getReaderUncompressed( uncompressedFileIn );
-			arcReader.setBlockDigestEnabled( false );
-			arcReader.setPayloadDigestEnabled( false );
+	        arcReader = ArcReaderFactory.getReaderUncompressed(uncompressedFileIn);
+			arcReader.setBlockDigestEnabled(options.bValidateDigest);
+			arcReader.setPayloadDigestEnabled(options.bValidateDigest);
+			arcReader.setRecordHeaderMaxSize(options.recordHeaderMaxSize);
+			arcReader.setPayloadHeaderMaxSize(options.payloadHeaderMaxSize);
 			long readerConsumed = arcReader.getConsumed();
 			while ((arcRecord = arcReader.getNextRecord()) != null) {
 				// debug
@@ -524,9 +526,11 @@ public class CompressFile {
 	        	uncompressedFileIn = in;
 	        }
 
-	        warcReader = WarcReaderFactory.getReader( uncompressedFileIn );
-			warcReader.setBlockDigestEnabled( true );
-			warcReader.setPayloadDigestEnabled( true );
+	        warcReader = WarcReaderFactory.getReader(uncompressedFileIn);
+			warcReader.setBlockDigestEnabled(options.bValidateDigest);
+			warcReader.setPayloadDigestEnabled(options.bValidateDigest);
+			warcReader.setRecordHeaderMaxSize(options.recordHeaderMaxSize);
+			warcReader.setPayloadHeaderMaxSize(options.payloadHeaderMaxSize);
 			long readerConsumed = warcReader.getConsumed();
 			while ( (warcRecord = warcReader.getNextRecord()) != null ) {
 				// debug

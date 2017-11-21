@@ -16,11 +16,11 @@ import java.util.concurrent.TimeUnit;
 
 import org.jwat.archive.FileIdent;
 import org.jwat.common.DiagnosisType;
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 
 import com.antiaction.common.cli.SynchronizedOutput;
 
-public class ContainerMDTask extends ProcessTask {
+public class ContainerMDTask extends AbstractTask {
 
 	private ContainerMDOptions options;
 
@@ -149,10 +149,6 @@ public class ContainerMDTask extends ProcessTask {
 		public void run() {
 			ParseContainerMD parseContainerMD = new ParseContainerMD();
 			ContainerMDResult result = parseContainerMD.processFile(srcFile, options);
-			// FIXME
-			result.srcFile = srcFile;
-			result.srcFileSize = srcFile.length();
-			
 			results.add(result);
 			resultsReady.release();
 		}
@@ -214,6 +210,8 @@ public class ContainerMDTask extends ProcessTask {
 					}
 				} catch (InterruptedException e) {
 					bLoop = false;
+				} catch (Throwable t) {
+					t.printStackTrace();
 				}
 			}
 			if (!options.bQuiet) cout.println("Output Thread stopped.");

@@ -34,13 +34,16 @@ public class ExtractFile implements ArchiveParserCallback {
 	public ExtractFile() {
 	}
 
-	public void processFile(File file, ExtractOptions options) {
-		fileName = file.getName();
+	public void processFile(File srcFile, ExtractOptions options) {
+		this.srcFile = srcFile;
+		fileName = srcFile.getName();
 		ArchiveParser archiveParser = new ArchiveParser();
 		archiveParser.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
-		archiveParser.bBlockDigestEnabled = true;
-		archiveParser.bPayloadDigestEnabled = true;
-		consumed = archiveParser.parse(file, this);
+		archiveParser.bBlockDigestEnabled = options.bValidateDigest;
+		archiveParser.bPayloadDigestEnabled = options.bValidateDigest;
+	    archiveParser.recordHeaderMaxSize = options.recordHeaderMaxSize;
+	    archiveParser.payloadHeaderMaxSize = options.payloadHeaderMaxSize;
+		consumed = archiveParser.parse(srcFile, this);
 	}
 
 	@Override
@@ -127,6 +130,7 @@ public class ExtractFile implements ArchiveParserCallback {
 
 	@Override
 	public void apcRuntimeError(Throwable t, long offset, long consumed) {
+		t.printStackTrace();
 	}
 
 	@Override

@@ -6,9 +6,9 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.jwat.archive.FileIdent;
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 
-public class DecompressTask extends ProcessTask {
+public class DecompressTask extends AbstractTask {
 
 	public DecompressTask() {
 	}
@@ -78,8 +78,6 @@ public class DecompressTask extends ProcessTask {
 		public void run() {
 			DecompressFile decompressFile = new DecompressFile();
 			decompressFile.decompressFile(srcFile);
-			// FIXME
-			decompressFile.srcFile = srcFile;
 			results.add(decompressFile);
 			resultsReady.release();
 		}

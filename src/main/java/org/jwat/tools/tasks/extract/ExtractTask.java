@@ -6,17 +6,26 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.jwat.archive.FileIdent;
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 
-public class ExtractTask extends ProcessTask {
+public class ExtractTask extends AbstractTask {
 
-	private ExtractOptions options;
+    private ExtractOptions options;
+
+	/*
+	 * Settings.
+	 */
+
+	private int recordHeaderMaxSize = 1024 * 1024;
+    private int payloadHeaderMaxSize = 1024 * 1024;
 
 	public ExtractTask() {
 	}
 
 	public void runtask(ExtractOptions options) {
 		this.options = options;
+		options.recordHeaderMaxSize = recordHeaderMaxSize;
+		options.payloadHeaderMaxSize = payloadHeaderMaxSize;
 
 		ResultThread resultThread = new ResultThread();
 		Thread thread = new Thread(resultThread);
@@ -86,7 +95,6 @@ public class ExtractTask extends ProcessTask {
 		public void run() {
 			ExtractFile extractFile = new ExtractFile();
 			extractFile.processFile(srcFile, options);
-			extractFile.srcFile = srcFile;
 			results.add(extractFile);
 			resultsReady.release();
 		}
@@ -124,6 +132,8 @@ public class ExtractTask extends ProcessTask {
 					}
 				} catch (InterruptedException e) {
 					bLoop = false;
+				} catch (Throwable t) {
+					t.printStackTrace();
 				}
 			}
 			bClosed = true;

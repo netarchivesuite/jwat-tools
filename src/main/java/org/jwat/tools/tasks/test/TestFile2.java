@@ -24,10 +24,6 @@ public class TestFile2 implements ArchiveParserCallback {
 
 	public TestOptions options;
 
-	public int recordHeaderMaxSize = 8192;
-
-    public int payloadHeaderMaxSize = 32768;
-
 	protected ManagedPayload managedPayload;
 
 	protected ManagedPayloadContentTypeIdentifier managedPayloadContentTypeIdentifier;
@@ -38,10 +34,11 @@ public class TestFile2 implements ArchiveParserCallback {
 
 	protected TestFileResult result;
 
-	public TestFileResult processFile(File file, TestOptions options, Cloner cloner) {
+	public TestFileResult processFile(File srcFile, TestOptions options, Cloner cloner) {
 		this.options = options;
 		result = new TestFileResult();
-		result.file = file.getPath();
+		result.srcFile = srcFile;
+		result.file = srcFile.getPath();
 
 		managedPayloadContentTypeIdentifier = ManagedPayloadContentTypeIdentifier.getManagedPayloadContentTypeIdentifier();
 
@@ -51,12 +48,12 @@ public class TestFile2 implements ArchiveParserCallback {
 		archiveParser.uriProfile = options.uriProfile;
 		archiveParser.bBlockDigestEnabled = options.bValidateDigest;
 		archiveParser.bPayloadDigestEnabled = options.bValidateDigest;
-	    archiveParser.recordHeaderMaxSize = recordHeaderMaxSize;
-	    archiveParser.payloadHeaderMaxSize = payloadHeaderMaxSize;
+	    archiveParser.recordHeaderMaxSize = options.recordHeaderMaxSize;
+	    archiveParser.payloadHeaderMaxSize = options.payloadHeaderMaxSize;
 
 		managedPayload = ManagedPayload.checkout();
 
-		long consumed = archiveParser.parse(file, this);
+		long consumed = archiveParser.parse(srcFile, this);
 
 		managedPayload.checkin();
 

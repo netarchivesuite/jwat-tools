@@ -15,16 +15,23 @@ import java.util.concurrent.TimeUnit;
 
 import org.jwat.archive.FileIdent;
 import org.jwat.common.Base16;
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 
 import com.antiaction.common.cli.SynchronizedOutput;
 
-public class CompressTask extends ProcessTask {
+public class CompressTask extends AbstractTask {
 
 	public CompressTask() {
 	}
 
 	private CompressOptions options;
+
+	/*
+	 * Settings.
+	 */
+
+	private int recordHeaderMaxSize = 1024 * 1024;
+    private int payloadHeaderMaxSize = 1024 * 1024;
 
     /** Integrity fails  output stream. */
 	private SynchronizedOutput failsOutput;
@@ -37,6 +44,8 @@ public class CompressTask extends ProcessTask {
 
 	public void runtask(CompressOptions options) {
 		this.options = options;
+	    options.recordHeaderMaxSize = recordHeaderMaxSize;
+	    options.payloadHeaderMaxSize = payloadHeaderMaxSize;
 
 		try {
 			failsOutput = new SynchronizedOutput("fails.out", 1024*1024);

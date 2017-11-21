@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jwat.tools.tasks.Task;
 import org.jwat.tools.tasks.TaskCLI;
 import org.jwat.tools.tasks.UnpackTaskCLI;
 import org.jwat.tools.tasks.arc2warc.Arc2WarcTaskCLI;
@@ -41,10 +40,6 @@ public class JWATTools {
 	public static void main(String[] args) {
 		JWATTools tools = new JWATTools();
 		tools.Main( args );
-	}
-
-	public class Command {
-		Class<? extends Task> task;
 	}
 
 	public static List<Class<? extends TaskCLI>> commandList = new ArrayList<Class<? extends TaskCLI>>();
@@ -142,11 +137,6 @@ public class JWATTools {
 			}
 		}
 		System.out.println("");
-		/*
-		System.out.println("Options:");
-		System.out.println(" -w <x>  set the amount of worker thread(s) (defaults to 1)");
-		System.out.println("");
-		*/
 		System.out.println("See 'jwattools help <command>' for more information on a specific command.");
 	}
 
@@ -177,12 +167,6 @@ public class JWATTools {
 			options.addOption("-w", "--workers", A_WORKERS, 0, null).setValueRequired();
 			options.addNamedArgument( "command", A_COMMAND, 0, 1).setStopParsing();
 			cmdLine = ArgumentParser.parse(args, options, null);
-			/*
-			for ( int i=0; i<arguments.switchArgsList.size(); ++i) {
-				argument = arguments.switchArgsList.get( i );
-				System.out.println( argument.argDef.id + "," + argument.argDef.subId + "=" + argument.value );
-			}
-			*/
 		}
 		catch (ArgumentParserException e) {
 			System.out.println( getClass().getName() + ": " + e.getMessage() );

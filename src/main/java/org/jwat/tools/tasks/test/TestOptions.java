@@ -17,6 +17,10 @@ public class TestOptions {
 
 	public boolean bValidateDigest = true;
 
+	public int recordHeaderMaxSize = 8192;
+
+    public int payloadHeaderMaxSize = 32768;
+
 	public UriProfile uriProfile = UriProfile.RFC3986;
 
 	public List<ValidatorPlugin> validatorPlugins = new LinkedList<ValidatorPlugin>();

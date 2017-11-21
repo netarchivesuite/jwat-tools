@@ -32,24 +32,26 @@ public class ParseContainerMD implements ArchiveParserCallback {
 
 	protected ContainerMDResult result;
 
-	public ContainerMDResult processFile(File file, ContainerMDOptions options) {
+	public ContainerMDResult processFile(File srcFile, ContainerMDOptions options) {
 		this.options = options;
 
-		if (!options.bQuiet) System.out.println("processFile " + file.getAbsolutePath());
+		if (!options.bQuiet) System.out.println("processFile " + srcFile.getAbsolutePath());
 
 		result = new ContainerMDResult();
-		result.file = file.getPath();
+		result.srcFile = srcFile;
+		result.srcFileSize = srcFile.length();
+		result.file = srcFile.getPath();
 
 		ArchiveParser archiveParser = new ArchiveParser();
 		archiveParser.uriProfile = options.uriProfile;
-		archiveParser.bBlockDigestEnabled = false;
-		archiveParser.bPayloadDigestEnabled = false;
+		archiveParser.bBlockDigestEnabled = options.bValidateDigest;
+		archiveParser.bPayloadDigestEnabled = options.bValidateDigest;
 		archiveParser.recordHeaderMaxSize = options.recordHeaderMaxSize;
 		archiveParser.payloadHeaderMaxSize = options.payloadHeaderMaxSize;
 
 		managedPayload = ManagedPayload.checkout();
 
-		long consumed = archiveParser.parse(file, this);
+		long consumed = archiveParser.parse(srcFile, this);
 
 		managedPayload.checkin();
 

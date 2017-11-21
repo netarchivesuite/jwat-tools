@@ -6,11 +6,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 
 import com.antiaction.common.cli.SynchronizedOutput;
 
-public class DeleteTask extends ProcessTask {
+public class DeleteTask extends AbstractTask {
 
 	private DeleteOptions options;
 

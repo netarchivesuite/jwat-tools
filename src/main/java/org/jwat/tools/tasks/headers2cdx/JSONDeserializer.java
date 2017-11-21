@@ -45,10 +45,10 @@ public class JSONDeserializer implements Closeable {
 	private GzipEntry gzipEntry = null;
 	private InputStream in = null;
 	private JSONEncoding json_encoding;
-	private JSONObjectMappings json_objectmappings;
 	private JSONDecoder json_decoder;
-	private JSONStreamUnmarshaller json_unmarshaller;
 	private JSONDecoderContext json_decodercontext;
+	private JSONObjectMappings json_objectmappings;
+	private JSONStreamUnmarshaller json_unmarshaller;
 
 	protected JSONDeserializer() {
 	}

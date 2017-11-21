@@ -7,9 +7,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 
-public class IntervalTask extends ProcessTask {
+public class IntervalTask extends AbstractTask {
 
 	private IntervalOptions options;
 

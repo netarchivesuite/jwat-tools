@@ -4,11 +4,11 @@ import java.io.File;
 import java.io.IOException;
 
 import org.jwat.archive.FileIdent;
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 
 import com.antiaction.common.cli.SynchronizedOutput;
 
-public class PathIndexTask extends ProcessTask {
+public class PathIndexTask extends AbstractTask {
 
 	/** Output stream. */
 	private SynchronizedOutput pathIndexOutput;

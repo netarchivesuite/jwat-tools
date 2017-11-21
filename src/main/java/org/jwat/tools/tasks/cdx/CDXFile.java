@@ -21,19 +21,24 @@ import org.jwat.warc.WarcRecord;
 
 public class CDXFile implements ArchiveParserCallback {
 
-	protected CDXResult result;
+	public CDXOptions options;
+
+    protected CDXResult result;
 
 	public CDXFile() {
 	}
 
-	public CDXResult processFile(File srcFile) {
+	public CDXResult processFile(File srcFile, CDXOptions options) {
+		this.options = options;
 		result = new CDXResult();
 		result.srcFile = srcFile;
 		result.filename = srcFile.getName();
 		ArchiveParser archiveParser = new ArchiveParser();
 		archiveParser.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
-		archiveParser.bBlockDigestEnabled = true;
-		archiveParser.bPayloadDigestEnabled = true;
+		archiveParser.bBlockDigestEnabled = options.bValidateDigest;
+		archiveParser.bPayloadDigestEnabled = options.bValidateDigest;
+	    archiveParser.recordHeaderMaxSize = options.recordHeaderMaxSize;
+	    archiveParser.payloadHeaderMaxSize = options.payloadHeaderMaxSize;
 		result.consumed = archiveParser.parse(srcFile, this);
 		return result;
 	}
@@ -205,6 +210,7 @@ public class CDXFile implements ArchiveParserCallback {
 
 	@Override
 	public void apcRuntimeError(Throwable t, long offset, long consumed) {
+		t.printStackTrace();
 	}
 
 	@Override

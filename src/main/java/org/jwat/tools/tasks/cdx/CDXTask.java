@@ -11,19 +11,32 @@ import java.util.concurrent.TimeUnit;
 import org.archive.wayback.UrlCanonicalizer;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.jwat.archive.FileIdent;
-import org.jwat.tools.tasks.ProcessTask;
+import org.jwat.tools.tasks.AbstractTask;
 
 import com.antiaction.common.cli.SynchronizedOutput;
 
-public class CDXTask extends ProcessTask {
+public class CDXTask extends AbstractTask {
 
-	/** Valid results output stream. */
+	private CDXOptions options;
+
+	/*
+	 * Settings.
+	 */
+
+	private int recordHeaderMaxSize = 1024 * 1024;
+    private int payloadHeaderMaxSize = 1024 * 1024;
+
+    /** Valid results output stream. */
 	private SynchronizedOutput cdxOutput;
 
 	public CDXTask() {
 	}
 
 	public void runtask(CDXOptions options) {
+		this.options = options;
+		options.recordHeaderMaxSize = recordHeaderMaxSize;
+		options.payloadHeaderMaxSize = payloadHeaderMaxSize;
+
 		System.out.println("Using output: " + options.outputFile.getPath());
 		try {
 			cdxOutput = new SynchronizedOutput(options.outputFile, 32*1024*1024);
@@ -100,7 +113,7 @@ public class CDXTask extends ProcessTask {
 		@Override
 		public void run() {
 			CDXFile cdxFile = new CDXFile();
-			CDXResult result = cdxFile.processFile(srcFile);
+			CDXResult result = cdxFile.processFile(srcFile, options);
 			results.add(result);
 			resultsReady.release();
 		}
@@ -167,6 +180,8 @@ public class CDXTask extends ProcessTask {
 					}
 				} catch (InterruptedException e) {
 					bLoop = false;
+				} catch (Throwable t) {
+					t.printStackTrace();
 				}
 			}
 			bClosed = true;
