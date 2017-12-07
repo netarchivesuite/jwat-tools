@@ -10,6 +10,7 @@ import java.util.List;
 import org.jwat.arc.ArcRecordBase;
 import org.jwat.common.Diagnosis;
 import org.jwat.gzip.GzipEntry;
+import org.jwat.tools.tasks.ResultItemThrowable;
 import org.jwat.warc.WarcConstants;
 import org.jwat.warc.WarcRecord;
 
@@ -62,7 +63,7 @@ public class ContainerMDResult {
 
 	public List<ContainerMDResultItemDiagnosis> rdList = new LinkedList<ContainerMDResultItemDiagnosis>();
 
-	public List<ContainerMDResultItemThrowable> throwableList = new LinkedList<ContainerMDResultItemThrowable>();
+	public List<ResultItemThrowable> throwableList = new LinkedList<ResultItemThrowable>();
 
 	public ContainerMDWrapper[] wraps = new ContainerMDWrapper[9];
 
@@ -141,8 +142,8 @@ public class ContainerMDResult {
 			}
 			runtimeErrors += throwableList.size();
 			if (throwableList.size() > 0) {
-				Iterator<ContainerMDResultItemThrowable> iter = throwableList.iterator();
-				ContainerMDResultItemThrowable itemThrowable;
+				Iterator<ResultItemThrowable> iter = throwableList.iterator();
+				ResultItemThrowable itemThrowable;
 				while (iter.hasNext()) {
 					itemThrowable = iter.next();
 					ContainerMDUtils.startElement(sb,

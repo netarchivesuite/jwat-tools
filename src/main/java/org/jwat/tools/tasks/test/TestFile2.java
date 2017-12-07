@@ -17,6 +17,7 @@ import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
 import org.jwat.tools.core.ManagedPayloadContentTypeIdentifier;
 import org.jwat.tools.core.ValidatorPlugin;
+import org.jwat.tools.tasks.ResultItemThrowable;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcRecord;
 
@@ -179,7 +180,7 @@ public class TestFile2 implements ArchiveParserCallback {
 		result.arcErrors += itemDiagnosis.errors.size();
 		result.arcWarnings += itemDiagnosis.warnings.size();
 		for (int i=0; i<itemDiagnosis.throwables.size(); ++i) {
-			TestFileResultItemThrowable itemThrowable = new TestFileResultItemThrowable();
+			ResultItemThrowable itemThrowable = new ResultItemThrowable();
 			itemThrowable.startOffset = startOffset;
 			itemThrowable.offset = startOffset;
 			itemThrowable.t = itemDiagnosis.throwables.get(i);
@@ -215,7 +216,7 @@ public class TestFile2 implements ArchiveParserCallback {
 		result.warcErrors += itemDiagnosis.errors.size();
 		result.warcWarnings += itemDiagnosis.warnings.size();
 		for (int i=0; i<itemDiagnosis.throwables.size(); ++i) {
-			TestFileResultItemThrowable itemThrowable = new TestFileResultItemThrowable();
+			ResultItemThrowable itemThrowable = new ResultItemThrowable();
 			itemThrowable.startOffset = startOffset;
 			itemThrowable.offset = startOffset;
 			itemThrowable.t = itemDiagnosis.throwables.get(i);
@@ -232,11 +233,7 @@ public class TestFile2 implements ArchiveParserCallback {
 
 	@Override
 	public void apcRuntimeError(Throwable t, long startOffset, long consumed) {
-		TestFileResultItemThrowable itemThrowable = new TestFileResultItemThrowable();
-		itemThrowable.startOffset = startOffset;
-		itemThrowable.offset = consumed;
-		itemThrowable.t = t;
-		result.throwableList.add(itemThrowable);
+		result.throwableList.add(new ResultItemThrowable(t, startOffset, consumed));
 	}
 
 	@Override
@@ -270,7 +267,7 @@ public class TestFile2 implements ArchiveParserCallback {
 			result.arcErrors += itemDiagnosis.errors.size();
 			result.arcWarnings += itemDiagnosis.warnings.size();
 			for (int i=0; i<itemDiagnosis.throwables.size(); ++i) {
-				TestFileResultItemThrowable itemThrowable = new TestFileResultItemThrowable();
+				ResultItemThrowable itemThrowable = new ResultItemThrowable();
 				itemThrowable.startOffset = arcReader.getStartOffset();
 				itemThrowable.offset = arcReader.getOffset();
 				itemThrowable.t = itemDiagnosis.throwables.get(i);
@@ -292,7 +289,7 @@ public class TestFile2 implements ArchiveParserCallback {
 			result.warcErrors += itemDiagnosis.errors.size();
 			result.warcWarnings += itemDiagnosis.warnings.size();
 			for (int i=0; i<itemDiagnosis.throwables.size(); ++i) {
-				TestFileResultItemThrowable itemThrowable = new TestFileResultItemThrowable();
+				ResultItemThrowable itemThrowable = new ResultItemThrowable();
 				itemThrowable.startOffset = warcReader.getStartOffset();
 				itemThrowable.offset = warcReader.getOffset();
 				itemThrowable.t = itemDiagnosis.throwables.get(i);

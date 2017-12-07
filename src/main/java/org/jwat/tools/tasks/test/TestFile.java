@@ -18,6 +18,7 @@ import org.jwat.common.UriProfile;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
 import org.jwat.tools.core.ValidatorPlugin;
+import org.jwat.tools.tasks.ResultItemThrowable;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcReaderFactory;
 import org.jwat.warc.WarcRecord;
@@ -41,7 +42,7 @@ public class TestFile {
 		WarcRecord warcRecord = null;
 		TestFileResult result = new TestFileResult();
 		TestFileResultItemDiagnosis itemDiagnosis;
-		TestFileResultItemThrowable itemThrowable;
+		ResultItemThrowable itemThrowable;
 		result.file = file.getPath();
 		try {
 			raf = new RandomAccessFile( file, "r" );
@@ -216,7 +217,7 @@ public class TestFile {
 			}
 		}
 		catch (Throwable t) {
-			itemThrowable = new TestFileResultItemThrowable();
+			itemThrowable = new ResultItemThrowable();
 			long startOffset = -1;
 			Long length = null;
 			if (arcRecord != null) {

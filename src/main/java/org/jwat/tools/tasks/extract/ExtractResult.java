@@ -1,4 +1,4 @@
-package org.jwat.tools.tasks.cdx;
+package org.jwat.tools.tasks.extract;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -6,25 +6,17 @@ import java.util.List;
 
 import org.jwat.tools.tasks.ResultItemThrowable;
 
-public class CDXResult {
+public class ExtractResult {
 
-	protected File srcFile;
+    protected File srcFile;
 
-	protected String filename;
+	protected String fileName;
+
+	protected int recordNr = 1;
 
 	protected long consumed = 0;
 
-	protected List<CDXEntry> entries = new LinkedList<CDXEntry>();
-
 	protected List<ResultItemThrowable> throwableList = new LinkedList<ResultItemThrowable>();
-
-	/**
-	 * Get a list of CDX entries for this result.
-	 * @return list of CDX entries for the input file
-     */
-	public List<CDXEntry> getEntries() {
-		return entries;
-	}
 
 	/**
 	 * Get a list of throwables encountered during the input processing.

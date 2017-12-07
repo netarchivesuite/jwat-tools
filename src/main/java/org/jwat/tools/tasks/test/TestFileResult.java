@@ -9,6 +9,7 @@ import java.util.List;
 import org.jwat.arc.ArcRecordBase;
 import org.jwat.common.Diagnosis;
 import org.jwat.gzip.GzipEntry;
+import org.jwat.tools.tasks.ResultItemThrowable;
 import org.jwat.warc.WarcRecord;
 
 public class TestFileResult {
@@ -50,7 +51,7 @@ public class TestFileResult {
 
 	public List<TestFileResultItemDiagnosis> rdList = new LinkedList<TestFileResultItemDiagnosis>();
 
-	public List<TestFileResultItemThrowable> throwableList = new LinkedList<TestFileResultItemThrowable>();
+	public List<ResultItemThrowable> throwableList = new LinkedList<ResultItemThrowable>();
 
 	public void printResult(boolean bShowErrors, PrintStream validOutput, PrintStream invalidOutput, PrintStream exceptionsOutput) {
 		PrintStream output;
@@ -125,8 +126,8 @@ public class TestFileResult {
 
 		runtimeErrors += throwableList.size();
 		if ( throwableList.size() > 0 ) {
-			Iterator<TestFileResultItemThrowable> iter = throwableList.iterator();
-			TestFileResultItemThrowable itemThrowable;
+			Iterator<ResultItemThrowable> iter = throwableList.iterator();
+			ResultItemThrowable itemThrowable;
 			while ( iter.hasNext() ) {
 				itemThrowable = iter.next();
 				exceptionsOutput.println( "#" );
@@ -272,6 +273,22 @@ public class TestFileResult {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Get a list of throwables encountered during the input processing.
+	 * @return list of throwables encountered during input file processing
+	 */
+	public List<ResultItemThrowable> getThrowables() {
+		return throwableList;
+	}
+
+	/**
+	 * Returns true if any throwables were encountered during the input processing, false otherwise.
+	 * @return boolean value indicating whether any throwables were encountered during input file processing
+	 */
+	public boolean hasFailed() {
+		return !throwableList.isEmpty();
 	}
 
 }

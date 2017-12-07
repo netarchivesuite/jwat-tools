@@ -25,4 +25,20 @@ public class CompressResult {
 
 	protected Throwable t;
 
+	/**
+	 * Get throwable, if any, encountered during the input processing.
+	 * @return throwable, if any, encountered during input file processing
+	 */
+	public Throwable getThrowable() {
+		return t;
+	}
+
+	/**
+	 * Returns true if a throwables was encountered during the input processing, false otherwise.
+	 * @return boolean value indicating whether a throwable was encountered during input file processing
+	 */
+	public boolean hasFailed() {
+		return (t != null);
+	}
+
 }

@@ -14,6 +14,7 @@ import org.jwat.common.HttpHeader;
 import org.jwat.common.UriProfile;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
+import org.jwat.tools.tasks.ResultItemThrowable;
 import org.jwat.warc.WarcConstants;
 import org.jwat.warc.WarcHeader;
 import org.jwat.warc.WarcReader;
@@ -210,7 +211,7 @@ public class CDXFile implements ArchiveParserCallback {
 
 	@Override
 	public void apcRuntimeError(Throwable t, long offset, long consumed) {
-		t.printStackTrace();
+		result.throwableList.add(new ResultItemThrowable(t, offset, consumed));
 	}
 
 	@Override

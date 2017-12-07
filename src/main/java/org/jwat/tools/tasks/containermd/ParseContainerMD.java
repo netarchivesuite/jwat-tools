@@ -15,6 +15,7 @@ import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
 import org.jwat.tools.core.ManagedPayloadContentType;
 import org.jwat.tools.core.ManagedPayloadContentTypeIdentifier;
+import org.jwat.tools.tasks.ResultItemThrowable;
 import org.jwat.warc.WarcConstants;
 import org.jwat.warc.WarcHeader;
 import org.jwat.warc.WarcReader;
@@ -208,11 +209,7 @@ public class ParseContainerMD implements ArchiveParserCallback {
 		result.arcErrors += itemDiagnosis.errors.size();
 		result.arcWarnings += itemDiagnosis.warnings.size();
 		for (int i = 0; i < itemDiagnosis.throwables.size(); ++i) {
-			ContainerMDResultItemThrowable itemThrowable = new ContainerMDResultItemThrowable();
-			itemThrowable.startOffset = startOffset;
-			itemThrowable.offset = startOffset;
-			itemThrowable.t = itemDiagnosis.throwables.get(i);
-			result.throwableList.add(itemThrowable);
+			result.throwableList.add(new ResultItemThrowable(itemDiagnosis.throwables.get(i), startOffset, startOffset));
 		}
 		
 		// Don't forget to close the record
@@ -303,11 +300,7 @@ public class ParseContainerMD implements ArchiveParserCallback {
 		result.warcErrors += itemDiagnosis.errors.size();
 		result.warcWarnings += itemDiagnosis.warnings.size();
 		for (int i = 0; i < itemDiagnosis.throwables.size(); ++i) {
-			ContainerMDResultItemThrowable itemThrowable = new ContainerMDResultItemThrowable();
-			itemThrowable.startOffset = startOffset;
-			itemThrowable.offset = startOffset;
-			itemThrowable.t = itemDiagnosis.throwables.get(i);
-			result.throwableList.add(itemThrowable);
+			result.throwableList.add(new ResultItemThrowable(itemDiagnosis.throwables.get(i), startOffset, startOffset));
 		}
 		
 		// Don't forget to close the record
@@ -324,11 +317,7 @@ public class ParseContainerMD implements ArchiveParserCallback {
 
 	@Override
 	public void apcRuntimeError(Throwable t, long startOffset, long consumed) {
-		ContainerMDResultItemThrowable itemThrowable = new ContainerMDResultItemThrowable();
-		itemThrowable.startOffset = startOffset;
-		itemThrowable.offset = consumed;
-		itemThrowable.t = t;
-		result.throwableList.add(itemThrowable);
+		result.throwableList.add(new ResultItemThrowable(t, startOffset, consumed));
 	}
 
 	@Override

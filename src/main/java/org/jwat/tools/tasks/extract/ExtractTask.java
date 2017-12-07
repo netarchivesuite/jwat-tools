@@ -94,8 +94,8 @@ public class ExtractTask extends AbstractTask {
 		@Override
 		public void run() {
 			ExtractFile extractFile = new ExtractFile();
-			extractFile.processFile(srcFile, options);
-			results.add(extractFile);
+			ExtractResult result = extractFile.processFile(srcFile, options);
+			results.add(result);
 			resultsReady.release();
 		}
 	}
@@ -104,7 +104,7 @@ public class ExtractTask extends AbstractTask {
 	private Semaphore resultsReady = new Semaphore(0);
 
 	/** Completed ExtractFile results list. */
-	private ConcurrentLinkedQueue<ExtractFile> results = new ConcurrentLinkedQueue<ExtractFile>();
+	private ConcurrentLinkedQueue<ExtractResult> results = new ConcurrentLinkedQueue<ExtractResult>();
 
 	class ResultThread implements Runnable {
 
@@ -114,7 +114,7 @@ public class ExtractTask extends AbstractTask {
 
 		@Override
 		public void run() {
-			ExtractFile result;
+			ExtractResult result;
 			boolean bLoop = true;
 			while (bLoop) {
 				try {

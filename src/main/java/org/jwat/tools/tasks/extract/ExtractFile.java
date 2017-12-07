@@ -14,6 +14,7 @@ import org.jwat.common.Payload;
 import org.jwat.common.UriProfile;
 import org.jwat.gzip.GzipEntry;
 import org.jwat.gzip.GzipReader;
+import org.jwat.tools.tasks.ResultItemThrowable;
 import org.jwat.warc.WarcReader;
 import org.jwat.warc.WarcRecord;
 
@@ -21,29 +22,26 @@ public class ExtractFile implements ArchiveParserCallback {
 
 	protected ExtractOptions options;
 
-	protected File srcFile;
-
-	protected String fileName;
-
-	protected int recordNr = 1;
+    protected ExtractResult result;
 
 	protected byte[] tmpBuf = new byte[8192];
-
-	protected long consumed = 0;
 
 	public ExtractFile() {
 	}
 
-	public void processFile(File srcFile, ExtractOptions options) {
-		this.srcFile = srcFile;
-		fileName = srcFile.getName();
+	public ExtractResult processFile(File srcFile, ExtractOptions options) {
+		this.options = options;
+		result = new ExtractResult();
+		result.srcFile = srcFile;
+		result.fileName = srcFile.getName();
 		ArchiveParser archiveParser = new ArchiveParser();
 		archiveParser.uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
 		archiveParser.bBlockDigestEnabled = options.bValidateDigest;
 		archiveParser.bPayloadDigestEnabled = options.bValidateDigest;
 	    archiveParser.recordHeaderMaxSize = options.recordHeaderMaxSize;
 	    archiveParser.payloadHeaderMaxSize = options.payloadHeaderMaxSize;
-		consumed = archiveParser.parse(srcFile, this);
+		result.consumed = archiveParser.parse(srcFile, this);
+		return result;
 	}
 
 	@Override
@@ -69,7 +67,7 @@ public class ExtractFile implements ArchiveParserCallback {
 				}
 			}
 			if (payloadStream != null) {
-				FileOutputStream out = new FileOutputStream(new File("extracted." + recordNr), false);
+				FileOutputStream out = new FileOutputStream(new File("extracted." + result.recordNr), false);
 				int read;
 				while ((read = payloadStream.read(tmpBuf)) != -1) {
 					out.write(tmpBuf, 0, read);
@@ -85,7 +83,7 @@ public class ExtractFile implements ArchiveParserCallback {
 				payload.close();
 			}
 			arcRecord.close();
-			++recordNr;
+			++result.recordNr;
 		}
 	}
 
@@ -104,7 +102,7 @@ public class ExtractFile implements ArchiveParserCallback {
 				}
 			}
 			if (payloadStream != null) {
-				FileOutputStream out = new FileOutputStream(new File("extracted." + recordNr), false);
+				FileOutputStream out = new FileOutputStream(new File("extracted." + result.recordNr), false);
 				int read;
 				while ((read = payloadStream.read(tmpBuf)) != -1) {
 					out.write(tmpBuf, 0, read);
@@ -120,7 +118,7 @@ public class ExtractFile implements ArchiveParserCallback {
 				payload.close();
 			}
 			warcRecord.close();
-			++recordNr;
+			++result.recordNr;
 		}
 	}
 
@@ -130,7 +128,7 @@ public class ExtractFile implements ArchiveParserCallback {
 
 	@Override
 	public void apcRuntimeError(Throwable t, long offset, long consumed) {
-		t.printStackTrace();
+		result.throwableList.add(new ResultItemThrowable(t, offset, consumed));
 	}
 
 	@Override
