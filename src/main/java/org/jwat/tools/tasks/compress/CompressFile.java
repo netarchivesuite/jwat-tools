@@ -251,8 +251,11 @@ public class CompressFile {
 			while ((arcRecord = arcReader.getNextRecord()) != null) {
 				// debug
 				//System.out.println(arcRecord.getStartOffset());
-				if (arcRecord.header.archiveLength == null || arcRecord.header.archiveLength < 0) {
-					throw new Exception("Missing or invalid ARC record length!");
+				if (arcRecord.header.archiveLength == null) {
+					throw new Exception("Missing or invalid ARC record length at offset=" + arcRecord.header.archiveLength + "!");
+				}
+				else if (arcRecord.header.archiveLength < 0) {
+					throw new Exception("Missing or invalid ARC record length (" + arcRecord.header.archiveLength + ") at offset=" + arcRecord.header.archiveLength + "!");
 				}
 				if (options.bHeaderFiles) {
 			        recordEntry = new RecordEntry();
@@ -535,8 +538,13 @@ public class CompressFile {
 			while ( (warcRecord = warcReader.getNextRecord()) != null ) {
 				// debug
 				//System.out.println(warcRecord.getStartOffset());
-				if (warcRecord.header.contentLength == null || warcRecord.header.contentLength < 0) {
-					throw new Exception("Missing or invalid WARC record length!");
+				if (warcRecord.header.contentLength == null) {
+					if (warcReader.getOffset() != raf.length()) {
+						throw new Exception("Missing WARC record length at offset=" + warcReader.getOffset() + "!");
+					}
+				}
+				else if (warcRecord.header.contentLength < 0) {
+					throw new Exception("Invalid WARC record length (" + warcRecord.header.contentLength + ") at offset=" + warcReader.getOffset() + "!");
 				}
 				if (options.bHeaderFiles) {
 			        recordEntry = new RecordEntry();
