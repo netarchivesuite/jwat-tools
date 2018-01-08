@@ -61,7 +61,7 @@ public class CDXFile implements ArchiveParserCallback {
 		if (arcRecord.recordType == ArcRecord.RT_ARC_RECORD) {
 			CDXEntry entry = new CDXEntry();
 			ArcHeader arcHeader = arcRecord.header;
-			long length = arcHeader.archiveLength;
+			Long length = arcHeader.archiveLength;
 			String mimetype = null;
 			String responseCode = "-";
 			int idx;
@@ -132,7 +132,7 @@ public class CDXFile implements ArchiveParserCallback {
 		if (warcRecord.header.warcTypeIdx == WarcConstants.RT_IDX_RESPONSE) {
 			CDXEntry entry = new CDXEntry();
 			WarcHeader warcHeader = warcRecord.header;
-			long length = warcHeader.contentLength;
+			Long length = warcHeader.contentLength;
 			String responseCode = "-";
 			String mimetype = null;
             String msgtype = null;

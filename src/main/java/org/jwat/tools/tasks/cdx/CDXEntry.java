@@ -43,7 +43,7 @@ public class CDXEntry {
 	public String responseCode;
 	public String checksum;
 	public long offset; 
-	public long length; 
+	public Long length; 
 
 	public String toCDXLine(String filename, UrlCanonicalizer canonicalizer, char[] format) {
 		StringBuilder sb = new StringBuilder();
