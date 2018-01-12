@@ -247,15 +247,16 @@ public class CompressFile {
 			arcReader.setPayloadDigestEnabled(options.bValidateDigest);
 			arcReader.setRecordHeaderMaxSize(options.recordHeaderMaxSize);
 			arcReader.setPayloadHeaderMaxSize(options.payloadHeaderMaxSize);
+			arcReader.setArcRecordParserCallback(options.arpCallback);
 			long readerConsumed = arcReader.getConsumed();
 			while ((arcRecord = arcReader.getNextRecord()) != null) {
 				// debug
 				//System.out.println(arcRecord.getStartOffset());
 				if (arcRecord.header.archiveLength == null) {
-					throw new Exception("Missing or invalid ARC record length at offset=" + arcRecord.header.archiveLength + "!");
+					throw new Exception(String.format("Missing ARC record length at offset=%d/%s!", arcReader.getOffset(), Long.toHexString(arcReader.getOffset())));
 				}
 				else if (arcRecord.header.archiveLength < 0) {
-					throw new Exception("Missing or invalid ARC record length (" + arcRecord.header.archiveLength + ") at offset=" + arcRecord.header.archiveLength + "!");
+					throw new Exception(String.format("Invalid ARC record length (%d) at offset=%d/%s!", arcRecord.header.archiveLength, arcReader.getOffset(), Long.highestOneBit(arcReader.getOffset())));
 				}
 				if (options.bHeaderFiles) {
 			        recordEntry = new RecordEntry();
@@ -534,17 +535,18 @@ public class CompressFile {
 			warcReader.setPayloadDigestEnabled(options.bValidateDigest);
 			warcReader.setRecordHeaderMaxSize(options.recordHeaderMaxSize);
 			warcReader.setPayloadHeaderMaxSize(options.payloadHeaderMaxSize);
+			warcReader.setWarcRecordParserCallback(options.arpCallback);
 			long readerConsumed = warcReader.getConsumed();
 			while ( (warcRecord = warcReader.getNextRecord()) != null ) {
 				// debug
 				//System.out.println(warcRecord.getStartOffset());
 				if (warcRecord.header.contentLength == null) {
 					if (warcReader.getOffset() != raf.length()) {
-						throw new Exception("Missing WARC record length at offset=" + warcReader.getOffset() + "!");
+						throw new Exception(String.format("Missing WARC record length at offset=%d/%s!", warcReader.getOffset(), Long.toHexString(warcReader.getOffset())));
 					}
 				}
 				else if (warcRecord.header.contentLength < 0) {
-					throw new Exception("Invalid WARC record length (" + warcRecord.header.contentLength + ") at offset=" + warcReader.getOffset() + "!");
+					throw new Exception(String.format("Invalid WARC record length (%d) at offset=%d/%s!", warcRecord.header.contentLength, warcReader.getOffset(), Long.toHexString(warcReader.getOffset())));
 				}
 				if (options.bHeaderFiles) {
 			        recordEntry = new RecordEntry();

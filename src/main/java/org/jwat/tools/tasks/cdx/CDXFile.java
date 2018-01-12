@@ -40,6 +40,7 @@ public class CDXFile implements ArchiveParserCallback {
 		archiveParser.bPayloadDigestEnabled = options.bValidateDigest;
 	    archiveParser.recordHeaderMaxSize = options.recordHeaderMaxSize;
 	    archiveParser.payloadHeaderMaxSize = options.payloadHeaderMaxSize;
+	    archiveParser.arpCallback = options.arpCallback;
 		result.consumed = archiveParser.parse(srcFile, this);
 		return result;
 	}

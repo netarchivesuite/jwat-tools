@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.List;
 import java.util.zip.Deflater;
 
+import org.jwat.archive.ArchiveRecordParserCallback;
+
 public class CompressOptions {
 
 	public boolean bQueueFirst = false;
@@ -33,7 +35,9 @@ public class CompressOptions {
 
     public int payloadHeaderMaxSize = 32768;
 
-	public File dstPath;
+    public ArchiveRecordParserCallback arpCallback;
+
+    public File dstPath;
 
 	public File lstFile;
 
