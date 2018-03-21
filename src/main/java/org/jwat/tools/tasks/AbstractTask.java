@@ -53,6 +53,7 @@ public abstract class AbstractTask {
 		try {
 			filelist_feeder( filesList, task );
 		} catch (Throwable t) {
+			t.printStackTrace();
 			cout.println("Died unexpectedly!");
 		} finally {
 			cout.println("Queued " + queued + " file(s).");

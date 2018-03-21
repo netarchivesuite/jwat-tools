@@ -45,6 +45,10 @@ public class CompressOptions {
 
 	public File failFile;
 
+	public File blacklistFile;
+
+	public File checksumsFile;
+
 	public List<String> filesList;
 
 }

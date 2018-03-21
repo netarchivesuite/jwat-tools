@@ -2,13 +2,17 @@ package org.jwat.tools.tasks.compress;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +22,9 @@ import org.jwat.common.Base16;
 import org.jwat.tools.tasks.AbstractTask;
 
 import com.antiaction.common.cli.SynchronizedOutput;
+import com.antiaction.common.datastructures.flatfilelookup.FlatfileLookupAbstract;
+import com.antiaction.common.datastructures.flatfilelookup.FlatfileLookupCaching;
+import com.antiaction.common.datastructures.flatfilelookup.PrefixStringComparator;
 
 public class CompressTask extends AbstractTask {
 
@@ -33,7 +40,21 @@ public class CompressTask extends AbstractTask {
 	private int recordHeaderMaxSize = 1024 * 1024;
     private int payloadHeaderMaxSize = 1024 * 1024;
 
-    /** Integrity fails  output stream. */
+    private Set<String> blacklistMap;
+
+    private int blacklisted = 0;
+
+	private FlatfileLookupAbstract ffl;
+
+	private RandomAccessFile checksumsRaf;
+
+	private int missingChecksum = 0;
+
+	private int wrongChecksum = 0;
+
+	private PrefixStringComparator psComparator = new PrefixStringComparator();
+
+	/** Integrity fails  output stream. */
 	private SynchronizedOutput failsOutput;
 
 	/** Exception output stream. */
@@ -47,7 +68,58 @@ public class CompressTask extends AbstractTask {
 	    options.recordHeaderMaxSize = recordHeaderMaxSize;
 	    options.payloadHeaderMaxSize = payloadHeaderMaxSize;
 
-		try {
+	    if (options.blacklistFile != null) {
+	    	if (!options.blacklistFile.exists()) {
+	    		System.out.println("Blacklist file does not exist!");
+	    		System.exit(-1);
+	    	}
+	    	blacklistMap = new HashSet<String>();
+	    	RandomAccessFile raf = null;
+	    	String tmpStr;
+	    	try {
+		    	raf = new RandomAccessFile(options.blacklistFile, "r");
+		    	while ((tmpStr = raf.readLine()) != null) {
+		    		if (tmpStr.length() > 0) {
+		    			blacklistMap.add(tmpStr);
+		    		}
+		    	}
+		    	raf.close();
+		    	raf = null;
+		    	System.out.println(blacklistMap.size() + " files blacklisted.");
+	    	}
+	    	catch (IOException e) {
+	    		if (raf != null) {
+	    			try {
+			    		raf.close();
+	    			} catch (IOException e1) {
+	    			}
+		    		raf = null;
+	    		}
+	    		e.printStackTrace();
+	    		System.exit(-1);
+	    	}
+	    }
+
+	    if (options.checksumsFile != null) {
+	    	if (!options.checksumsFile.exists()) {
+	    		System.out.println("Checksums file does not exist!");
+	    		System.exit(-1);
+	    	}
+			ffl = new FlatfileLookupCaching(options.checksumsFile, 4, 16);
+			ffl.lock();
+			try {
+				if (!ffl.open()) {
+		    		System.out.println("Unable to open checksums file!");
+		    		System.exit(-1);
+				}
+				checksumsRaf = new RandomAccessFile(options.checksumsFile, "r");
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				System.exit(-1);
+			}
+	    }
+
+	    try {
 			failsOutput = new SynchronizedOutput("fails.out", 1024*1024);
 			exceptionsOutput = new SynchronizedOutput("exceptions.out", 1024*1024);
 			compressReportOutput = new SynchronizedOutput("compress-report.out", 1024*1024);
@@ -73,6 +145,19 @@ public class CompressTask extends AbstractTask {
 			}
 		}
 
+		if (checksumsRaf != null) {
+			try {
+				checksumsRaf.close();
+			} catch (IOException e) {
+			}
+			checksumsRaf = null;
+		}
+		if (ffl != null) {
+			ffl.close();
+			ffl.unlock();
+			ffl = null;
+		}
+
 		exceptionsOutput.close();
 		failsOutput.close();
 
@@ -85,7 +170,10 @@ public class CompressTask extends AbstractTask {
 			cout.println(String.format("       Gained: %s (%.2f%%).", toSizeString(uncompressed - compressed), current_gain));
 			cout.println("    Completed: " + completed);
 			cout.println("  Incompleted: " + incomplete);
+			cout.println("  Blacklisted: " + blacklisted);
 			cout.println("IntegrityFail: " + integrityFail);
+			cout.println("ChksumMissing: " + missingChecksum);
+			cout.println("  ChksumWrong: " + wrongChecksum);
 			Iterator<Entry<String, Long>> schemesIter = schemesMap.entrySet().iterator();
 			Entry<String, Long> schemeEntry;
 			while (schemesIter.hasNext()) {
@@ -101,7 +189,10 @@ public class CompressTask extends AbstractTask {
 		compressReportOutput.out.println(String.format("       Gained: %s (%.2f%%).", toSizeString(uncompressed - compressed), current_gain));
 		compressReportOutput.out.println("    Completed: " + completed);
 		compressReportOutput.out.println("  Incompleted: " + incomplete);
+		compressReportOutput.out.println("  Blacklisted: " + blacklisted);
 		compressReportOutput.out.println("IntegrityFail: " + integrityFail);
+		compressReportOutput.out.println("ChksumMissing: " + missingChecksum);
+		compressReportOutput.out.println("  ChksumWrong: " + wrongChecksum);
 		Iterator<Entry<String, Long>> schemesIter = schemesMap.entrySet().iterator();
 		Entry<String, Long> schemeEntry;
 		while (schemesIter.hasNext()) {
@@ -115,48 +206,85 @@ public class CompressTask extends AbstractTask {
 
 	@Override
 	public void process(File srcFile) {
-		FileIdent fileIdent = FileIdent.ident(srcFile);
-		if (srcFile.length() > 0) {
-			// debug
-			//System.out.println(fileIdent.filenameId + " " + fileIdent.streamId + " " + srcFile.getName());
-			if (fileIdent.filenameId != fileIdent.streamId) {
-				cout.println("Wrong extension: '" + srcFile.getPath() + "'");
-			}
-			switch (fileIdent.streamId) {
-			case FileIdent.FILEID_UNKNOWN:
-			case FileIdent.FILEID_ARC:
-			case FileIdent.FILEID_WARC:
-				executor.submit(new TaskRunnable(srcFile));
-				queued_size += srcFile.length();
-				++queued;
-				break;
-			default:
-				break;
-			}
-			if (fileIdent.streamId != FileIdent.FILEID_GZIP && fileIdent.streamId != FileIdent.FILEID_ARC_GZ && fileIdent.streamId != FileIdent.FILEID_WARC_GZ) {
-			}
+		String filename = srcFile.getName();
+		if (blacklistMap != null && blacklistMap.contains(filename)) {
+			++blacklisted;
+			cout.println("File blacklisted: '" + srcFile.getPath() + "'");
 		} else {
-			switch (fileIdent.filenameId) {
-			case FileIdent.FILEID_UNKNOWN:
-			case FileIdent.FILEID_ARC:
-			case FileIdent.FILEID_WARC:
-				cout.println("Empty file: '" + srcFile.getPath() + "'");
-				break;
-			default:
-				break;
+			FileIdent fileIdent = FileIdent.ident(srcFile);
+			boolean bSubmit;
+			if (srcFile.length() > 0) {
+				// debug
+				//System.out.println(fileIdent.filenameId + " " + fileIdent.streamId + " " + srcFile.getName());
+				if (fileIdent.filenameId != fileIdent.streamId) {
+					cout.println("Wrong extension: '" + srcFile.getPath() + "'");
+				}
+				switch (fileIdent.streamId) {
+				case FileIdent.FILEID_UNKNOWN:
+				case FileIdent.FILEID_ARC:
+				case FileIdent.FILEID_WARC:
+					bSubmit = true;
+					byte[] expectedDigest = null;
+					if (ffl != null) {
+						try {
+							long pos = ffl.lookup(filename);
+							checksumsRaf.seek(pos);
+							String tmpStr = checksumsRaf.readLine();
+							if (tmpStr != null) {
+								int cmp = psComparator.comparePrefix(filename.toCharArray(), tmpStr.toCharArray());
+								bSubmit = (cmp == 0);
+								int index = tmpStr.indexOf("##");
+								if (index != -1) {
+									expectedDigest = Base16.decodeToArray(tmpStr.substring(index + 2));
+								}
+							} else {
+								bSubmit = false;
+							}
+							if (!bSubmit) {
+								++missingChecksum;
+								cout.println("Checksum not found in reference file for: '" + srcFile.getPath() + "'");
+							}
+						} catch (IOException e) {
+							e.printStackTrace();
+							System.exit(-1);
+						}
+					}
+					if (bSubmit) {
+						executor.submit(new TaskRunnable(srcFile, expectedDigest));
+						queued_size += srcFile.length();
+						++queued;
+					}
+					break;
+				default:
+					break;
+				}
+				if (fileIdent.streamId != FileIdent.FILEID_GZIP && fileIdent.streamId != FileIdent.FILEID_ARC_GZ && fileIdent.streamId != FileIdent.FILEID_WARC_GZ) {
+				}
+			} else {
+				switch (fileIdent.filenameId) {
+				case FileIdent.FILEID_UNKNOWN:
+				case FileIdent.FILEID_ARC:
+				case FileIdent.FILEID_WARC:
+					cout.println("Empty file: '" + srcFile.getPath() + "'");
+					break;
+				default:
+					break;
+				}
 			}
 		}
 	}
 
 	class TaskRunnable implements Runnable {
 		File srcFile;
-		TaskRunnable(File srcFile) {
+		byte[] expectedDigest;
+		TaskRunnable(File srcFile, byte[] expectedDigest) {
 			this.srcFile = srcFile;
+			this.expectedDigest = expectedDigest;
 		}
 		@Override
 		public void run() {
 			CompressFile compressFile = new CompressFile();
-			CompressResult compressionResult = compressFile.compressFile(srcFile, options);
+			CompressResult compressionResult = compressFile.compressFile(srcFile, expectedDigest, options);
 			results.add(compressionResult);
 			resultsReady.release();
 		}
@@ -250,6 +378,13 @@ public class CompressTask extends AbstractTask {
 										failsOutput.out.println(result.srcFile.getPath());
 										failsOutput.release();
 						        	}
+						        	if (result.bExpected != null && !result.bExpected) {
+						        		++wrongChecksum;
+										cout.print("Checksum fail: " + result.srcFile.getPath());
+										failsOutput.acquire();
+										failsOutput.out.println(result.srcFile.getPath());
+										failsOutput.release();
+						        	}
 								}
 								if (!options.bVerify || result.bVerified) {
 									uncompressed += result.srcFile.length();
@@ -279,7 +414,7 @@ public class CompressTask extends AbstractTask {
 								result.dstFile.delete();
 							}
 							else if (options.bRemove) {
-								if (result.bCompleted && result.bVerified) {
+								if (result.bCompleted && result.bVerified && (result.bExpected == null || result.bExpected)) {
 									result.srcFile.delete();
 								}
 							}

@@ -5,8 +5,8 @@ import java.io.File;
 import org.jwat.tools.JWATTools;
 
 import com.antiaction.common.cli.Argument;
-import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.ArgumentParser;
+import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
 
@@ -21,6 +21,8 @@ public class CompressTaskCLIParser {
 	public static final int A_FILELIST = 107;
 	public static final int A_TWOPASS = 108;
 	public static final int A_HDRFILES = 109;
+	public static final int A_BLACKLIST = 110;
+	public static final int A_CHECKSUMS = 111;
 
 	protected CompressTaskCLIParser() {
 	}
@@ -48,6 +50,8 @@ public class CompressTaskCLIParser {
 			cliOptions.addOption(null, "--listfile", A_FILELIST, 0, null).setValueRequired();
 			cliOptions.addOption(null, "--hdrfiles", A_HDRFILES, 0, null);
 			cliOptions.addOption("-q", "--quiet", JWATTools.A_QUIET, 0, null);
+			cliOptions.addOption(null, "--blacklist", A_BLACKLIST, 0, null).setValueRequired();
+			cliOptions.addOption(null, "--checksums", A_CHECKSUMS, 0, null).setValueRequired();
 			cliOptions.addNamedArgument("files", JWATTools.A_FILES, 1, Integer.MAX_VALUE);
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
 		}
@@ -122,6 +126,16 @@ public class CompressTaskCLIParser {
 		argument = cmdLine.idMap.get( A_HDRFILES );
 		if (argument != null) {
 			options.bHeaderFiles = true;
+		}
+
+		argument = cmdLine.idMap.get( A_BLACKLIST );
+		if (argument != null) {
+			options.blacklistFile = new File( argument.value );
+		}
+
+		argument = cmdLine.idMap.get( A_CHECKSUMS );
+		if (argument != null) {
+			options.checksumsFile = new File( argument.value );
 		}
 
 		options.bQuiet = cmdLine.idMap.containsKey( JWATTools.A_QUIET );

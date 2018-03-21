@@ -31,6 +31,8 @@ public class CompressTaskCLI extends TaskCLI {
 		System.out.println("     --twopass      index file and then bitstream compress based on index");
 		System.out.println("     --hdrfiles     write (W)ARC/HTTP headers to a seperate file for each input file");
 		System.out.println("     --queue-first  queue files before processing");
+		System.out.println("     --blacklist    list of files to ignore (one filename per line)");
+		System.out.println("     --checksums    list of sorted checksums (one filename##checksum per line))");
 		System.out.println(" -w <x>             set the amount of worker thread(s) (defaults to 1)");
 	}
 

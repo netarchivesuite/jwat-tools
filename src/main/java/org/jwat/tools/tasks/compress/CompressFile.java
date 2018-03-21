@@ -58,7 +58,7 @@ public class CompressFile {
 	 * Other files are compressed as one entry.
 	 * @param srcFile
 	 */
-	protected CompressResult compressFile(File srcFile, CompressOptions options) {
+	protected CompressResult compressFile(File srcFile, byte[] expectedDigest, CompressOptions options) {
 		CompressResult result = null;
 		String srcFname = srcFile.getName();
 		String dstFname = srcFname + ".gz";
@@ -80,13 +80,13 @@ public class CompressFile {
 				if ( !dstFile.exists() ) {
 					//System.out.println( srcFname + " -> " + dstFname );
 					if ( ArcReaderFactory.isArcFile( pbin ) ) {
-						result = compressArcFile( raf, pbin, srcFile, dstFile, options );
+						result = compressArcFile( raf, pbin, srcFile, dstFile, expectedDigest, options );
 					}
 					else if ( WarcReaderFactory.isWarcFile( pbin ) ) {
-						result = compressWarcFile( raf, pbin, srcFile, dstFile, options );
+						result = compressWarcFile( raf, pbin, srcFile, dstFile, expectedDigest, options );
 					}
 					else {
-						result = compressNormalFile( pbin, srcFile, dstFile, options );
+						result = compressNormalFile( pbin, srcFile, dstFile, expectedDigest, options );
 					}
 					if (result.bCompleted) {
 						result.dstFile.setLastModified(result.srcFile.lastModified());
@@ -127,7 +127,7 @@ public class CompressFile {
 	}
 
 	// TODO
-	protected CompressResult compressNormalFile(InputStream in, File srcFile, File dstFile, CompressOptions options) {
+	protected CompressResult compressNormalFile(InputStream in, File srcFile, File dstFile, byte[] expectedDigest, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
 		FileOutputStream out = null;
         GzipWriter writer = null;
@@ -194,7 +194,7 @@ public class CompressFile {
     protected byte[] arcEndMark = "\n".getBytes();
 
 	// TODO
-	protected CompressResult compressArcFile(RandomAccessFile raf, InputStream in, File srcFile, File dstFile, CompressOptions options) {
+	protected CompressResult compressArcFile(RandomAccessFile raf, InputStream in, File srcFile, File dstFile, byte[] expectedDigest, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
         InputStream uncompressedFileIn = null;
         RandomAccessFile rafOut = null;
@@ -447,6 +447,9 @@ public class CompressFile {
 		        result.md5DigestBytesVerify = md5uncomp.digest();
 		        result.md5compDigestBytesVerify = md5comp.digest();
 		        result.bVerified = ArrayUtils.equalsAt(result.md5DigestBytesVerify, result.md5DigestBytesOrg, 0);
+		        if (expectedDigest != null) {
+		        	result.bExpected = ArrayUtils.equalsAt(result.md5compDigestBytesVerify, expectedDigest, 0);
+		        }
 
 	        	// debug
 		        //System.out.println("    original md5:     " + Base16.encodeArray(md5DigestBytesOrg));
@@ -487,7 +490,7 @@ public class CompressFile {
     protected byte[] warcEndMark = "\r\n\r\n".getBytes();
 
     // TODO
-	protected CompressResult compressWarcFile(RandomAccessFile raf, InputStream in, File srcFile, File dstFile, CompressOptions options) {
+	protected CompressResult compressWarcFile(RandomAccessFile raf, InputStream in, File srcFile, File dstFile, byte[] expectedDigest, CompressOptions options) {
         byte[] buffer = new byte[BUFFER_SIZE];
         InputStream uncompressedFileIn = null;
         RandomAccessFile rafOut = null;
@@ -727,6 +730,9 @@ public class CompressFile {
 		        result.md5DigestBytesVerify = md5uncomp.digest();
 		        result.md5compDigestBytesVerify = md5comp.digest();
 		        result.bVerified = ArrayUtils.equalsAt(result.md5DigestBytesVerify, result.md5DigestBytesOrg, 0);
+		        if (expectedDigest != null) {
+		        	result.bExpected = ArrayUtils.equalsAt(result.md5compDigestBytesVerify, expectedDigest, 0);
+		        }
 
 	        	// debug
 		        //System.out.println("    original md5:     " + Base16.encodeArray(md5DigestBytesOrg));

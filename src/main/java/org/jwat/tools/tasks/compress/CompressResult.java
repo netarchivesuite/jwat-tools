@@ -23,6 +23,8 @@ public class CompressResult {
 
 	protected byte[] md5compDigestBytesVerify;
 
+	protected Boolean bExpected = null;
+
 	protected Throwable t;
 
 	/**
