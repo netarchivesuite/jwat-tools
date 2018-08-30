@@ -105,7 +105,7 @@ public class CompressTask extends AbstractTask {
 	    		System.out.println("Checksums file does not exist!");
 	    		System.exit(-1);
 	    	}
-			ffl = new FlatfileLookupCaching(options.checksumsFile, 4, 16);
+			ffl = FlatfileLookupCaching.getConcurrentInstance(options.checksumsFile, 4, 16);
 			ffl.lock();
 			try {
 				if (!ffl.open()) {

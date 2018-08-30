@@ -155,4 +155,62 @@ public class CDXEntry {
 		return sb.toString();
 	}
 
+    public static String fixUpTimestampString(String timestampStr) {
+    	switch (timestampStr.length()) {
+    	case 0:
+    		timestampStr += "19700101000000";
+    		break;
+    	case 1:
+    		if (timestampStr.charAt(0) == '1') {
+        		timestampStr += "9700101000000";
+    		}
+    		else {
+        		timestampStr += "0000101000000";
+    		}
+    		break;
+    	case 2:
+    		if (timestampStr.charAt(0) == '1' && timestampStr.charAt(1) == '9') {
+        		timestampStr += "700101000000";
+    		}
+    		else {
+        		timestampStr += "000101000000";
+    		}
+    		break;
+    	case 3:
+    		timestampStr += "00101000000";
+    		break;
+    	case 4:
+    		timestampStr += "0101000000";
+    		break;
+    	case 5:
+    		if (timestampStr.charAt(6) == '0') {
+        		timestampStr += "101000000";
+    		}
+    		else {
+        		timestampStr += "000000000";
+    		}
+    		break;
+    	case 6:
+    		timestampStr += "01000000";
+    		break;
+    	case 7:
+    		if (timestampStr.charAt(6) == '0') {
+        		timestampStr += "1000000";
+    		}
+    		else {
+        		timestampStr += "0000000";
+    		}
+    		break;
+    	case 8:
+    	case 9:
+    	case 10:
+    	case 11:
+    	case 12:
+    	case 13:
+    		timestampStr += "000000".substring(14 - timestampStr.length());
+    		break;
+    	}
+    	return timestampStr;
+    }
+
 }

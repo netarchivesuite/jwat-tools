@@ -3,6 +3,7 @@ package org.jwat.tools.tasks.cdx;
 import java.io.File;
 import java.io.IOException;
 
+import org.jwat.arc.ArcDateParser;
 import org.jwat.arc.ArcHeader;
 import org.jwat.arc.ArcReader;
 import org.jwat.arc.ArcRecord;
@@ -109,6 +110,15 @@ public class CDXFile implements ArchiveParserCallback {
         			recordContentTypeStr = recordContentTypeStr.trim();
             	}
             	mimetype = recordContentTypeStr;
+        	}
+        	/*
+        	 * Fix bad ARC date value.
+        	 */
+        	if (arcHeader.archiveDate == null && arcHeader.archiveDateStr != null && arcHeader.archiveDateStr.length() < 14) {
+        		arcHeader.archiveDateStr = CDXEntry.fixUpTimestampString(arcHeader.archiveDateStr);
+        		if (arcHeader.archiveDateStr != null) {
+            		ArcDateParser.getDate(arcHeader.archiveDateStr);
+        		}
         	}
         	/*
         	 * CDX entry values.

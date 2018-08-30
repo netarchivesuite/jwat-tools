@@ -163,7 +163,7 @@ public class CDXTask extends AbstractTask {
 									cdxOutput.out.println(tmpLine);
 								}
 							} catch (Throwable t) {
-								cout.println(t.toString());
+								t.printStackTrace(cout);
 							}
 						}
 						result.entries.clear();
@@ -181,7 +181,7 @@ public class CDXTask extends AbstractTask {
 				} catch (InterruptedException e) {
 					bLoop = false;
 				} catch (Throwable t) {
-					t.printStackTrace();
+					t.printStackTrace(cout);
 				}
 			}
 			bClosed = true;
