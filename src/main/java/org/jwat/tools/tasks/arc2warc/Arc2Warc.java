@@ -38,8 +38,10 @@ public class Arc2Warc {
 	public List<Throwable> exceptionList = new LinkedList<Throwable>();
 
 	/**
-	 * 
+	 * Convert an arc(.gz) file to a warc(.gz) file.
 	 * @param srcFile a valid arc(.gz) file
+	 * @param options arc2warc options used to configure what features to enable when converting a file
+	 * TODO Should return a result object.
 	 */
 	public void arc2warc(File srcFile, Arc2WarcOptions options) {
 		this.srcFile = srcFile;

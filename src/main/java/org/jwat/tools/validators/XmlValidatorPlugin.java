@@ -38,7 +38,7 @@ public class XmlValidatorPlugin implements ValidatorPlugin {
     };
 
     /**
-     * Construct an <code>XmlValidatorPlugin</object> dispenser.
+     * Construct an <code>XmlValidatorPlugin</code> dispenser.
      */
     public XmlValidatorPlugin() {
     }

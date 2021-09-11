@@ -53,10 +53,13 @@ public class CompressFile {
 	}
 
 	/**
-	 * Compress input file according to its type.
+	 * Compress input file according to its file type.
 	 * ARC/WARC files are compressed one record at a time and concatenated into on multi-entry GZip file.
 	 * Other files are compressed as one entry.
-	 * @param srcFile
+	 * @param srcFile source file to compress
+	 * @param expectedDigest digest vaule to check against compressed file, or null if no check is to be performed
+	 * @param options compression options used to configure what features to enable when compressing a file
+	 * @return a compression result object which can be used to check the outcome of compressing the file
 	 */
 	protected CompressResult compressFile(File srcFile, byte[] expectedDigest, CompressOptions options) {
 		CompressResult result = null;

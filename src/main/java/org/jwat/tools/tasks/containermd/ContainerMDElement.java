@@ -54,7 +54,9 @@ public final class ContainerMDElement {
 	/**
 	 * Convert to XML element
 	 * 
-	 * @param sb
+	 * @param sb output <code>StringBuilder</code>
+	 * @param name tag name
+	 * @param bAttrNameToValue if true, attribute name is used as the element value
 	 */
 	public void toXml(StringBuilder sb, String name, boolean bAttrNameToValue) {
 		ContainerMDUtils.makeElement(sb, (name == null)? this.elementName:name, this.value,

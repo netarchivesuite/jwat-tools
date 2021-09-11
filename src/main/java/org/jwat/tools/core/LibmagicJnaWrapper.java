@@ -16,6 +16,9 @@ import com.sun.jna.Pointer;
  */
 public class LibmagicJnaWrapper {
 
+	/**
+	 * LibmagicDll JNA interface.
+	 */
 	public interface LibmagicDll extends Library {
         String LIBRARY_NAME = (Platform.isWindows())? "magic1": "magic";
         LibmagicDll BASE = (LibmagicDll)Native.loadLibrary(LIBRARY_NAME, LibmagicDll.class);
@@ -90,7 +93,7 @@ public class LibmagicJnaWrapper {
      * Creates a new instance returning the default information: MIME
      * type and character encoding.
      *
-     * @throws JHOVE2Exception   if any error occurred while
+     * @throws IOException   if any error occurred while
      *         initializing the libmagic.
      *
      * @see    #LibmagicJnaWrapper(int)
@@ -103,8 +106,9 @@ public class LibmagicJnaWrapper {
     /**
      * Creates a new instance returning the information specified in
      * the <code>flag</code> argument
+     * @param flag <code>Libmagic</code> flags
      *
-     * @throws JHOVE2Exception   if any error occurred while
+     * @throws IOException   if any error occurred while
      *         initializing the libmagic.
      */
     public LibmagicJnaWrapper(int flag) throws IOException {

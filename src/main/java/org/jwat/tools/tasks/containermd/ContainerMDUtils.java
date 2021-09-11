@@ -135,6 +135,8 @@ public class ContainerMDUtils {
 	 * Encodes a content String in XML-clean form, converting characters to
 	 * entities as necessary. The null string will be converted to an empty
 	 * string.
+	 * @param content string to encode
+	 * @return encoded string
 	 */
 	public static String encodeContent(String content) {
 		if (!isSet(content)) {
@@ -249,10 +251,11 @@ public class ContainerMDUtils {
 	}
 
 	/**
-	 * Formats a given long "yyyyMMddHHmmss" into a date
+	 * Formats a given long "yyyyMMddHHmmss" into a date.
 	 * 
-	 * @param date
-	 * @return Long
+	 * @param date date in long format
+	 * @return a date object parse from the long value converted to a string
+	 * @throws ParseException if the long value does not match the format of a date when converted into a string
 	 */
 	public static Date longToDate(long date) throws ParseException {
 		Date d = null;
@@ -263,10 +266,11 @@ public class ContainerMDUtils {
 	}
 
 	/**
-	 * Formats a given date into a long "yyyyMMddHHmmss"
+	 * Formats a given date into a long "yyyyMMddHHmmss".
 	 * 
-	 * @param date
-	 * @return Long
+	 * @param date date to convert into long
+	 * @return long value of the date formattet as a number string
+	 * @throws ParseException in case of parsing problems
 	 */
 	public static Long dateToLong(Date date) throws ParseException {
 		String stringDate = RAW_DATE_FORMAT.format(date);
@@ -276,9 +280,9 @@ public class ContainerMDUtils {
 	/**
 	 * Formats a given date into "yyyy-MM-dd'T'HH:mm:ss'Z'".
 	 * 
-	 * @param DateTime
-	 * @return <code>String</code>
-	 * @throws ParseException
+	 * @param date date to format
+	 * @return date <code>String</code> in ISO format
+	 * @throws ParseException in case of parsing problems
 	 */
 	public static String formatDateTime(Date date) throws ParseException {
 		if (date == null) {
@@ -293,10 +297,10 @@ public class ContainerMDUtils {
 
 	/**
 	 * Control that the String given can represent a mimetype. Returns null if
-	 * given null, UNKNOWN_MIMETYPE if the mimetype is not parsable
+	 * given null, UNKNOWN_MIMETYPE if the mimetype is not parsable.
 	 * 
-	 * @param mimeType
-	 * @return a controled mimetype
+	 * @param mimeType unverified mimetype
+	 * @return a valid mimetype
 	 */
 	public static String verifyMimeType(String mimeType) {
 		if (!isSet(mimeType)) {

@@ -3,16 +3,13 @@ package org.jwat.tools.core;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
 import org.jwat.archive.ManagedPayload;
 import org.jwat.common.ContentType;
 
 /**
- * A {@link SourceIdentifier source identifier} that wraps the
- * libmagic dynamic library of the UNIX <code>file</code> identifier
- * tool.
+ * A file type identifier that wraps the libmagic dynamic library of the UNIX <code>file</code> identifier tool.
  *
  * @author hbian
  */
@@ -32,7 +29,7 @@ public class LibmagicIdentifier {
 
     /**
      * Initialize module if it has not been done yet.
-     * @throws JHOVE2Exception if an error occurs during initialization
+     * @throws IOException if an error occurs during initialization
      */
     public void checkIfInitialized() throws IOException {
        if (libmagicWrapper == null) {
@@ -94,6 +91,12 @@ public class LibmagicIdentifier {
         }
     }
 
+    /**
+     * Identify the mimetype of the content of a managed payload object.
+     * @param managedPayload managed payload object where the content to identify is located. 
+     * @return a mimetype, null if none can be identified
+     * @throws IOException an I/O exception is thrown if an error occurs while identifying a file
+     */
     public ContentType identify(ManagedPayload managedPayload) throws IOException {
         checkIfInitialized();
         // Extract MIME type and encoding using libmagic.
@@ -106,9 +109,11 @@ public class LibmagicIdentifier {
                 // the processing by mixing the C arrays in multithread context
                 File fTemp = File.createTempFile("JWAT-", "-MEMORY");
                 try {
-                    FileChannel wc = new FileOutputStream(fTemp, false).getChannel();
+                    FileOutputStream fos = new FileOutputStream(fTemp, false);
+                    FileChannel wc = fos.getChannel();
                     wc.write(managedPayload.getBuffer());
                     wc.close();
+                    fos.close();
                     mimeType = libmagicWrapper.getMimeType(fTemp.getAbsolutePath());
                 } finally {
                     fTemp.delete();

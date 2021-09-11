@@ -44,15 +44,16 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Register a new entry of an ARC/WARC file
+	 * Register a new entry of an ARC/WARC file.
 	 * 
-	 * @param sourceName
-	 * @param size
-	 * @param dateTime
-	 * @param format
-	 * @param mimeType
-	 * @param protocolVersion
-	 * @param codeResponse
+	 * @param sourceName entry source 
+	 * @param size entry size
+	 * @param dateTime date time
+	 * @param blockFormat block format
+	 * @param declaredMimeType declared mimetype
+	 * @param payloadFormat payload format
+	 * @param protocolVersion protocol version
+	 * @param codeResponse response code
 	 */
 	public void addEntry(String sourceName, long size, String dateTime,
 			String blockFormat, String declaredMimeType, String payloadFormat,
@@ -99,7 +100,7 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Gets number of records
+	 * Gets number of records.
 	 * 
 	 * @return <code>long</code>
 	 */
@@ -108,9 +109,9 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Sets maximum size
+	 * Sets maximum size.
 	 * 
-	 * @param size
+	 * @param size entry size
 	 */
 	public void setMaximumSize(long size) {
 		if (this.maximumSize < size) {
@@ -119,7 +120,7 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Gets maximumSize
+	 * Gets maximumSize.
 	 * 
 	 * @return <code>String</code>
 	 */
@@ -128,9 +129,9 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Sets minimum size
+	 * Sets minimum size.
 	 * 
-	 * @param size
+	 * @param size entry size
 	 */
 	public void setMinimumSize(long size) {
 		if ((size >= 0L) && (this.minimumSize > size)) {
@@ -139,9 +140,9 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Sets the global size
+	 * Sets the global size.
 	 * 
-	 * @param size
+	 * @param size entry size
 	 */
 	public void setGlobalSize(long size) {
 		if (size >= 0L) {
@@ -150,7 +151,7 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Gets the global size
+	 * Gets the global size.
 	 * 
 	 * @return <code>long</code>
 	 */
@@ -159,7 +160,7 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Gets minimumSize
+	 * Gets minimumSize.
 	 * 
 	 * @return <code>String</code>
 	 */
@@ -169,9 +170,9 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Sets firstLastTime
+	 * Sets firstLastTime.
 	 * 
-	 * @param dateTime
+	 * @param dateTime date time
 	 */
 	public void setFirstDateTime(long dateTime) {
 		if ((this.firstDateTime == -1L) || (this.firstDateTime > dateTime)) {
@@ -180,7 +181,7 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Gets firstDateTime
+	 * Gets firstDateTime.
 	 * 
 	 * @return <code>String</code>
 	 */
@@ -198,9 +199,9 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Sets lastDateTime
+	 * Sets lastDateTime.
 	 * 
-	 * @param dateTime
+	 * @param dateTime date time
 	 */
 	public void setLastDateTime(long dateTime) {
 		if (this.lastDateTime < dateTime) {
@@ -209,10 +210,9 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Gets lastDateTime
+	 * Gets lastDateTime.
 	 * 
 	 * @return <code>String</code>
-	 * @throws ParseException
 	 */
 	public String getLastDateTime() {
 		if (this.lastDateTime == -1L)
@@ -230,6 +230,9 @@ public final class ContainerMDWrapper {
 	/**
 	 * Returns containerMD format elements formatted into XML.
 	 * 
+	 * @param sb output buffer
+	 * @param name element name
+	 * @param bAttrNameToValue if true, attribute name is used as the element value
 	 */
 	public void getBlockFormats(StringBuilder sb, String name, boolean bAttrNameToValue) {
 		if (this.blockFormats.isEmpty())
@@ -247,6 +250,9 @@ public final class ContainerMDWrapper {
 	/**
 	 * Returns containerMD format elements formatted into XML.
 	 * 
+	 * @param sb output buffer
+	 * @param name element name
+	 * @param bAttrNameToValue if true, attribute name is used as the element value
 	 */
 	public void getPayloadFormats(StringBuilder sb, String name, boolean bAttrNameToValue) {
 		if (this.payloadFormats.isEmpty())
@@ -260,7 +266,7 @@ public final class ContainerMDWrapper {
 	/**
 	 * Returns containerMD encoding elements formatted into XML.
 	 * 
-	 * @return <code>String</code>
+	 * @param sb output buffer
 	 */
 	public void getEncodings(StringBuilder sb) {
 		if (this.encodings.isEmpty())
@@ -277,7 +283,8 @@ public final class ContainerMDWrapper {
 	/**
 	 * Returns containerMD declared mimeTypes elements formatted into XML.
 	 * 
-	 * @return <code>String</code>
+	 * @param sb output buffer
+	 * @param name element name
 	 */
 	public void getDeclaredMimeTypes(StringBuilder sb, String name)  {
 		if (this.declaredMimeTypes.isEmpty())
@@ -291,7 +298,7 @@ public final class ContainerMDWrapper {
 	/**
 	 * Returns containerMD host elements formatted into XML.
 	 * 
-	 * @return <code>String</code>
+	 * @param sb output buffer
 	 */
 	public void getHosts(StringBuilder sb) {
 		if (this.hosts.isEmpty())
@@ -304,7 +311,7 @@ public final class ContainerMDWrapper {
 	/**
 	 * Returns containerMD response elements formatted into XML.
 	 * 
-	 * @return <code>String</code>
+	 * @param sb output buffer
 	 */
 	public void getResponses(StringBuilder sb) {
 		if (this.responses.isEmpty())
@@ -315,7 +322,7 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Format in XML the content of a given aggregated element
+	 * Format in XML the content of a given aggregated element.
 	 * 
 	 * @param sb
 	 *            the StringBuilder where the XML is written
@@ -335,9 +342,10 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Handles distinct encodings
+	 * Handles distinct encodings.
 	 * 
-	 * @param encoding
+	 * @param type type
+	 * @param method method
 	 */
 	public void handleEncoding(String type, String method) {
 		if (!encodings.containsKey(method)) {
@@ -355,8 +363,8 @@ public final class ContainerMDWrapper {
 	/**
 	 * Handles declared block formats
 	 * 
-	 * @param format
-	 * @param size
+	 * @param format format
+	 * @param size size
 	 */
 	public void handleBlockFormat(String format, long size) {
 		if (!ContainerMDUtils.isSet(format))
@@ -385,10 +393,10 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Handles identified formats
+	 * Handles identified formats.
 	 * 
-	 * @param format
-	 * @param size
+	 * @param format format
+	 * @param size size
 	 */
 	public void handlePayloadFormat(String format, long size) {
 		if (!ContainerMDUtils.isSet(format))
@@ -417,9 +425,10 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Handles distinct declared mimeTypes
+	 * Handles distinct declared mimeTypes.
 	 * 
-	 * @param mimeType
+	 * @param mimeType mime type
+	 * @param size size
 	 */
 	public void handleDeclaredMimeType(String mimeType, long size) {
 		if (!ContainerMDUtils.isSet(mimeType))
@@ -445,10 +454,10 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Handles distinct hosts
+	 * Handles distinct hosts.
 	 * 
-	 * @param host
-	 * @param size
+	 * @param host host
+	 * @param size size
 	 */
 	public void handleHost(String host, long size) {
 		ContainerMDElement container = hosts.get(host);
@@ -470,11 +479,12 @@ public final class ContainerMDWrapper {
 	}
 
 	/**
-	 * Handles distinct response
+	 * Handles distinct response.
 	 * 
-	 * @param protocolVersion
-	 * @param protocolName
-	 * @param codeResponse
+	 * @param protocolVersion protocol version
+	 * @param protocolName protocol name
+	 * @param codeResponse response code
+	 * @param size size
 	 */
 	public void handleResponse(String protocolVersion, String protocolName,
 			String codeResponse, long size) {
