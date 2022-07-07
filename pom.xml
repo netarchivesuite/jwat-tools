@@ -1,354 +1,407 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>org.sonatype.oss</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>7</version>
-  </parent>
+	<groupId>org.jwat</groupId>
+	<artifactId>jwat-tools</artifactId>
+	<version>0.6.8-SNAPSHOT</version>
 
-  <groupId>org.jwat</groupId>
-  <artifactId>jwat-tools</artifactId>
-  <version>0.6.8-SNAPSHOT</version>
+	<packaging>jar</packaging>
 
-  <packaging>jar</packaging>
+	<name>jwat-tools</name>
+	<description>
+		JWAT-Tools uses the available JWAT libraries to make high level tasks available either from command-line or programmatically.
+		Common tasks include: Test, Compress, Decompress, CDX, Arc2Warc.
+		More specialised tasks include: Changed, ContainerMD, Delete, Extract, Interval, PathIndex, Unpack, Headers2CDX.
+	</description>
+	<url>http://jwat.org/</url>
 
-  <name>jwat-tools</name>
-  <description>JWAT Tools</description>
-  <url>http://jwat.org/</url>
+	<inceptionYear>2011</inceptionYear>
 
-  <inceptionYear>2011</inceptionYear>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
+	</licenses>
 
-  <licenses>
-    <license>
-      <name>Apache License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-      <comments>A business-friendly OSS license</comments>
-    </license>
-  </licenses>
+	<scm>
+		<connection>scm:git:https://github.com/netarchivesuite/jwat-tools.git</connection>
+		<developerConnection>scm:git:https://github.com/netarchivesuite/jwat-tools.git</developerConnection>
+		<url>http://bitbucket.org/nclarkekb/jwat-tools</url>
+	</scm>
 
-  <scm>
-    <connection>scm:hg:http://bitbucket.org/nclarkekb/jwat-tools</connection>
-    <developerConnection>scm:hg:https://bitbucket.org/nclarkekb/jwat-tools</developerConnection>
-    <url>http://bitbucket.org/nclarkekb/jwat-tools</url>
-  </scm>
+	<issueManagement>
+		<system>jira</system> 
+		<url>https://sbforge.org/jira/browse/JWAT</url> 
+	</issueManagement>
 
-  <issueManagement>
-    <system>jira</system> 
-    <url>https://sbforge.org/jira/browse/JWAT</url> 
-  </issueManagement>
+	<ciManagement>
+		<system>jenkins</system>
+		<url>https://sbforge.org/jenkins/view/JWAT/</url>
+	</ciManagement>
 
-  <ciManagement>
-    <system>jenkins</system>
-    <url>https://sbforge.org/jenkins/view/JWAT/</url>
-  </ciManagement>
+	<developers>
+		<developer>
+			<name>Nicholas Clarke</name>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<email>nclarke@antiaction.com</email>
+			<organization>Antiaction</organization>
+			<organizationUrl>https://www.antiaction.com</organizationUrl>
+		</developer>
 
-  <developers>
-    <developer>
-      <name>Nicholas Clarke</name>
-      <roles>
-        <role>developer</role>
-      </roles>
-      <email>nicl@kb.dk</email>
-      <organization>Det Kongelige Bibliotek/Royal Danish Library</organization>
-      <organizationUrl>http://www.kb.dk</organizationUrl>
-    </developer>
-  </developers>
+		<developer>
+			<name>Nicholas Clarke</name>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<email>nicl@kb.dk</email>
+			<organization>Det Kongelige Bibliotek/Royal Danish Library</organization>
+			<organizationUrl>http://www.kb.dk</organizationUrl>
+		</developer>
+	</developers>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jwat.core.version>1.1.2-SNAPSHOT</jwat.core.version>
-    <common-cli.version>0.2.0</common-cli.version>
-    <common-json.version>0.7.0</common-json.version>
-    <common-datastructures.version>0.1.0-SNAPSHOT</common-datastructures.version>
-    <jna.version>3.2.7</jna.version>
-    <maven.assembly.plugin>2.2.2</maven.assembly.plugin>
-    <maven.compiler.plugin>3.3</maven.compiler.plugin>
-    <maven.jar.plugin>2.3</maven.jar.plugin>
-    <maven.javadoc.plugin>2.10.3</maven.javadoc.plugin>
-    <maven.source.plugin>2.4</maven.source.plugin>
-    <license.maven.plugin>1.8</license.maven.plugin>
-  </properties>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.jwat</groupId>
-      <artifactId>jwat-common</artifactId>
-      <version>${jwat.core.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jwat</groupId>
-      <artifactId>jwat-gzip</artifactId>
-      <version>${jwat.core.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jwat</groupId>
-      <artifactId>jwat-arc</artifactId>
-      <version>${jwat.core.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jwat</groupId>
-      <artifactId>jwat-warc</artifactId>
-      <version>${jwat.core.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jwat</groupId>
-      <artifactId>jwat-archive</artifactId>
-      <version>${jwat.core.version}</version>
-    </dependency>
+		<maven.assembly.plugin>2.2.2</maven.assembly.plugin>
+		<maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+		<maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
+		<maven.jar.plugin>2.3</maven.jar.plugin>
+		<maven-javadoc-plugin.version>3.3.0</maven-javadoc-plugin.version>
+		<maven-source-plugin.version>3.2.1</maven-source-plugin.version>
 
-    <dependency>
-      <groupId>com.antiaction</groupId>
-      <artifactId>common-cli</artifactId>
-      <version>${common-cli.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.antiaction</groupId>
-      <artifactId>common-json</artifactId>
-      <version>${common-json.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.antiaction</groupId>
-      <artifactId>common-datastructures</artifactId>
-      <version>${common-datastructures.version}</version>
-    </dependency>
+		<license.maven.plugin>1.8</license.maven.plugin>
 
-    <dependency>
-      <groupId>net.java.dev.jna</groupId>
-      <artifactId>jna</artifactId>
-      <version>${jna.version}</version>
-    </dependency>
+		<jwat.core.version>1.1.1</jwat.core.version>
+		<jna.version>3.2.7</jna.version>
+		<common-cli.version>0.2.0</common-cli.version>
+		<common-json.version>0.7.0</common-json.version>
+		<common-datastructures.version>0.1.0-SNAPSHOT</common-datastructures.version>
+		<openwayback-core.version>2.0.0</openwayback-core.version>
+		<junit.version>4.13.2</junit.version>
+	</properties>
 
-    <dependency>
-      <groupId>org.netpreserve.openwayback</groupId>
-      <artifactId>openwayback-core</artifactId>
-      <version>2.0.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.netpreserve.openwayback</groupId>
-          <artifactId>openwayback-cdx-server</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.netpreserve.openwayback</groupId>
-          <artifactId>openwayback-webapp</artifactId>
-        </exclusion>
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<!-->url>https://s01.oss.sonatype.org/content/repositories/snapshots</url-->
+			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<!-->url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url-->
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.jwat</groupId>
+			<artifactId>jwat-common</artifactId>
+			<version>${jwat.core.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jwat</groupId>
+			<artifactId>jwat-gzip</artifactId>
+			<version>${jwat.core.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jwat</groupId>
+			<artifactId>jwat-arc</artifactId>
+			<version>${jwat.core.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jwat</groupId>
+			<artifactId>jwat-warc</artifactId>
+			<version>${jwat.core.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jwat</groupId>
+			<artifactId>jwat-archive</artifactId>
+			<version>${jwat.core.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.antiaction</groupId>
+			<artifactId>common-cli</artifactId>
+			<version>${common-cli.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.antiaction</groupId>
+			<artifactId>common-json</artifactId>
+			<version>${common-json.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.antiaction</groupId>
+			<artifactId>common-datastructures</artifactId>
+			<version>${common-datastructures.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>${jna.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.netpreserve.openwayback</groupId>
+			<artifactId>openwayback-core</artifactId>
+			<version>${openwayback-core.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.netpreserve.openwayback</groupId>
+					<artifactId>openwayback-cdx-server</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.netpreserve.openwayback</groupId>
+					<artifactId>openwayback-webapp</artifactId>
+				</exclusion>
 <!--
-        <exclusion>
-          <groupId>org.springframework</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.beanshell</groupId>
-          <artifactId>bsh</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.htmlparser</groupId>
-          <artifactId>htmlparser</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.flagstone</groupId>
-          <artifactId>transform</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.jwat</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
+				<exclusion>
+					<groupId>org.springframework</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.beanshell</groupId>
+					<artifactId>bsh</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.htmlparser</groupId>
+					<artifactId>htmlparser</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.flagstone</groupId>
+					<artifactId>transform</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.hadoop</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.jwat</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
 -->
-        <!-- Dependencies from the access-control-core artifact. -->
+				<!-- Dependencies from the access-control-core artifact. -->
 <!--
-        <exclusion>
-          <groupId>com.thoughtworks.xstream</groupId>
-          <artifactId>xstream</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-dbcp</groupId>
-          <artifactId>commons-dbcp</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.jettison</groupId>
-          <artifactId>jettison</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>redis.clients</groupId>
-          <artifactId>jedis</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>redis.clients</groupId>
-          <artifactId>jedis</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.sleepycat</groupId>
-          <artifactId>je</artifactId>
-        </exclusion>
+				<exclusion>
+					<groupId>com.thoughtworks.xstream</groupId>
+					<artifactId>xstream</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>commons-dbcp</groupId>
+					<artifactId>commons-dbcp</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.codehaus.jettison</groupId>
+					<artifactId>jettison</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>redis.clients</groupId>
+					<artifactId>jedis</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>redis.clients</groupId>
+					<artifactId>jedis</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.sleepycat</groupId>
+					<artifactId>je</artifactId>
+				</exclusion>
 -->
-        <!-- Dependencies from the webarchive-commons artifact. -->
+				<!-- Dependencies from the webarchive-commons artifact. -->
 <!--
-        <exclusion>
-          <groupId>com.google.guava</groupId>
-          <artifactId>guava</artifactId>
-        </exclusion>
--->
-<!--
-        <exclusion>
-          <groupId>org.json</groupId>
-          <artifactId>json</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-lang</groupId>
-          <artifactId>commons-lang</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>commons-io</groupId>
-          <artifactId>commons-io</artifactId>
-        </exclusion>
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava</artifactId>
+				</exclusion>
 -->
 <!--
-        <exclusion>
-         <groupId>it.unimi.dsi</groupId>
-          <artifactId>dsiutils</artifactId>
-        </exclusion>
+				<exclusion>
+					<groupId>org.json</groupId>
+					<artifactId>json</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>commons-lang</groupId>
+					<artifactId>commons-lang</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>commons-io</groupId>
+					<artifactId>commons-io</artifactId>
+				</exclusion>
 -->
 <!--
-        <exclusion>
-          <groupId>joda-time</groupId>
-          <artifactId>joda-time</artifactId>
-        </exclusion>
+				<exclusion>
+				 <groupId>it.unimi.dsi</groupId>
+					<artifactId>dsiutils</artifactId>
+				</exclusion>
 -->
-      </exclusions>
-    </dependency>
+<!--
+				<exclusion>
+					<groupId>joda-time</groupId>
+					<artifactId>joda-time</artifactId>
+				</exclusion>
+-->
+			</exclusions>
+		</dependency>
 
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven.compiler.plugin}</version>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
-      </plugin>
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
 
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-        <version>${license.maven.plugin}</version>
-        <configuration>
-          <generateBundle>true</generateBundle>
-          <licenseName>apache_v2</licenseName>
-          <failIfWarning>true</failIfWarning>
-          <useMissingFile>true</useMissingFile>
-        </configuration>
-      </plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<version>${license.maven.plugin}</version>
+				<configuration>
+					<generateBundle>true</generateBundle>
+					<licenseName>apache_v2</licenseName>
+					<failIfWarning>true</failIfWarning>
+					<useMissingFile>true</useMissingFile>
+				</configuration>
+			</plugin>
 
-      <plugin>
-        <!-- install source jars to maven repo
-             http://maven.apache.org/plugins/maven-source-plugin/usage.html -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>${maven.source.plugin}</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>jar-no-fork</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+			<!-- generate the JWAT-Tools Command Line jar executable -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>${maven.jar.plugin}</version>
+				<configuration>
+					<archive>
+						<addMavenDescriptor>false</addMavenDescriptor>
+						<!-- make jar executable -->
+						<manifest>
+							<mainClass>org.jwat.tools.JWATTools</mainClass>
+						</manifest>
+						<manifestEntries>
+							<Specification-Title>${project.name}</Specification-Title>
+							<Specification-Version>${project.version}</Specification-Version>
+							<!--Specification-Vendor>${project.specification_vendor}</Specification-Vendor-->
+							<Implementation-Title>${project.groupId}.${project.artifactId}</Implementation-Title>
+							<!--Implementation-Version>${git.revision}</Implementation-Version-->
+							<!--Implementation-Vendor>${project.implementation_vendor}</Implementation-Vendor-->
+							<!--X-Git-Branch>${git.branch}</X-Git-Branch-->
+							<!--X-Git-Tag>${git.tag}</X-Git-Tag-->
+							<!--X-Git-Commits-Count>${git.commitsCount}</X-Git-Commits-Count-->
+							<Sealed>false</Sealed>
+						</manifestEntries>
+					</archive>
+					 <forceCreation>true</forceCreation>
+					<finalName>${project.build.finalName}</finalName>
+				</configuration>
+			</plugin>
 
-      <!-- Generate javadoc jar. Note: Java 8 (doclint) check has been disabled. -->
-      <plugin> 
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId> 
-        <version>${maven.javadoc.plugin}</version>
-        <configuration>
-          <aggregate>true</aggregate>
-          <linksource>true</linksource>
-          <quiet>true</quiet>
-          <!-- Note: This fails with a JVM older than Java 8 -->
-          <additionalparam>-Xdoclint:none</additionalparam>
-        </configuration>
-        <executions> 
-          <execution> 
-            <id>attach-javadocs</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>jar</goal>
-            </goals> 
-          </execution> 
-        </executions> 
-      </plugin>
+			<!--
+				package the jar, artifacts,and bin scripts into zip and tar files
+				for JWAT-Tools release
+			-->
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>${maven.assembly.plugin}</version>
+				<executions>
+					<execution>
+						<id>distro-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+						<configuration>
+							<descriptors>
+								<descriptor>src/main/assembly/release.xml</descriptor>
+							</descriptors>
+							<appendAssemblyId>false</appendAssemblyId>
+							<tarLongFileMode>gnu</tarLongFileMode>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 
-      <!-- generate the JWAT-Tools Command Line jar executable -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>${maven.jar.plugin}</version>
-        <configuration>
-          <archive>
-            <addMavenDescriptor>false</addMavenDescriptor>
-            <!-- make jar executable -->
-            <manifest>
-              <mainClass>org.jwat.tools.JWATTools</mainClass>
-            </manifest>
-            <manifestEntries>
-              <Specification-Title>${project.name}</Specification-Title>
-              <Specification-Version>${project.version}</Specification-Version>
-              <!--Specification-Vendor>${project.specification_vendor}</Specification-Vendor-->
-              <Implementation-Title>${project.groupId}.${project.artifactId}</Implementation-Title>
-              <!--Implementation-Version>${git.revision}</Implementation-Version-->
-              <!--Implementation-Vendor>${project.implementation_vendor}</Implementation-Vendor-->
-              <!--X-Git-Branch>${git.branch}</X-Git-Branch-->
-              <!--X-Git-Tag>${git.tag}</X-Git-Tag-->
-              <!--X-Git-Commits-Count>${git.commitsCount}</X-Git-Commits-Count-->
-              <Sealed>false</Sealed>
-            </manifestEntries>
-          </archive>
-           <forceCreation>true</forceCreation>
-          <finalName>${project.build.finalName}</finalName>
-        </configuration>
-      </plugin>
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<!-- Generate source jar. (http://maven.apache.org/plugins/maven-source-plugin/usage.html) -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>${maven-source-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
 
-      <!--
-        package the jar, artifacts,and bin scripts into zip and tar files
-        for JWAT-Tools release
-      -->
-      <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <version>${maven.assembly.plugin}</version>
-        <executions>
-          <execution>
-            <id>distro-assembly</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-            <configuration>
-              <descriptors>
-                <descriptor>src/main/assembly/release.xml</descriptor>
-              </descriptors>
-              <appendAssemblyId>false</appendAssemblyId>
-              <tarLongFileMode>gnu</tarLongFileMode>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-  </build>
+					<!-- Generate javadoc jar. Note: Java 8 (doclint) check has been disabled. -->
+					<plugin> 
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId> 
+						<version>${maven-javadoc-plugin.version}</version>
+						<configuration>
+							<source>8</source>
+							<detectJavaApiLink>false</detectJavaApiLink>
+							<aggregate>true</aggregate>
+							<linksource>true</linksource>
+							<quiet>true</quiet>
+							<!-- Note: This fails with a JVM older than Java 8 -->
+							<additionalparam>-Xdoclint:none</additionalparam>
+						</configuration>
+						<executions> 
+							<execution> 
+								<id>attach-javadocs</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals> 
+							</execution> 
+						</executions> 
+					</plugin>
+
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>${maven-gpg-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>

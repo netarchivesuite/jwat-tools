@@ -140,8 +140,9 @@ public class JWATTools {
 		System.out.println("See 'jwattools help <command>' for more information on a specific command.");
 	}
 
-	public static String getVersionString() {
-		Package pkg = Package.getPackage("org.jwat.tools");
+	public static String getVersionString(String packageName) {
+		Package pkg = Package.getPackage(packageName);
+		System.out.println(pkg);
 		String version = null;
 		if (pkg != null) {
 			version = pkg.getSpecificationVersion();
@@ -153,7 +154,11 @@ public class JWATTools {
 	}
 
 	public static void show_help() {
-		System.out.println("JWATTools v" + getVersionString());
+		System.out.println("JWATTools v" + getVersionString("org.jwat.tools"));
+		//System.out.println(getVersionString("org.jwat.common"));
+		//System.out.println(getVersionString("org.jwat.gzip"));
+		//System.out.println(getVersionString("org.jwat.arc"));
+		//System.out.println(getVersionString("org.jwat.warc"));
 		System.out.println("usage: JWATTools <command> [<args>]");
 		System.out.println("");
 		show_commands();

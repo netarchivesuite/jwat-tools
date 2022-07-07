@@ -145,7 +145,7 @@ public class CompressTaskCLIParser {
 		options.filesList = argument.values;
 
 		if (!options.bQuiet) {
-			System.out.println("JWATTools v" + JWATTools.getVersionString());
+			System.out.println("JWATTools v" + JWATTools.getVersionString("org.jwat.tools"));
 			System.out.println( "Compression level: " + options.compressionLevel );
 			System.out.println( "       Batch mode: " + options.bBatch );
 			System.out.println( "          Dry run: " + options.bDryrun );
