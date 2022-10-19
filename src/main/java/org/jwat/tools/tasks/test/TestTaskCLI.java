@@ -21,6 +21,7 @@ public class TestTaskCLI extends TaskCLI {
 		System.out.println(" -a <yyyyMMddHHmmss>  only test files with last-modified after <yyyyMMddHHmmss>");
 		System.out.println(" -b                   tag/rename files with errors/warnings (*.bad)");
 		System.out.println(" -e                   show errors");
+		System.out.println(" -h                   report HTTP header errors as ARC/WARC format errors");
 		System.out.println(" -i --ignore-digest   skip digest calculation and validation");
 		System.out.println(" -l                   relaxed URL URI validation");
 		System.out.println(" -x                   to validate text/xml payload (eg. mets)");

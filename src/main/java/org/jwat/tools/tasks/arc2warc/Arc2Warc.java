@@ -23,6 +23,7 @@ import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.HttpHeader;
 import org.jwat.common.RandomAccessFileInputStream;
 import org.jwat.warc.WarcConstants;
+import org.jwat.warc.WarcDate;
 import org.jwat.warc.WarcDigest;
 import org.jwat.warc.WarcRecord;
 import org.jwat.warc.WarcWriter;
@@ -165,7 +166,8 @@ public class Arc2Warc {
 							warcinfoUuid = UUID.randomUUID();
 						    record = WarcRecord.createRecord(writer);
 							record.header.addHeader(WarcConstants.FN_WARC_TYPE, WarcConstants.RT_WARCINFO);
-							record.header.addHeader(WarcConstants.FN_WARC_DATE, cal.getTime(), null);
+							//record.header.addHeader(WarcConstants.FN_WARC_DATE, cal.getTime(), null);
+							record.header.addHeader(WarcConstants.FN_WARC_DATE, WarcDate.now(), null);
 							record.header.addHeader(WarcConstants.FN_WARC_FILENAME, dstFname);
 							record.header.addHeader(WarcConstants.FN_WARC_RECORD_ID, "<urn:uuid:" + warcinfoUuid + ">");
 							record.header.addHeader(WarcConstants.FN_CONTENT_TYPE, "application/warc-fields");
@@ -189,7 +191,8 @@ public class Arc2Warc {
 							record = WarcRecord.createRecord(writer);
 							record.header.addHeader(WarcConstants.FN_WARC_TYPE, WarcConstants.RT_METADATA);
 							record.header.addHeader(WarcConstants.FN_WARC_TARGET_URI, arcRecord.header.urlUri, arcRecord.header.urlStr );
-							record.header.addHeader(WarcConstants.FN_WARC_DATE, arcRecord.header.archiveDate, arcRecord.header.archiveDateStr);
+							//record.header.addHeader(WarcConstants.FN_WARC_DATE, arcRecord.header.archiveDate, arcRecord.header.archiveDateStr);
+							record.header.addHeader(WarcConstants.FN_WARC_DATE, WarcDate.fromLocalDate(arcRecord.header.archiveDate), arcRecord.header.archiveDateStr);
 							record.header.addHeader(WarcConstants.FN_WARC_RECORD_ID, "<urn:uuid:" + filedescUuid + ">");
 							record.header.addHeader(WarcConstants.FN_WARC_CONCURRENT_TO, "<urn:uuid:" + warcinfoUuid + ">");
 							record.header.addHeader(WarcConstants.FN_WARC_IP_ADDRESS, arcRecord.header.inetAddress, arcRecord.header.ipAddressStr);
@@ -254,7 +257,8 @@ public class Arc2Warc {
 							record = WarcRecord.createRecord(writer);
 							record.header.addHeader(WarcConstants.FN_WARC_TYPE, WarcConstants.RT_RESPONSE);
 							record.header.addHeader(WarcConstants.FN_WARC_TARGET_URI, arcRecord.header.urlUri, arcRecord.header.urlStr);
-							record.header.addHeader(WarcConstants.FN_WARC_DATE, arcRecord.header.archiveDate, arcRecord.header.archiveDateStr);
+							//record.header.addHeader(WarcConstants.FN_WARC_DATE, arcRecord.header.archiveDate, arcRecord.header.archiveDateStr);
+							record.header.addHeader(WarcConstants.FN_WARC_DATE, WarcDate.fromLocalDate(arcRecord.header.archiveDate), arcRecord.header.archiveDateStr);
 							record.header.addHeader(WarcConstants.FN_WARC_RECORD_ID, "<urn:uuid:" + recordUuid + ">");
 							record.header.addHeader(WarcConstants.FN_WARC_IP_ADDRESS, arcRecord.header.inetAddress, arcRecord.header.ipAddressStr);
 							record.header.addHeader(WarcConstants.FN_WARC_WARCINFO_ID, "<urn:uuid:" + warcinfoUuid + ">");

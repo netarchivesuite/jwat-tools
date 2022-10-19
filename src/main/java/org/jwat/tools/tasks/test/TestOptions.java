@@ -15,6 +15,8 @@ public class TestOptions {
 
 	public boolean bShowErrors = false;
 
+	public boolean bHttpHeaderErrors = false;
+
 	public boolean bValidateDigest = true;
 
 	public int recordHeaderMaxSize = 8192;

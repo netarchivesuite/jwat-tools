@@ -204,7 +204,7 @@ public class CDXFile implements ArchiveParserCallback {
         	/*
         	 * CDX entry values.
         	 */
-			entry.date = warcHeader.warcDate;
+			entry.date = warcHeader.warcDate.getDateUTC();
 			entry.ip = warcHeader.warcIpAddress;
 			entry.url = warcHeader.warcTargetUriStr;
 	        entry.mimetype = mimetype;

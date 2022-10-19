@@ -8,7 +8,6 @@ import org.jwat.arc.ArcFieldParsers;
 import org.jwat.arc.ArcHeader;
 import org.jwat.common.ByteCountingPushBackInputStream;
 import org.jwat.common.ContentType;
-import org.jwat.common.Diagnosis;
 import org.jwat.common.Diagnostics;
 import org.jwat.common.HeaderLineReader;
 import org.jwat.common.HttpHeader;
@@ -34,7 +33,7 @@ public class Headers2CDXFile {
 	}
 
 	protected Headers2CDXResult processFile(File srcFile) {
-		Diagnostics<Diagnosis> diagnostics = new Diagnostics<Diagnosis>(); 
+		Diagnostics diagnostics = new Diagnostics(); 
 		ArcFieldParsers arcFieldParsers = new ArcFieldParsers();
 		arcFieldParsers.diagnostics = diagnostics;
 		UriProfile uriProfile = UriProfile.RFC3986_ABS_16BIT_LAX;
@@ -311,7 +310,7 @@ public class Headers2CDXFile {
     	/*
     	 * CDX entry values.
     	 */
-		entry.date = warcHeader.warcDate;
+		entry.date = warcHeader.warcDate.getDateUTC();
 		entry.ip = warcHeader.warcIpAddress;
 		entry.url = warcHeader.warcTargetUriStr;
         entry.mimetype = mimetype;

@@ -10,8 +10,8 @@ import org.jwat.tools.JWATTools;
 import org.jwat.tools.validators.XmlValidatorPlugin;
 
 import com.antiaction.common.cli.Argument;
-import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.ArgumentParser;
+import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
 
@@ -21,8 +21,9 @@ public class TestTaskCLIParser {
 	public static final int A_BAD = 102;
 	public static final int A_SHOW_ERRORS = 103;
 	public static final int A_IGNORE_DIGEST = 104;
-	public static final int A_LAX = 105;
-	public static final int A_XML = 106;
+	public static final int A_HTTP_HEADER_ERRORS = 105;
+	public static final int A_LAX = 106;
+	public static final int A_XML = 107;
 
 	protected TestTaskCLIParser() {
 	}
@@ -35,6 +36,7 @@ public class TestTaskCLIParser {
 			cliOptions.addOption("-a", null, A_AFTER, 0, null).setValueRequired();
 			cliOptions.addOption("-b", null, A_BAD, 0, null);
 			cliOptions.addOption("-e", null, A_SHOW_ERRORS, 0, null);
+			cliOptions.addOption("-h", null, A_HTTP_HEADER_ERRORS, 0, null);
 			cliOptions.addOption("-i", "--ignore-digest", A_IGNORE_DIGEST, 0, null);
 			cliOptions.addOption("-l", null, A_LAX, 0, null);
 			cliOptions.addOption("-x", null, A_XML, 0, null);
@@ -52,6 +54,7 @@ public class TestTaskCLIParser {
 
 		// Queue first.
 		options.bQueueFirst = cmdLine.idMap.containsKey(JWATTools.A_QUEUE_FIRST);
+		options.bHttpHeaderErrors = cmdLine.idMap.containsKey(A_HTTP_HEADER_ERRORS);
 
 		// Thread workers.
 		argument = cmdLine.idMap.get( JWATTools.A_WORKERS );

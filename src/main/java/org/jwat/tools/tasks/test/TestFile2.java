@@ -51,6 +51,7 @@ public class TestFile2 implements ArchiveParserCallback {
 		archiveParser.bPayloadDigestEnabled = options.bValidateDigest;
 	    archiveParser.recordHeaderMaxSize = options.recordHeaderMaxSize;
 	    archiveParser.payloadHeaderMaxSize = options.payloadHeaderMaxSize;
+	    archiveParser.bReportHttpHeaderError = options.bHttpHeaderErrors;
 
 		managedPayload = ManagedPayload.checkout();
 

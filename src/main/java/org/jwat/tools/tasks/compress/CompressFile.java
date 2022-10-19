@@ -560,7 +560,7 @@ public class CompressFile {
 		        	//recordEntry.wL = RecordEntry.headerLinesToNameValueList(warcRecord.header.getHeaderList());
 		        	recordEntry.i = rafOut.getFilePointer();
 				}
-				Date date = warcRecord.header.warcDate;
+				Date date = warcRecord.header.warcDate.getDateUTC();
 				if (date == null) {
 					date = new Date(0L);
 				}
