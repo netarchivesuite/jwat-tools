@@ -30,7 +30,7 @@
 
 	<scm>
 		<connection>scm:git:https://github.com/netarchivesuite/jwat-tools.git</connection>
-		<developerConnection>scm:git:https://github.com/netarchivesuite/jwat-tools.git</developerConnection>
+		<developerConnection>scm:git:git@github.com:netarchivesuite/jwat-tools.git</developerConnection>
 		<url>http://bitbucket.org/nclarkekb/jwat-tools</url>
 	</scm>
 
@@ -79,7 +79,7 @@
 
 		<license.maven.plugin>1.8</license.maven.plugin>
 
-		<jwat.core.version>1.2.0-SNAPSHOT</jwat.core.version>
+		<jwat.core.version>1.2.0</jwat.core.version>
 		<jna.version>3.2.7</jna.version>
 		<common-cli.version>0.2.0</common-cli.version>
 		<common-json.version>0.7.0</common-json.version>
@@ -88,17 +88,31 @@
 		<junit.version>4.13.2</junit.version>
 	</properties>
 
-	<distributionManagement>
+	<!--<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>
-			<!-->url>https://s01.oss.sonatype.org/content/repositories/snapshots</url-->
+			&lt;!&ndash;dash;&gt;url>https://s01.oss.sonatype.org/content/repositories/snapshots</url&ndash;&gt;
 			<url>https://oss.sonatype.org/content/repositories/snapshots/</url>
 		</snapshotRepository>
 		<repository>
 			<id>ossrh</id>
-			<!-->url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url-->
+			&lt;!&ndash;dash;&gt;url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url&ndash;&gt;
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
+	</distributionManagement>-->
+
+	<distributionManagement>
+		<repository>
+			<id>sbforge-nexus</id>
+			<name>SBForge Nexus Repo manager</name>
+			<url>https://sbforge.org/nexus/content/repositories/releases</url>
+		</repository>
+
+		<snapshotRepository>
+			<id>sbforge-nexus</id>
+			<name>SBForge Nexus Repo manager</name>
+			<url>https://sbforge.org/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
 	</distributionManagement>
 
 	<dependencies>
