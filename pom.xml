@@ -4,7 +4,7 @@
 
 	<groupId>org.jwat</groupId>
 	<artifactId>jwat-tools</artifactId>
-	<version>0.7.1-SNAPSHOT</version>
+	<version>0.7.1</version>
 
 	<packaging>jar</packaging>
 
@@ -31,7 +31,7 @@
 		<connection>scm:git:https://github.com/netarchivesuite/jwat-tools.git</connection>
 		<developerConnection>scm:git:git@github.com:netarchivesuite/jwat-tools.git</developerConnection>
 		<url>http://bitbucket.org/nclarkekb/jwat-tools</url>
-	  <tag>HEAD</tag>
+	  <tag>jwat-tools-0.7.1</tag>
   </scm>
 
 	<issueManagement>
