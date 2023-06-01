@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.jwat.tools.tasks.TaskCLI;
-import org.jwat.tools.tasks.UnpackTaskCLI;
 import org.jwat.tools.tasks.arc2warc.Arc2WarcTaskCLI;
 import org.jwat.tools.tasks.cdx.CDXTaskCLI;
 import org.jwat.tools.tasks.changed.ChangedTaskCLI;
@@ -17,11 +16,14 @@ import org.jwat.tools.tasks.compress.CompressTaskCLI;
 import org.jwat.tools.tasks.containermd.ContainerMDTaskCLI;
 import org.jwat.tools.tasks.decompress.DecompressTaskCLI;
 import org.jwat.tools.tasks.delete.DeleteTaskCLI;
+import org.jwat.tools.tasks.digest.DigestTaskCLI;
 import org.jwat.tools.tasks.extract.ExtractTaskCLI;
 import org.jwat.tools.tasks.headers2cdx.Headers2CDXTaskCLI;
 import org.jwat.tools.tasks.interval.IntervalTaskCLI;
 import org.jwat.tools.tasks.pathindex.PathIndexTaskCLI;
 import org.jwat.tools.tasks.test.TestTaskCLI;
+import org.jwat.tools.tasks.unchunk.UnchunkTaskCLI;
+import org.jwat.tools.tasks.unpack.UnpackTaskCLI;
 
 import com.antiaction.common.cli.Argument;
 import com.antiaction.common.cli.ArgumentParser;
@@ -92,7 +94,9 @@ public class JWATTools {
 				PathIndexTaskCLI.class,
 				TestTaskCLI.class,
 				UnpackTaskCLI.class,
-				Headers2CDXTaskCLI.class
+				Headers2CDXTaskCLI.class,
+				DigestTaskCLI.class,
+				UnchunkTaskCLI.class
 		};
 		addCommands((Class<? extends TaskCLI>[])tasks);
 	}

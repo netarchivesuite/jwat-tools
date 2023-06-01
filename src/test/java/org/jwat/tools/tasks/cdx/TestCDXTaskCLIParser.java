@@ -35,7 +35,7 @@ public class TestCDXTaskCLIParser {
 		CommandLine cmdLine;
 		CDXOptions options;
 
-		CDXTaskCLIParser object = new CDXTaskCLIParser();
+		CDXTaskCLI object = new CDXTaskCLI();
 		Assert.assertNotNull(object);
 
 		Object[][] cases = new Object[][] {
@@ -69,7 +69,7 @@ public class TestCDXTaskCLIParser {
 		for (int i=0; i<cases.length; ++i) {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
-			options = CDXTaskCLIParser.parseArguments(cmdLine);
+			options = CDXTaskCLI.parseArguments(cmdLine);
 			Assert.assertEquals(cases[ i ][ 1 ], options.threads);
 			Assert.assertEquals(cases[ i ][ 2 ], options.outputFile);
 			String[] expectedFileList = (String[])cases[ i ][ 3 ];
@@ -83,7 +83,7 @@ public class TestCDXTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {};
-			options = CDXTaskCLIParser.parseArguments(cmdLine);
+			options = CDXTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -92,7 +92,7 @@ public class TestCDXTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-o", "outfile"};
-			options = CDXTaskCLIParser.parseArguments(cmdLine);
+			options = CDXTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -101,7 +101,7 @@ public class TestCDXTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "0", "file"};
-			options = CDXTaskCLIParser.parseArguments(cmdLine);
+			options = CDXTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -110,7 +110,7 @@ public class TestCDXTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "fourtytwo", "file"};
-			options = CDXTaskCLIParser.parseArguments(cmdLine);
+			options = CDXTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {

@@ -1,4 +1,4 @@
-package org.jwat.tools.tasks.delete;
+package org.jwat.tools.tasks.changed;
 
 import java.io.File;
 import java.util.List;
@@ -15,7 +15,7 @@ import org.jwat.tools.NoExitSecurityManager;
 import com.antiaction.common.cli.CommandLine;
 
 @RunWith(JUnit4.class)
-public class TestDeleteTaskCLIParser {
+public class TestChangedTaskCLI {
 
 	private SecurityManager securityManager;
 
@@ -31,43 +31,37 @@ public class TestDeleteTaskCLIParser {
 	}
 
 	@Test
-	public void test_deletetask_cli_parser() {
+	public void test_changedtask_cli_parser() {
 		CommandLine cmdLine;
-		DeleteOptions options;
+		ChangedOptions options;
 
-		DeleteTaskCLIParser object = new DeleteTaskCLIParser();
+		ChangedTaskCLI object = new ChangedTaskCLI();
 		Assert.assertNotNull(object);
 
 		Object[][] cases = new Object[][] {
 			{
 				new String[] {"file1"},
-				false, new File(DeleteOptions.DEFAULT_DELETEDFILES_FILENAME),
+				null,
 				new String[] {"file1"}
 			},
 			{
 				new String[] {"file1", "file2"},
-				false, new File(DeleteOptions.DEFAULT_DELETEDFILES_FILENAME),
+				null,
 				new String[] {"file1", "file2"}
 			},
 			{
 				new String[] {"-o", "output-file", "file3"},
-				false, new File("output-file"),
+				new File("output-file"),
 				new String[] {"file3"}
-			},
-			{
-				new String[] {"-o", "output-file2", "--dryrun", "file4"},
-				true, new File("output-file2"),
-				new String[] {"file4"}
 			}
 		};
 
 		for (int i=0; i<cases.length; ++i) {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
-			options = DeleteTaskCLIParser.parseArguments(cmdLine);
-			Assert.assertEquals(cases[ i ][ 1 ], options.bDryRun);
-			Assert.assertEquals(cases[ i ][ 2 ], options.outputFile);
-			String[] expectedFileList = (String[])cases[ i ][ 3 ];
+			options = ChangedTaskCLI.parseArguments(cmdLine);
+			Assert.assertEquals(cases[ i ][ 1 ], options.outputFile);
+			String[] expectedFileList = (String[])cases[ i ][ 2 ];
 			List<String> fileList = options.filesList;
 			Assert.assertEquals(expectedFileList.length, fileList.size());
 			for (int j=0; j<expectedFileList.length; ++j) {
@@ -78,7 +72,7 @@ public class TestDeleteTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {};
-			options = DeleteTaskCLIParser.parseArguments(cmdLine);
+			options = ChangedTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -87,7 +81,7 @@ public class TestDeleteTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-o", "outfile"};
-			options = DeleteTaskCLIParser.parseArguments(cmdLine);
+			options = ChangedTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {

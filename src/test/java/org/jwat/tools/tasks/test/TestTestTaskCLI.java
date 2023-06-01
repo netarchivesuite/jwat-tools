@@ -19,7 +19,7 @@ import org.jwat.tools.validators.XmlValidatorPlugin;
 import com.antiaction.common.cli.CommandLine;
 
 @RunWith(JUnit4.class)
-public class TestTestTaskCLIParser {
+public class TestTestTaskCLI {
 
 	private SecurityManager securityManager;
 
@@ -39,7 +39,7 @@ public class TestTestTaskCLIParser {
 		CommandLine cmdLine;
 		TestOptions options;
 
-		TestTaskCLIParser object = new TestTaskCLIParser();
+		TestTaskCLI object = new TestTaskCLI();
 		Assert.assertNotNull(object);
 
 		Date date = new Date();
@@ -118,7 +118,7 @@ public class TestTestTaskCLIParser {
 		for (int i=0; i<cases.length; ++i) {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
-			options = TestTaskCLIParser.parseArguments(cmdLine);
+			options = TestTaskCLI.parseArguments(cmdLine);
 			Assert.assertEquals(cases[ i ][ 1 ], options.threads);
 			Assert.assertEquals(cases[ i ][ 2 ], options.bShowErrors);
 			Assert.assertEquals(cases[ i ][ 3 ], options.bValidateDigest);
@@ -143,7 +143,7 @@ public class TestTestTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {};
-			options = TestTaskCLIParser.parseArguments(cmdLine);
+			options = TestTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -152,7 +152,7 @@ public class TestTestTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "42"};
-			options = TestTaskCLIParser.parseArguments(cmdLine);
+			options = TestTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -161,7 +161,7 @@ public class TestTestTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "0", "file"};
-			options = TestTaskCLIParser.parseArguments(cmdLine);
+			options = TestTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -170,7 +170,7 @@ public class TestTestTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "fourtytwo", "file"};
-			options = TestTaskCLIParser.parseArguments(cmdLine);
+			options = TestTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -179,7 +179,7 @@ public class TestTestTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-a", "fourtytwo", "file"};
-			options = TestTaskCLIParser.parseArguments(cmdLine);
+			options = TestTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {

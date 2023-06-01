@@ -14,7 +14,7 @@ import org.jwat.tools.NoExitSecurityManager;
 import com.antiaction.common.cli.CommandLine;
 
 @RunWith(JUnit4.class)
-public class TestIntervalTaskCLIParser {
+public class TestIntervalTaskCLI {
 
 	private SecurityManager securityManager;
 
@@ -34,7 +34,7 @@ public class TestIntervalTaskCLIParser {
 		CommandLine cmdLine;
 		IntervalOptions options;
 
-		IntervalTaskCLIParser object = new IntervalTaskCLIParser();
+		IntervalTaskCLI object = new IntervalTaskCLI();
 		Assert.assertNotNull(object);
 
 		Object[][] cases = new Object[][] {
@@ -59,7 +59,7 @@ public class TestIntervalTaskCLIParser {
 		for (int i=0; i<cases.length; ++i) {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
-			options = IntervalTaskCLIParser.parseArguments(cmdLine);
+			options = IntervalTaskCLI.parseArguments(cmdLine);
 			Assert.assertEquals(cases[ i ][ 1 ], options.sIdx);
 			Assert.assertEquals(cases[ i ][ 2 ], options.bPlusEIdx);
 			Assert.assertEquals(cases[ i ][ 3 ], options.eIdx);
@@ -75,7 +75,7 @@ public class TestIntervalTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"fourtytwo", "30", "infile1", "outfile1"};
-			options = IntervalTaskCLIParser.parseArguments(cmdLine);
+			options = IntervalTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -84,7 +84,7 @@ public class TestIntervalTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"$fourtytwo", "$30", "infile2", "outfile2"};
-			options = IntervalTaskCLIParser.parseArguments(cmdLine);
+			options = IntervalTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -93,7 +93,7 @@ public class TestIntervalTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"0xfourtytwo", "+0x30", "infile3", "outfile3"};
-			options = IntervalTaskCLIParser.parseArguments(cmdLine);
+			options = IntervalTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -102,7 +102,7 @@ public class TestIntervalTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"10", "fourtytwo", "infile4", "outfile4"};
-			options = IntervalTaskCLIParser.parseArguments(cmdLine);
+			options = IntervalTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -111,7 +111,7 @@ public class TestIntervalTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"$10", "$fourtytwo", "infile5", "outfile5"};
-			options = IntervalTaskCLIParser.parseArguments(cmdLine);
+			options = IntervalTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -120,7 +120,7 @@ public class TestIntervalTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"0x10", "+0xfourtytwo", "infile6", "outfile6"};
-			options = IntervalTaskCLIParser.parseArguments(cmdLine);
+			options = IntervalTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {

@@ -15,7 +15,7 @@ import org.jwat.tools.NoExitSecurityManager;
 import com.antiaction.common.cli.CommandLine;
 
 @RunWith(JUnit4.class)
-public class TestCompressTaskCLIParser {
+public class TestCompressTaskCLI {
 
 	private SecurityManager securityManager;
 
@@ -35,7 +35,7 @@ public class TestCompressTaskCLIParser {
 		CommandLine cmdLine;
 		CompressOptions options;
 
-		CompressTaskCLIParser object = new CompressTaskCLIParser();
+		CompressTaskCLI object = new CompressTaskCLI();
 		Assert.assertNotNull(object);
 
 		Object[][] cases = new Object[][] {
@@ -134,7 +134,7 @@ public class TestCompressTaskCLIParser {
 		for (int i=0; i<cases.length; ++i) {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
-			options = CompressTaskCLIParser.parseArguments(cmdLine);
+			options = CompressTaskCLI.parseArguments(cmdLine);
 			Assert.assertEquals(cases[ i ][ 1 ], options.threads);
 			Assert.assertEquals(cases[ i ][ 2 ], options.compressionLevel);
 			Assert.assertEquals(cases[ i ][ 3 ], options.bBatch);
@@ -156,7 +156,7 @@ public class TestCompressTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {};
-			options = CompressTaskCLIParser.parseArguments(cmdLine);
+			options = CompressTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -165,7 +165,7 @@ public class TestCompressTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "42"};
-			options = CompressTaskCLIParser.parseArguments(cmdLine);
+			options = CompressTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -174,7 +174,7 @@ public class TestCompressTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "0", "file"};
-			options = CompressTaskCLIParser.parseArguments(cmdLine);
+			options = CompressTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -183,7 +183,7 @@ public class TestCompressTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "fourtytwo", "file"};
-			options = CompressTaskCLIParser.parseArguments(cmdLine);
+			options = CompressTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
