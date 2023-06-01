@@ -1,6 +1,5 @@
-package org.jwat.tools.tasks.changed;
+package org.jwat.tools.tasks.decompress;
 
-import java.io.File;
 import java.util.List;
 
 import org.junit.After;
@@ -15,7 +14,7 @@ import org.jwat.tools.NoExitSecurityManager;
 import com.antiaction.common.cli.CommandLine;
 
 @RunWith(JUnit4.class)
-public class TestChangedTaskCLIParser {
+public class TestDecompressTaskCLI {
 
 	private SecurityManager securityManager;
 
@@ -31,36 +30,41 @@ public class TestChangedTaskCLIParser {
 	}
 
 	@Test
-	public void test_changedtask_cli_parser() {
+	public void test_decompresstask_cli_parser() {
 		CommandLine cmdLine;
-		ChangedOptions options;
+		DecompressOptions options;
 
-		ChangedTaskCLIParser object = new ChangedTaskCLIParser();
+		DecompressTaskCLI object = new DecompressTaskCLI();
 		Assert.assertNotNull(object);
 
 		Object[][] cases = new Object[][] {
 			{
 				new String[] {"file1"},
-				null,
+				1,
 				new String[] {"file1"}
 			},
 			{
 				new String[] {"file1", "file2"},
-				null,
+				1,
 				new String[] {"file1", "file2"}
 			},
 			{
-				new String[] {"-o", "output-file", "file3"},
-				new File("output-file"),
+				new String[] {"-w", "8", "file3"},
+				8,
 				new String[] {"file3"}
+			},
+			{
+				new String[] {"--workers", "42", "file4"},
+				42,
+				new String[] {"file4"}
 			}
 		};
 
 		for (int i=0; i<cases.length; ++i) {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
-			options = ChangedTaskCLIParser.parseArguments(cmdLine);
-			Assert.assertEquals(cases[ i ][ 1 ], options.outputFile);
+			options = DecompressTaskCLI.parseArguments(cmdLine);
+			Assert.assertEquals(cases[ i ][ 1 ], options.threads);
 			String[] expectedFileList = (String[])cases[ i ][ 2 ];
 			List<String> fileList = options.filesList;
 			Assert.assertEquals(expectedFileList.length, fileList.size());
@@ -72,7 +76,7 @@ public class TestChangedTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {};
-			options = ChangedTaskCLIParser.parseArguments(cmdLine);
+			options = DecompressTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -80,8 +84,26 @@ public class TestChangedTaskCLIParser {
 
 		try {
 			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-o", "outfile"};
-			options = ChangedTaskCLIParser.parseArguments(cmdLine);
+			cmdLine.argsArray = new String[] {"-w", "8"};
+			options = DecompressTaskCLI.parseArguments(cmdLine);
+			Assert.fail("Exception expected!");
+		}
+		catch (ExitException e) {
+		}
+
+		try {
+			cmdLine = new CommandLine();
+			cmdLine.argsArray = new String[] {"-w", "0", "file"};
+			options = DecompressTaskCLI.parseArguments(cmdLine);
+			Assert.fail("Exception expected!");
+		}
+		catch (ExitException e) {
+		}
+
+		try {
+			cmdLine = new CommandLine();
+			cmdLine.argsArray = new String[] {"-w", "fourtytwo", "file"};
+			options = DecompressTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {

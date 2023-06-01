@@ -79,7 +79,7 @@
 
 		<license.maven.plugin>1.8</license.maven.plugin>
 
-		<jwat.core.version>1.2.1</jwat.core.version>
+		<jwat.core.version>1.3.0-SNAPSHOT</jwat.core.version>
 		<jna.version>3.2.7</jna.version>
 		<common-cli.version>0.2.0</common-cli.version>
 		<common-json.version>0.7.0</common-json.version>
