@@ -260,11 +260,16 @@ public class TestTask extends AbstractTask {
 		}
 		@Override
 		public void run() {
-			TestFile2 testFile = new TestFile2();
-			testFile.callback = null;
-			TestFileResult result = testFile.processFile(srcFile, options, cloner);
-			results.add(result);
-			resultsReady.release();
+			try {
+				TestFile2 testFile = new TestFile2();
+				testFile.callback = null;
+				TestFileResult result = testFile.processFile(srcFile, options, cloner);
+				results.add(result);
+				resultsReady.release();
+			}
+			catch (Throwable t) {
+				t.printStackTrace();
+			}
 		}
 	}
 

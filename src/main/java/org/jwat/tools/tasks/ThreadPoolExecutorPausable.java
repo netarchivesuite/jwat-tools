@@ -32,6 +32,7 @@ public class ThreadPoolExecutorPausable extends ThreadPoolExecutor {
 		super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
 	}
 
+	@Override
 	protected void beforeExecute(Thread t, Runnable r) {
 		super.beforeExecute(t, r);
 		pauseLock.lock();
@@ -43,6 +44,14 @@ public class ThreadPoolExecutorPausable extends ThreadPoolExecutor {
 		}
 		finally {
 			pauseLock.unlock();
+		}
+	}
+
+	@Override
+	protected void afterExecute(Runnable r, Throwable t) {
+		super.afterExecute(r, t);
+		if (t != null) {
+			t.printStackTrace();
 		}
 	}
 
