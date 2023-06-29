@@ -1,5 +1,6 @@
-package org.jwat.tools.tasks.decompress;
+package org.jwat.tools.tasks.pathindex;
 
+import java.io.File;
 import java.util.List;
 
 import org.junit.After;
@@ -14,7 +15,7 @@ import org.jwat.tools.NoExitSecurityManager;
 import com.antiaction.common.cli.CommandLine;
 
 @RunWith(JUnit4.class)
-public class TestDecompressTaskCLIParser {
+public class TestPathIndexTaskCLI {
 
 	private SecurityManager securityManager;
 
@@ -30,41 +31,37 @@ public class TestDecompressTaskCLIParser {
 	}
 
 	@Test
-	public void test_decompresstask_cli_parser() {
+	public void test_pathindextask_cli_parser() {
 		CommandLine cmdLine;
-		DecompressOptions options;
+		PathIndexOptions options;
 
-		DecompressTaskCLIParser object = new DecompressTaskCLIParser();
+		PathIndexTaskCLI object = new PathIndexTaskCLI();
 		Assert.assertNotNull(object);
 
 		Object[][] cases = new Object[][] {
 			{
 				new String[] {"file1"},
-				1,
+				new File(PathIndexOptions.DEFAULT_OUTPUT_FILENAME),
 				new String[] {"file1"}
 			},
 			{
 				new String[] {"file1", "file2"},
-				1,
+				new File(PathIndexOptions.DEFAULT_OUTPUT_FILENAME),
 				new String[] {"file1", "file2"}
 			},
 			{
-				new String[] {"-w", "8", "file3"},
-				8,
+				new String[] {"-o", "directory/file", "file3"},
+				new File("directory/file"),
 				new String[] {"file3"}
-			},
-			{
-				new String[] {"--workers", "42", "file4"},
-				42,
-				new String[] {"file4"}
 			}
 		};
-
+		// path-index.unsorted.out
 		for (int i=0; i<cases.length; ++i) {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
-			options = DecompressTaskCLIParser.parseArguments(cmdLine);
-			Assert.assertEquals(cases[ i ][ 1 ], options.threads);
+			options = PathIndexTaskCLI.parseArguments(cmdLine);
+			System.out.println(options.outputFile);
+			Assert.assertEquals((File)cases[ i ][ 1 ], options.outputFile);
 			String[] expectedFileList = (String[])cases[ i ][ 2 ];
 			List<String> fileList = options.filesList;
 			Assert.assertEquals(expectedFileList.length, fileList.size());
@@ -76,7 +73,7 @@ public class TestDecompressTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {};
-			options = DecompressTaskCLIParser.parseArguments(cmdLine);
+			options = PathIndexTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -84,26 +81,8 @@ public class TestDecompressTaskCLIParser {
 
 		try {
 			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-w", "8"};
-			options = DecompressTaskCLIParser.parseArguments(cmdLine);
-			Assert.fail("Exception expected!");
-		}
-		catch (ExitException e) {
-		}
-
-		try {
-			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-w", "0", "file"};
-			options = DecompressTaskCLIParser.parseArguments(cmdLine);
-			Assert.fail("Exception expected!");
-		}
-		catch (ExitException e) {
-		}
-
-		try {
-			cmdLine = new CommandLine();
-			cmdLine.argsArray = new String[] {"-w", "fourtytwo", "file"};
-			options = DecompressTaskCLIParser.parseArguments(cmdLine);
+			cmdLine.argsArray = new String[] {"-o", "outfile"};
+			options = PathIndexTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {

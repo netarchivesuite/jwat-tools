@@ -29,9 +29,8 @@
 
 	<scm>
 		<connection>scm:git:https://github.com/netarchivesuite/jwat-tools.git</connection>
-		<developerConnection>scm:git:git@github.com:netarchivesuite/jwat-tools.git</developerConnection>
-		<url>http://bitbucket.org/nclarkekb/jwat-tools</url>
-	  <tag>HEAD</tag>
+		<developerConnection>scm:git:https://github.com/netarchivesuite/jwat-tools.git</developerConnection>
+		<url>https://github.com/netarchivesuite/jwat-tools</url>
   </scm>
 
 	<issueManagement>
@@ -79,7 +78,7 @@
 
 		<license.maven.plugin>1.8</license.maven.plugin>
 
-		<jwat.core.version>1.2.1</jwat.core.version>
+		<jwat.core.version>1.2.0-SNAPSHOT</jwat.core.version>
 		<jna.version>3.2.7</jna.version>
 		<common-cli.version>0.2.0</common-cli.version>
 		<common-json.version>0.7.0</common-json.version>

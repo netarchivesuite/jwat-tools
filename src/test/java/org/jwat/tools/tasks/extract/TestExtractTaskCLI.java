@@ -14,7 +14,7 @@ import org.jwat.tools.NoExitSecurityManager;
 import com.antiaction.common.cli.CommandLine;
 
 @RunWith(JUnit4.class)
-public class TestExtractTaskCLIParser {
+public class TestExtractTaskCLI {
 
 	private SecurityManager securityManager;
 
@@ -34,7 +34,7 @@ public class TestExtractTaskCLIParser {
 		CommandLine cmdLine;
 		ExtractOptions options;
 
-		ExtractTaskCLIParser object = new ExtractTaskCLIParser();
+		ExtractTaskCLI object = new ExtractTaskCLI();
 		Assert.assertNotNull(object);
 
 		Object[][] cases = new Object[][] {
@@ -67,7 +67,7 @@ public class TestExtractTaskCLIParser {
 		for (int i=0; i<cases.length; ++i) {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
-			options = ExtractTaskCLIParser.parseArguments(cmdLine);
+			options = ExtractTaskCLI.parseArguments(cmdLine);
 			Assert.assertEquals(cases[ i ][ 1 ], options.threads);
 			Assert.assertEquals(cases[ i ][ 2 ], options.targetUri);
 			String[] expectedFileList = (String[])cases[ i ][ 3 ];
@@ -81,7 +81,7 @@ public class TestExtractTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {};
-			options = ExtractTaskCLIParser.parseArguments(cmdLine);
+			options = ExtractTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -90,7 +90,7 @@ public class TestExtractTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "42"};
-			options = ExtractTaskCLIParser.parseArguments(cmdLine);
+			options = ExtractTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -99,7 +99,7 @@ public class TestExtractTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "0", "file"};
-			options = ExtractTaskCLIParser.parseArguments(cmdLine);
+			options = ExtractTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -108,7 +108,7 @@ public class TestExtractTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "fourtytwo", "file"};
-			options = ExtractTaskCLIParser.parseArguments(cmdLine);
+			options = ExtractTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
