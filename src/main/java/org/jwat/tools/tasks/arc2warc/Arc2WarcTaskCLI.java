@@ -15,10 +15,11 @@ public class Arc2WarcTaskCLI extends TaskCLI {
 
 	public static final String commandName = "arc2warc";
 
-	public static final String commandDescription = "convert ARC to WARC";
+	public static final String commandDescription = "convert ARC file(s) to WARC file(s)";
 
 	@Override
 	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("jwattools arc2warc [-d DIR] [--overwrite]... [-w THREADS] <filepattern>...");
 		System.out.println("");
 		System.out.println("arc2warc will convert one or more ARC file(s) to WARC file(s).");
@@ -30,6 +31,7 @@ public class Arc2WarcTaskCLI extends TaskCLI {
 		System.out.println("    --prefix       destination filename prefix (default is '" + Arc2WarcOptions.DEFAULT_PREFIX + "')");
 		System.out.println("    --queue-first  queue files before processing");
 		System.out.println(" -w <x>            set the amount of worker thread(s) (defaults to 1)");
+		System.out.println("");
 	}
 
 	@Override

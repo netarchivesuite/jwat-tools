@@ -17,17 +17,18 @@ public class DecompressTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("jwattools decompress [-w THREADS] <filepattern>...");
 		System.out.println("");
-		System.out.println("decompress one or more GZip files");
-		System.out.println("");
-		System.out.println("\tNormal files are decompressed into one or more files.");
-		System.out.println("\tARC/WARC files are compressed on a record level.");
+		System.out.println("Decompress one or more GZip files.");
+		System.out.println("ARC/WARC files are compressed on a record level.");
+		System.out.println("Normal files are decompressed into one or more files.");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
 		System.out.println("    --queue-first  queue files before processing");
-		System.out.println(" -w<x>             set the amount of worker thread(s) (defaults to 1)");
+		System.out.println(" -w <x>             set the amount of worker thread(s) (defaults to 1)");
+		System.out.println("");
 	}
 
 	@Override

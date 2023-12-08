@@ -19,12 +19,17 @@ public class HelpTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("jwattools help [<command>]");
 		System.out.println("");
-		System.out.println("display help information");
+		System.out.println("Display help information.");
+		System.out.println("If no command is supplied overall help information is shown.");
+		System.out.println("If a command is supplied its help information is shown instead.");
 		System.out.println("");
-		System.out.println("\tIf no command is supplied overall help information is shown.");
-		System.out.println("\tIf a command is supplied its help information is shown instead.");
+		System.out.println("options:");
+		System.out.println("");
+		System.out.println("none");
+		System.out.println("");
 	}
 
 	public static final int A_HELPFOR_COMMAND = 101;

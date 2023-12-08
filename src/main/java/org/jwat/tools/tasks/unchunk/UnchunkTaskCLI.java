@@ -15,20 +15,23 @@ public class UnchunkTaskCLI extends TaskCLI {
 
 	public static final String commandName = "unchunk";
 
-	public static final String commandDescription = "unchunk file(s) with chunked transfter encoding";
+	public static final String commandDescription = "unchunk file(s) containing only chunked transfter encoded data";
 
 	@Override
 	public void show_help() {
-		System.out.println("jwattools [-o<file>] unchunk ");
+		System.out.println("FileTools v" + JWATTools.getVersionString());
+		System.out.println("jwattools [-o<file>] unchunk <filepattern>...");
 		System.out.println("");
-		System.out.println("unchunk file(s)");
-		System.out.println("");
-		System.out.println("\tUnchunk file(s).");
-		/*
+		System.out.println("Unchunk one or more files which consist of chunked transfer encoded data files.");
+		System.out.println("This command only handles the chunked data.");
+		System.out.println("All encapsulating headers or similar must be removed before using this command.");
+		System.out.println("This includes removing headers for ARC, WARC, HTTP etc.");
+		System.out.println("Use of this is mostly for debugging purposes.");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		*/
+		System.out.println("none");
+		System.out.println("");
 	}
 
 	@Override

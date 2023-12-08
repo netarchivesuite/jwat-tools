@@ -51,6 +51,25 @@ public class UnchunkTask extends AbstractTask {
 		catch (IOException e) {
 			e.printStackTrace();
 		}
+		int state;
+		if (dis != null) {
+			state = dis.getState();
+			switch (state) {
+			case DigestInputStreamChunkedNoSkip.S_LENGTH:
+			case DigestInputStreamChunkedNoSkip.S_LENGTH_CR:
+			case DigestInputStreamChunkedNoSkip.S_LENGTH_LF:
+			case DigestInputStreamChunkedNoSkip.S_CHUNK_CR:
+			case DigestInputStreamChunkedNoSkip.S_CHUNK_LF:
+			case DigestInputStreamChunkedNoSkip.S_END_CR:
+			case DigestInputStreamChunkedNoSkip.S_END_LF:
+				break;
+			case DigestInputStreamChunkedNoSkip.S_DONE:
+				break;
+			case DigestInputStreamChunkedNoSkip.S_ERROR:
+				break;
+			}
+			dis.getOverflow();
+		}
 	}
 
 }

@@ -1,6 +1,7 @@
 package org.jwat.tools;
 
 import java.lang.reflect.Field;
+import java.security.Provider;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -8,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jwat.common.SecurityProviderTools;
 import org.jwat.tools.tasks.TaskCLI;
 import org.jwat.tools.tasks.arc2warc.Arc2WarcTaskCLI;
 import org.jwat.tools.tasks.cdx.CDXTaskCLI;
@@ -142,11 +144,11 @@ public class JWATTools {
 		}
 		System.out.println("");
 		System.out.println("See 'jwattools help <command>' for more information on a specific command.");
+		System.out.println("");
 	}
 
-	public static String getVersionString(String packageName) {
-		Package pkg = Package.getPackage(packageName);
-		System.out.println(pkg);
+	public static String getVersionString() {
+		Package pkg = Package.getPackage("org.jwat.tools");
 		String version = null;
 		if (pkg != null) {
 			version = pkg.getSpecificationVersion();
@@ -158,7 +160,7 @@ public class JWATTools {
 	}
 
 	public static void show_help() {
-		System.out.println("JWATTools v" + getVersionString("org.jwat.tools"));
+		System.out.println("JWATTools v" + getVersionString());
 		//System.out.println(getVersionString("org.jwat.common"));
 		//System.out.println(getVersionString("org.jwat.gzip"));
 		//System.out.println(getVersionString("org.jwat.arc"));
@@ -169,6 +171,10 @@ public class JWATTools {
 	}
 
 	public void Main(String[] args) {
+		Provider[] providers = SecurityProviderTools.getSecurityProviders();
+		if (!SecurityProviderTools.isProviderAvailable(providers, "BC")) {
+			SecurityProviderTools.loadBCProvider();
+		}
 		CommandLine cmdLine = null;
 		configure_cli();
 		try {

@@ -19,18 +19,18 @@ public class CDXTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("jwattools cdx [-o OUTPUT_FILE] [-w THREADS] <filepattern>...");
 		System.out.println("");
-		System.out.println("cdx one or more ARC/WARC files");
-		System.out.println("");
-		System.out.println("\tRead through ARC/WARC file(s) and create a CDX file.");
-		System.out.println("\tCDX files are primarily used with Wayback.");
+		System.out.println("Read through ARC/WARC file(s) and create a CDX file.");
+		System.out.println("CDX files are primarily used with replay tools like (Open)Wayback.");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
 		System.out.println(" -o <file>         output cdx filename (unsorted)");
 		System.out.println("    --queue-first  queue files before processing");
 		System.out.println(" -w <x>            set the amount of worker thread(s) (defaults to 1)");
+		System.out.println("");
 	}
 
 	@Override

@@ -19,12 +19,12 @@ public class CompressTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("jwattools compress [-123456789] [--fast] [--best] [-w THREADS] <filepattern>...");
 		System.out.println("");
-		System.out.println("compress one or more ARC/WARC/GZip files");
-		System.out.println("");
-		System.out.println("\tNormal files are compressed as a single GZip file.");
-		System.out.println("\tARC/WARC files are compressed on a record level.");
+		System.out.println("Compress one or more ARC/WARC/GZip files.");
+		System.out.println("ARC/WARC files are compressed on a record level.");
+		System.out.println("Normal files are compressed as a single GZip file.");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
@@ -41,6 +41,7 @@ public class CompressTaskCLI extends TaskCLI {
 		System.out.println("     --blacklist    list of files to ignore (one filename per line)");
 		System.out.println("     --checksums    list of sorted checksums (one filename##checksum per line))");
 		System.out.println(" -w <x>             set the amount of worker thread(s) (defaults to 1)");
+		System.out.println("");
 	}
 
 	@Override
@@ -180,7 +181,7 @@ public class CompressTaskCLI extends TaskCLI {
 		options.filesList = argument.values;
 
 		if (!options.bQuiet) {
-			System.out.println("JWATTools v" + JWATTools.getVersionString("org.jwat.tools"));
+			System.out.println("JWATTools v" + JWATTools.getVersionString());
 			System.out.println( "Compression level: " + options.compressionLevel );
 			System.out.println( "       Batch mode: " + options.bBatch );
 			System.out.println( "          Dry run: " + options.bDryrun );

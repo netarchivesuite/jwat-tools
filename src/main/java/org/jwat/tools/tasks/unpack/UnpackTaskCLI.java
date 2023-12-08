@@ -17,6 +17,7 @@ public class UnpackTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("Work in progress...");
 	}
 

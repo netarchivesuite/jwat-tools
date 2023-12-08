@@ -3,8 +3,6 @@ package org.jwat.tools.tasks.digest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 
 import org.jwat.common.Base16;
 import org.jwat.common.Base32;
@@ -22,7 +20,11 @@ public class DigestTask extends AbstractTask {
 
 	public void runtask(DigestOptions options) {
 		this.options = options;
-		filelist_feeder( options.filesList, this );
+		if (options.filesList.size() > 0) {
+			filelist_feeder( options.filesList, this );
+		}
+		else {
+		}
 	}
 
     private byte[] isBuffer = new byte[65536];
@@ -31,40 +33,37 @@ public class DigestTask extends AbstractTask {
 
 	@Override
 	public void process(File srcFile) {
-		MessageDigest md = null;
 		byte[] digest;
 		FastBufferedInputStream in = null;
-		String digestAlgorithm = "SHA-1";
-        try {
-            md = MessageDigest.getInstance(digestAlgorithm);
-        }
-        catch (NoSuchAlgorithmException e) {
-        	e.printStackTrace();
-        	System.exit(-1);
-        }
-        int read;
-        try {
+		int read;
+		try {
 			in = new FastBufferedInputStream(new FileInputStream(srcFile), isBuffer);
 			while ((read = in.read(readBuffer)) != -1) {
-				md.update(readBuffer, 0, read);
+				options.md.update(readBuffer, 0, read);
 			}
-			digest = md.digest();
-			System.out.println(digestAlgorithm + ":" + Base16.encodeArray(digest) + " (base16/hex)");
-			System.out.println(digestAlgorithm + ":" + Base32.encodeArray(digest) + " (base32)");
-			System.out.println(digestAlgorithm + ":" + Base64.encodeArray(digest) + " (base64)");
+			digest = options.md.digest();
+			if (options.bBase16) {
+				System.out.println(options.mdAlgo + ":" + Base16.encodeArray(digest) + " (base16/hex)");
+			}
+			if (options.bBase32) {
+				System.out.println(options.mdAlgo + ":" + Base32.encodeArray(digest) + " (base32)");
+			}
+			if (options.bBase64) {
+				System.out.println(options.mdAlgo + ":" + Base64.encodeArray(digest) + " (base64)");
+			}
 		}
-        catch (IOException e) {
+		catch (IOException e) {
 			e.printStackTrace();
 		}
-        finally {
-        	if (in != null) {
-        		try {
+		finally {
+			if (in != null) {
+				try {
 					in.close();
 				}
-        		catch (IOException e) {
+				catch (IOException e) {
 				}
-        	}
-        }
+			}
+		}
 	}
 
 }

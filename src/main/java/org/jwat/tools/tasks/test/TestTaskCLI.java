@@ -24,9 +24,10 @@ public class TestTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("jwattools test [-beilx] [-w THREADS] [-a<yyyyMMddHHmmss>] <filepattern>...");
 		System.out.println("");
-		System.out.println("test one or more ARC/WARC/GZip files");
+		System.out.println("Test one or more ARC/WARC/GZip files.");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
@@ -39,6 +40,7 @@ public class TestTaskCLI extends TaskCLI {
 		System.out.println(" -x                   to validate text/xml payload (eg. mets)");
 		System.out.println("    --queue-first     queue files before processing");
 		System.out.println(" -w <x>               set the amount of worker thread(s) (defaults to 1)");
+		System.out.println("");
 	}
 
 	@Override
@@ -133,16 +135,16 @@ public class TestTaskCLI extends TaskCLI {
 		if ( argument != null && argument.value != null ) {
 			try {
 				DateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
-		        dateFormat.setLenient(false);
-		        Date afterDate = dateFormat.parse(argument.value);
-		        options.after = afterDate.getTime();
+				dateFormat.setLenient(false);
+				Date afterDate = dateFormat.parse(argument.value);
+				options.after = afterDate.getTime();
 			} catch (ParseException e) {
 				System.out.println("Invalid date format - " + argument.value);
 				System.exit( 1 );
 			}
 		}
 
-        // Files.
+		// Files.
 		argument = cmdLine.idMap.get( JWATTools.A_FILES );
 		options.filesList = argument.values;
 

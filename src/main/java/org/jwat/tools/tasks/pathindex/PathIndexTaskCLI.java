@@ -19,16 +19,16 @@ public class PathIndexTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("jwattools pathindex [-o OUTPUT_FILE] <filepattern>...");
 		System.out.println("");
-		System.out.println("create a pathindex from one or more ARC/WARC files");
-		System.out.println("");
-		System.out.println("\tRead through ARC/WARC file(s) and create a pathindex file.");
-		System.out.println("\tPathindex files are primarily used with Wayback.");
+		System.out.println("Create a pathindex from one or more ARC/WARC files.");
+		System.out.println("Pathindex files are primarily used with replay tools like (Open)Wayback.");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
 		System.out.println(" -o <file>  output pathindex filename (unsorted)");
+		System.out.println("");
 	}
 
 	@Override

@@ -20,9 +20,10 @@ public class ContainerMDTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("jwattools containermd [-d outputDir] [-l] [-q] [-w THREADS] <paths>");
 		System.out.println("");
-		System.out.println("generate containerMD for (W)ARC files");
+		System.out.println("Generate containerMD for (W)ARC files.");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
@@ -31,6 +32,7 @@ public class ContainerMDTaskCLI extends TaskCLI {
 		System.out.println(" -q                quiet, no output to console");
 		System.out.println("    --queue-first  queue files before processing");
 		System.out.println(" -w <x>            set the amount of worker thread(s) (defaults to 1)");
+		System.out.println("");
 	}
 
 	@Override

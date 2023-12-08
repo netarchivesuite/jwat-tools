@@ -19,16 +19,16 @@ public class ChangedTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("jwattools changed <filepattern>...");
 		System.out.println("");
-		System.out.println("group files by similar last modified dates");
-		System.out.println("");
-		System.out.println("\tUseful command for identifying when and if files where modified");
-		System.out.println("\tin close proximity of others.");
+		System.out.println("Useful command for identifying when and if files where modified in close proximity of others.");
+		System.out.println("Group files by similar last modified dates.");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(" -o<file>  output intervals and files to file");
+		System.out.println(" -o <file>  output intervals and files to file");
+		System.out.println("");
 	}
 
 	@Override

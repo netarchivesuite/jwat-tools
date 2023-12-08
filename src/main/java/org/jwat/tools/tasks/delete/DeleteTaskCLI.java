@@ -19,17 +19,17 @@ public class DeleteTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("jwattools delete [-t] [-o OUTPUT_FILE] <filepattern>...");
 		System.out.println("");
-		System.out.println("delete one or more files");
-		System.out.println("");
-		System.out.println("\tDelete one or more files.");
-		System.out.println("\tLinux has this nasty habit of making it hard to delete many files at the same time.");
+		System.out.println("Delete one or more files.");
+		System.out.println("Linux has this nasty habit of making it hard to delete many files at the same time.");
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
 		System.out.println(" -o <file>    output filenames deleted");
 		System.out.println("    --dryrun  dry run, does not delete files");
+		System.out.println("");
 	}
 
 	@Override
