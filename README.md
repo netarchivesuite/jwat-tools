@@ -6,18 +6,29 @@ This project currently includes a commandline tool with various gzip/arc/warc/xm
 
 ### Tasks ###
 
-* Arc2Warc
-* CDX
-* Changed
-* Compress
-* ContainerMD
-* Decompress
-* Delete
-* Extract
-* Interval
-* PathIndex
-* Test
-* Unpack
+```
+usage: JWATTools <command> [<args>]
+
+Commands:
+   arc2warc      convert ARC file(s) to WARC file(s)
+   cdx           create a CDX index for use in wayback (unsorted)
+   changed       changed files grouped by intervals
+   compress      compress ARC/WARC or plain file(s)
+   containermd   generation of containerMD for (W)ARC file(s)
+   decompress    decompress ARC/WARC or normal GZip file(s)
+   delete        delete files
+   digest        calculate the digest of file(s)
+   extract       extract ARC/WARC record(s)
+   headers2cdx   create a CDX index for use in wayback (unsorted)
+   help          display help information
+   interval      interval extract
+   pathindex     create a path index file for use in wayback (unsorted)
+   test          test validity of ARC/WARC/GZip file(s)
+   unchunk       unchunk file(s) containing only chunked transfter encoded data
+   unpack        unpack multifile GZip
+
+See 'jwattools help <command>' for more information on a specific command.
+```
 
 ### Downloads ###
 
