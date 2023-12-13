@@ -1,16 +1,31 @@
-package org.jwat.tools.tasks;
+package org.jwat.tools.tasks.unpack;
 
 import org.jwat.tools.JWATTools;
+import org.jwat.tools.tasks.TaskCLI;
 
 import com.antiaction.common.cli.Argument;
-import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.ArgumentParser;
+import com.antiaction.common.cli.ArgumentParserException;
 import com.antiaction.common.cli.CommandLine;
 import com.antiaction.common.cli.Options;
 
-public class UnpackTaskCLIParser {
+public class UnpackTaskCLI extends TaskCLI {
 
-	protected UnpackTaskCLIParser() {
+	public static final String commandName = "unpack";
+
+	public static final String commandDescription = "unpack multifile GZip";
+
+	@Override
+	public void show_help() {
+		System.out.println("FileTools v" + JWATTools.getVersionString());
+		System.out.println("Work in progress...");
+	}
+
+	@Override
+	public void runtask(CommandLine cmdLine) {
+		UnpackTask task = new UnpackTask();
+		UnpackOptions options = parseArguments(cmdLine);
+		task.runtask(options);
 	}
 
 	public static UnpackOptions parseArguments(CommandLine cmdLine) {
@@ -20,7 +35,7 @@ public class UnpackTaskCLIParser {
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
 		}
 		catch (ArgumentParserException e) {
-			System.out.println( UnpackTaskCLIParser.class.getName() + ": " + e.getMessage() );
+			System.out.println( UnpackTaskCLI.class.getName() + ": " + e.getMessage() );
 			System.exit( 1 );
 		}
 

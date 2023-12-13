@@ -15,7 +15,7 @@ import org.jwat.tools.NoExitSecurityManager;
 import com.antiaction.common.cli.CommandLine;
 
 @RunWith(JUnit4.class)
-public class TestArc2WarcTaskCLIParser {
+public class TestArc2WarcTaskCLI {
 
 	private SecurityManager securityManager;
 
@@ -35,7 +35,7 @@ public class TestArc2WarcTaskCLIParser {
 		CommandLine cmdLine;
 		Arc2WarcOptions options;
 
-		Arc2WarcTaskCLIParser object = new Arc2WarcTaskCLIParser();
+		Arc2WarcTaskCLI object = new Arc2WarcTaskCLI();
 		Assert.assertNotNull(object);
 
 		Object[][] cases = new Object[][] {
@@ -85,7 +85,7 @@ public class TestArc2WarcTaskCLIParser {
 			System.out.println(i);
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = (String[])cases[ i ][ 0 ];
-			options = Arc2WarcTaskCLIParser.parseArguments(cmdLine);
+			options = Arc2WarcTaskCLI.parseArguments(cmdLine);
 			Assert.assertEquals(cases[ i ][ 1 ], options.threads);
 			Assert.assertEquals(cases[ i ][ 2 ], options.destDir);
 			Assert.assertEquals(cases[ i ][ 3 ], options.prefix);
@@ -101,7 +101,7 @@ public class TestArc2WarcTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {};
-			options = Arc2WarcTaskCLIParser.parseArguments(cmdLine);
+			options = Arc2WarcTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -110,7 +110,7 @@ public class TestArc2WarcTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "42"};
-			options = Arc2WarcTaskCLIParser.parseArguments(cmdLine);
+			options = Arc2WarcTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -119,7 +119,7 @@ public class TestArc2WarcTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "0", "file"};
-			options = Arc2WarcTaskCLIParser.parseArguments(cmdLine);
+			options = Arc2WarcTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
@@ -128,7 +128,7 @@ public class TestArc2WarcTaskCLIParser {
 		try {
 			cmdLine = new CommandLine();
 			cmdLine.argsArray = new String[] {"-w", "fourtytwo", "file"};
-			options = Arc2WarcTaskCLIParser.parseArguments(cmdLine);
+			options = Arc2WarcTaskCLI.parseArguments(cmdLine);
 			Assert.fail("Exception expected!");
 		}
 		catch (ExitException e) {
