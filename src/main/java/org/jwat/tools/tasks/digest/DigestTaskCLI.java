@@ -2,17 +2,9 @@ package org.jwat.tools.tasks.digest;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.Provider;
-import java.security.Provider.Service;
-import java.security.Security;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
-import org.jwat.common.SecurityProviderTools;
+import org.jwat.common.SecurityProviderAlgorithms;
 import org.jwat.tools.JWATTools;
 import org.jwat.tools.tasks.TaskCLI;
 
@@ -31,6 +23,7 @@ public class DigestTaskCLI extends TaskCLI {
 
 	@Override
 	public void show_help() {
+		SecurityProviderAlgorithms spa = SecurityProviderAlgorithms.getInstanceFor(MessageDigest.class);
 		System.out.println("FileTools v" + JWATTools.getVersionString());
 		System.out.println("jwattools [-o<file>] digest <filepattern>... ");
 		System.out.println("");
@@ -39,7 +32,11 @@ public class DigestTaskCLI extends TaskCLI {
 		System.out.println("");
 		System.out.println("options:");
 		System.out.println("");
-		System.out.println(getMessageDigestAlgos());
+		System.out.println(" -a <algorithm[,...]>  specify one or more digest algorithm");
+		System.out.println("");
+		System.out.println("Available digest algorithms:");
+		System.out.println("----------------------------");
+		System.out.println(spa.getAlgorithmListGrouped());
 		System.out.println("");
 	}
 
@@ -60,11 +57,9 @@ public class DigestTaskCLI extends TaskCLI {
 		Options cliOptions = new Options();
 		try {
 			cliOptions.addNamedArgument( "files", JWATTools.A_FILES, 1, 1 );
-			/*
-			cliOptions.addOption(null, "--base16", A_BASE16, 0, null);
-			cliOptions.addOption(null, "--base32", A_BASE32, 0, null);
-			cliOptions.addOption(null, "--base64", A_BASE64, 0, null);
-			*/
+			//cliOptions.addOption(null, "--base16", A_BASE16, 0, null);
+			//cliOptions.addOption(null, "--base32", A_BASE32, 0, null);
+			//cliOptions.addOption(null, "--base64", A_BASE64, 0, null);
 			cliOptions.addOption("-a", "--digest-algorithm", A_DIGEST_ALGO, 0, null).setValueRequired();
 			cmdLine = ArgumentParser.parse(cmdLine.argsArray, cliOptions, cmdLine);
 		}
@@ -76,7 +71,8 @@ public class DigestTaskCLI extends TaskCLI {
 		DigestOptions options = new DigestOptions();
 
 		Argument argument;
-		String tmpStr;
+		String[] values;
+		DigestAlgo digestAlgo;
 
 		// Files
 		argument = cmdLine.idMap.get( JWATTools.A_FILES );
@@ -88,14 +84,25 @@ public class DigestTaskCLI extends TaskCLI {
 
 		argument = cmdLine.idMap.get(A_DIGEST_ALGO);
 		if (argument != null) {
-			options.mdAlgo = argument.value;
-			try {
-				options.md = MessageDigest.getInstance(argument.value);
+			values = argument.value.split(",");
+			options.digestAlgos = new DigestAlgo[values.length];
+			for (int i=0; i<values.length; ++i) {
+				try {
+					digestAlgo = new DigestAlgo();
+					digestAlgo.mdAlgo = values[i];
+					digestAlgo.md = MessageDigest.getInstance(values[i]);
+					options.digestAlgos[i] = digestAlgo;
+				}
+				catch (NoSuchAlgorithmException e) {
+					System.out.println("Unsupported digest algorithm: " + values[i]);
+					System.exit(-1);
+				}
 			}
-			catch (NoSuchAlgorithmException e) {
-				System.out.println("Unsupported digest algorithm: " + argument.value);
-				System.exit(-1);
-			}
+		}
+
+		if (options.filesList.size() > 0 && options.digestAlgos == null) {
+			System.out.println("Missing digest algorithm.");
+			System.exit(-1);
 		}
 
 		options.bBase16 = (cmdLine.idMap.get(A_BASE16) != null);
@@ -109,96 +116,6 @@ public class DigestTaskCLI extends TaskCLI {
 		options.bBase64 = true;
 
 		return options;
-	}
-
-	public static Map<String, Set<String>> digestAlgos = new TreeMap<>();
-	public static Set<String> digestAliases = new TreeSet<>();
-	public static Set<String> digestAndAliases = new TreeSet<>();
-
-	public static String getMessageDigestAlgos() {
-		final String digestClassName = MessageDigest.class.getSimpleName();
-		final String aliasPrefix = "Alg.Alias." + digestClassName + ".";
-		final int aliasPrefixLen = aliasPrefix.length();
-		Provider[] providers = Security.getProviders();
-		String providerAlias;
-		if (SecurityProviderTools.isProviderAvailable(providers, "BC")) {
-			providerAlias = "BC";
-		}
-		else {
-			providerAlias = "SUN";
-		}
-		try {
-			Provider provider = Security.getProvider(providerAlias);
-			Set<Service> services = provider.getServices();
-			services.stream().forEach(service -> {
-				String algorithm;
-				Set<String> aliases;
-				if (digestClassName.equalsIgnoreCase(service.getType())) {
-					algorithm = service.getAlgorithm();
-					char[] charArr = algorithm.toCharArray();
-					int charIdx = charArr.length - 1;
-					char c;
-					boolean b = true;
-					while (b && charIdx >= 0) {
-						c = charArr[charIdx--];
-						b = ((c >= '0' && c<= '9') || c == '.');
-					}
-					if (charIdx != -1 && !(charIdx == 1 && algorithm.startsWith("OID."))) {
-						aliases = digestAlgos.get(algorithm);
-						if (aliases == null) {
-							digestAlgos.put(algorithm, new TreeSet<String>());
-							digestAndAliases.add(algorithm);
-						}
-					}
-				}
-			});
-			provider.keySet().stream().map(Object::toString).filter(s -> s.startsWith(aliasPrefix)).forEach(s -> {
-				String alias = s.substring(aliasPrefixLen);
-				String algorithm = provider.get(s).toString();
-				if (alias.compareToIgnoreCase(algorithm) != 0) {
-					char[] charArr = alias.toCharArray();
-					int charIdx = charArr.length - 1;
-					char c;
-					boolean b = true;
-					while (b && charIdx >= 0) {
-						c = charArr[charIdx--];
-						b = ((c >= '0' && c<= '9') || c == '.');
-					}
-					if (charIdx != -1 && !(charIdx == 1 && alias.startsWith("OID."))) {
-						Set<String> algorithms = digestAlgos.get(algorithm);
-						if (algorithms != null) {
-							algorithms.add(alias);
-							digestAliases.add(alias);
-							digestAndAliases.add(alias);
-						}
-					}
-				}
-			});
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		final StringBuffer sb = new StringBuffer();
-		//String prefix = null;
-		//int prefixLen = 0;
-		digestAlgos.entrySet().forEach(e -> {
-			Set<String> algorithms = e.getValue();
-			if (sb.length() > 0) {
-				sb.append(", ");
-			}
-			sb.append(e.getKey());
-			Iterator<String> aliasIter = algorithms.iterator();
-			if (aliasIter.hasNext()) {
-				sb.append(" (");
-				sb.append(aliasIter.next());
-				while (aliasIter.hasNext()) {
-					sb.append(", ");
-					sb.append(aliasIter.next());
-				}
-				sb.append(")");
-			}
-		});
-		return sb.toString();
 	}
 
 }

@@ -55,7 +55,6 @@ public class UnchunkTaskCLI extends TaskCLI {
 		UnchunkOptions options = new UnchunkOptions();
 
 		Argument argument;
-		String tmpStr;
 
 		// Files
 		argument = cmdLine.idMap.get( JWATTools.A_FILES );

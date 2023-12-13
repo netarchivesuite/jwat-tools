@@ -11,6 +11,7 @@ import org.jwat.tools.tasks.AbstractTask;
 
 public class UnchunkTask extends AbstractTask {
 
+	@SuppressWarnings("unused")
 	private UnchunkOptions options;
 
 	public UnchunkTask() {

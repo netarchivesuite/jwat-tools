@@ -1,6 +1,5 @@
 package org.jwat.tools.tasks.digest;
 
-import java.security.MessageDigest;
 import java.util.List;
 
 import org.jwat.tools.JWATTools;
@@ -15,38 +14,38 @@ public class DigestOptions {
 
 	public boolean bBase64;
 
-	public String mdAlgo;
-
-	public MessageDigest md;
+	public DigestAlgo[] digestAlgos;
 
 	@Override
 	public String toString() {
 		String lineSeparator = System.lineSeparator();
-		int idx;
-		int len;
+		//int idx;
+		//int len;
 		StringBuilder sb = new StringBuilder();
 		sb.append("FileTools v");
 		sb.append(JWATTools.getVersionString());
-		sb.append(lineSeparator);
-		/*
-		if (paths != null) {
-			idx = 0;
-			len = paths.length;
-			sb.append("       Path: " + paths[idx++].getPath());
+		if (filesList.size() > 0) {
 			sb.append(lineSeparator);
-			while (idx < len) {
-				sb.append("             " + paths[idx++].getPath());
+			/*
+			if (paths != null) {
+				idx = 0;
+				len = paths.length;
+				sb.append("       Path: " + paths[idx++].getPath());
 				sb.append(lineSeparator);
+				while (idx < len) {
+					sb.append("             " + paths[idx++].getPath());
+					sb.append(lineSeparator);
+				}
 			}
+			*/
+			sb.append("     base16: " + bBase16);
+			sb.append(lineSeparator);
+			sb.append("     base32: " + bBase32);
+			sb.append(lineSeparator);
+			sb.append("     base64: " + bBase64);
+			//sb.append(lineSeparator);
+			//sb.append("     base64: " + mdAlgo);
 		}
-		*/
-		sb.append("     base16: " + bBase16);
-		sb.append(lineSeparator);
-		sb.append("     base32: " + bBase32);
-		sb.append(lineSeparator);
-		sb.append("     base64: " + bBase64);
-		sb.append(lineSeparator);
-		sb.append("     base64: " + mdAlgo);
 		return sb.toString();
 	}
 
